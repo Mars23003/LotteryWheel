@@ -116,23 +116,7 @@
 </label>
 </div>
 <!-- Chips -->
-<div class="flex gap-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar mask-linear">
-<button class="flex h-9 items-center justify-center px-4 rounded-full bg-primary text-white text-sm font-medium transition-transform active:scale-95 whitespace-nowrap shadow-md shadow-primary/20">
-                        All
-                    </button>
-<button class="flex h-9 items-center justify-center px-4 rounded-full bg-white dark:bg-[#2f2348] hover:bg-slate-100 dark:hover:bg-[#3d2e5e] text-slate-700 dark:text-white border border-slate-200 dark:border-transparent text-sm font-medium transition-all active:scale-95 whitespace-nowrap">
-                        Creativity
-                    </button>
-<button class="flex h-9 items-center justify-center px-4 rounded-full bg-white dark:bg-[#2f2348] hover:bg-slate-100 dark:hover:bg-[#3d2e5e] text-slate-700 dark:text-white border border-slate-200 dark:border-transparent text-sm font-medium transition-all active:scale-95 whitespace-nowrap">
-                        Utilities
-                    </button>
-<button class="flex h-9 items-center justify-center px-4 rounded-full bg-white dark:bg-[#2f2348] hover:bg-slate-100 dark:hover:bg-[#3d2e5e] text-slate-700 dark:text-white border border-slate-200 dark:border-transparent text-sm font-medium transition-all active:scale-95 whitespace-nowrap">
-                        Prototypes
-                    </button>
-<button class="flex h-9 items-center justify-center px-4 rounded-full bg-white dark:bg-[#2f2348] hover:bg-slate-100 dark:hover:bg-[#3d2e5e] text-slate-700 dark:text-white border border-slate-200 dark:border-transparent text-sm font-medium transition-all active:scale-95 whitespace-nowrap">
-                        UI/UX
-                    </button>
-</div>
+<div id="chips" class="flex gap-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar mask-linear"></div>
 </div>
 <!-- Content Grid -->
 <div id="selected-works" class="space-y-6">
@@ -163,7 +147,9 @@
   const projectsCount = document.getElementById('projects-count');
   const emptyState = document.getElementById('empty-state');
   const searchInput = document.getElementById('search-input');
+  const chipsContainer = document.getElementById('chips');
   let projects = [];
+  let selectedTag = 'All';
 
   const normalize = (value) => (value || '').toLowerCase();
   const formatDate = (value) => {
@@ -214,19 +200,63 @@
     list.forEach((project) => projectsGrid.appendChild(createCard(project)));
   };
 
-  const filterProjects = (term) => {
-    if (!term) return projects;
-    const query = normalize(term);
-    return projects.filter((project) => {
-      const haystack = [project.name, project.description, ...(project.tags || [])].map(normalize).join(' ');
-      return haystack.includes(query);
+  const setChipAppearance = (button, isActive) => {
+    const baseClass = 'flex h-9 items-center justify-center px-4 rounded-full text-sm font-medium transition-all active:scale-95 whitespace-nowrap border';
+    const activeClass = 'bg-primary text-white border-primary shadow-md shadow-primary/20';
+    const inactiveClass = 'bg-white dark:bg-[#2f2348] hover:bg-slate-100 dark:hover:bg-[#3d2e5e] text-slate-700 dark:text-white border-slate-200 dark:border-transparent';
+    button.className = `${baseClass} ${isActive ? activeClass : inactiveClass}`;
+  };
+
+  const renderChips = (tags) => {
+    const uniqueTags = Array.from(new Set(tags));
+    const chipLabels = ['All', ...uniqueTags];
+    chipsContainer.innerHTML = '';
+    chipLabels.forEach((tag) => {
+      const button = document.createElement('button');
+      button.dataset.tag = tag;
+      button.textContent = tag;
+      setChipAppearance(button, selectedTag === tag);
+      button.addEventListener('click', () => {
+        selectedTag = tag;
+        chipsContainer.querySelectorAll('button').forEach((chip) => {
+          setChipAppearance(chip, chip.dataset.tag === selectedTag);
+        });
+        applyFilters();
+      });
+      chipsContainer.appendChild(button);
     });
+  };
+
+  const filterProjects = (term, tag) => {
+    let filtered = [...projects];
+    const normalizedTag = normalize(tag);
+
+    if (normalizedTag && normalizedTag !== 'all') {
+      filtered = filtered.filter((project) => (project.tags || []).some((item) => normalize(item) === normalizedTag));
+    }
+
+    if (term) {
+      const query = normalize(term);
+      filtered = filtered.filter((project) => {
+        const haystack = [project.name, project.description, ...(project.tags || [])].map(normalize).join(' ');
+        return haystack.includes(query);
+      });
+    }
+
+    return filtered;
+  };
+
+  const applyFilters = () => {
+    const filtered = filterProjects(searchInput?.value, selectedTag);
+    renderProjects(filtered);
   };
 
   const init = async () => {
     try {
       const response = await fetch('projects.json');
       projects = await response.json();
+      const allTags = projects.flatMap((project) => project.tags || []);
+      renderChips(allTags);
       renderProjects(projects);
     } catch (error) {
       console.error('Failed to load projects.json', error);
@@ -235,9 +265,8 @@
     }
   };
 
-  searchInput?.addEventListener('input', (event) => {
-    const filtered = filterProjects(event.target.value);
-    renderProjects(filtered);
+  searchInput?.addEventListener('input', () => {
+    applyFilters();
   });
 
   init();

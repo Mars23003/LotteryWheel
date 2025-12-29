@@ -573,10 +573,7 @@
   };
 
   const toggleView = (view) => {
-    if (state.diffMode) {
-      viewButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.view === 'raw'));
-      return;
-    }
+    if (state.diffMode) setDiffMode(false);
     state.view = view;
     viewButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.view === view));
     updateOutputVisibility();
@@ -710,6 +707,7 @@
     document.querySelectorAll('.toolbar-left [data-action]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const action = btn.dataset.action;
+        if (action !== 'diff' && state.diffMode) setDiffMode(false);
         switch (action) {
           case 'format':
             formatAction();

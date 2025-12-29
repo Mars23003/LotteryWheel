@@ -5,7 +5,7 @@
     "path": "01-lottery/index.html",
     "folder": "01-lottery/",
     "tags": ["UI", "Animation"],
-    "image": "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1200&q=80",
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=AI+Tool",
     "date": "2024-03-05",
     "description": "維持木質質感與抽獎流程的互動搖球機，集中於獨立頁面降低干擾。"
   },
@@ -15,7 +15,7 @@
     "path": "02-json-studio/index.html",
     "folder": "02-json-studio/",
     "tags": ["JSON", "Converter", "Validator"],
-    "image": "https://images.unsplash.com/photo-1554672723-b208dc85134f?auto=format&fit=crop&w=1200&q=80",
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=AI+Tool",
     "date": "2024-04-18",
     "description": "純前端的 JSON 格式化、驗證、轉換與差異比對工作台，支援遮罩敏感欄位與樹狀檢視。"
   }

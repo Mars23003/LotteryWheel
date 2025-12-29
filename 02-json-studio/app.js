@@ -51,6 +51,20 @@
     },
   };
 
+  const typeLabel = (value) => {
+    if (Array.isArray(value)) return '陣列';
+    if (value === null) return 'null';
+    const map = {
+      string: '字串',
+      number: '數字',
+      boolean: '布林',
+      object: '物件',
+      undefined: '未定義',
+      function: '函式',
+    };
+    return map[typeof value] || '未知';
+  };
+
   const examples = [
     {
       label: 'API 回應範例',
@@ -265,9 +279,9 @@
     node.className = 'node';
     const badge = document.createElement('span');
     badge.className = 'badge';
-    badge.textContent = Array.isArray(value) ? 'array' : typeof value;
+    badge.textContent = typeLabel(value);
     const label = document.createElement('span');
-    label.textContent = key != null ? key : 'root';
+    label.textContent = key != null ? key : '根';
     label.dataset.path = path;
     node.appendChild(badge);
     node.appendChild(label);
@@ -276,7 +290,7 @@
     preview.className = 'value';
     if (value && typeof value === 'object') {
       const size = Array.isArray(value) ? value.length : Object.keys(value).length;
-      preview.textContent = `(${size})`;
+      preview.textContent = `(${size} 項)`;
     } else {
       preview.textContent = String(value);
     }

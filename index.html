@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>DevPortfolio - Side Project Collection</title>
+<title>AI 工具坊 - Side Project Collection</title>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
@@ -70,10 +70,10 @@
 <div class="flex flex-col gap-6 flex-1 @[480px]:gap-8">
 <div class="flex flex-col gap-4 text-left">
 <h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl lg:text-6xl">
-                                Building the Future,<br/> <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">One AI Mini Tool</span> at a Time
+                                用簡潔工具，完成複雜任務<br/> <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">AI 工具坊</span>
                             </h1>
 <h2 class="text-slate-600 dark:text-slate-300 text-lg font-normal leading-relaxed max-w-2xl">
-                                獨立的編號資料夾承載每一個小工具，點擊卡片即在新分頁開啟。首頁保持純淨，專注於引導你探索每個專題。
+                                每個編號資料夾都承載一個獨立小工具。點擊卡片以新分頁開啟，讓開發與測試更專注。
                             </h2>
 </div>
 <div class="flex gap-4">
@@ -112,7 +112,7 @@
 <div class="grid place-items-center h-full w-12 text-slate-400 dark:text-[#a492c9]">
 <span class="material-symbols-outlined">search</span>
 </div>
-<input id="search-input" class="h-full w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#a492c9] text-base" placeholder="Search tools (e.g., lottery, JSON)"/>
+<input id="search-input" class="h-full w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#a492c9] text-base" placeholder="搜尋工具（名稱、標籤）"/>
 </label>
 </div>
 <!-- Chips -->
@@ -121,7 +121,7 @@
 <!-- Content Grid -->
 <div id="selected-works" class="space-y-6">
 <div class="flex items-center gap-2">
-<h2 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">Selected Works</h2>
+<h2 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">工具清單</h2>
 <span id="projects-count" class="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 text-xs font-bold text-slate-600 dark:text-slate-300">0</span>
 </div>
 <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -150,6 +150,7 @@
   const chipsContainer = document.getElementById('chips');
   let projects = [];
   let selectedTag = 'All';
+  const DEFAULT_IMAGE = 'https://placehold.co/1200x675/eeeeee/666666.png?text=AI+Tool';
 
   const normalize = (value) => (value || '').toLowerCase();
   const formatDate = (value) => {
@@ -165,7 +166,7 @@
     article.innerHTML = `
       <div class="absolute top-3 left-3 z-10 px-2 py-1 rounded-full bg-primary/90 text-white text-xs font-bold tracking-wide">${project.id || ''}</div>
       <div class="aspect-video w-full bg-slate-200 dark:bg-[#2f2348] relative overflow-hidden">
-        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" style="background-image: url('${project.image || ''}');"></div>
+        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" style="background-image: url('${project.image || DEFAULT_IMAGE}');"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
         <div class="absolute bottom-3 left-3 flex gap-2">${tags}</div>
       </div>
@@ -176,11 +177,11 @@
         <div class="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
           <a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="${project.path || '#'}" target="_blank" rel="noopener">
             <span class="material-symbols-outlined text-[18px]">visibility</span>
-            Open
+            開啟工具
           </a>
           <a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="${project.folder || project.path || '#'}" target="_blank" rel="noopener">
             <span class="material-symbols-outlined text-[18px]">code</span>
-            Folder
+            檔案夾
           </a>
         </div>
       </div>

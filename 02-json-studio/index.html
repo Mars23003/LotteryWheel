@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON 工作室｜格式化、驗證、轉換</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!--
+    CDN 依賴：
+    1) js-yaml（https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js）用於 JSON 轉 YAML。
+    2) jsdiff（https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js）用於文字差異比對。
+
+    部署到 GitHub Pages：
+    1. 將此資料夾推送到 GitHub repo 的 main 或 gh-pages 分支。
+    2. 在專案 Settings → Pages 選擇 Branch 與資料夾（通常是 /root 或 /docs）。
+    3. 儲存後等待數分鐘，使用提供的 GitHub Pages 網址即可存取。
+  -->
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">工具 02</p>
+      <h1>JSON 工作室</h1>
+      <p class="subtitle">格式化 / 驗證 / 轉換 / 搜尋</p>
+    </div>
+    <button id="theme-toggle" class="ghost-btn" aria-label="切換深色模式">深色模式</button>
+  </header>
+
+  <main class="layout">
+    <section class="toolbar" aria-label="工具列">
+      <div class="toolbar-left">
+        <button data-action="format">格式化</button>
+        <button data-action="minify">壓縮</button>
+        <button data-action="validate">驗證</button>
+        <button data-action="sortKeys">排序鍵名</button>
+        <button data-action="stripComments">移除註解</button>
+        <button data-action="decodeString">解碼字串 JSON</button>
+        <div class="dropdown">
+          <button id="convert-toggle">轉換 ▾</button>
+          <div class="dropdown-menu" id="convert-menu">
+            <button data-action="toYaml">轉成 YAML</button>
+            <button data-action="toCsv">轉成 CSV</button>
+            <button data-action="toQuery">轉成 QueryString</button>
+            <button data-action="toTs">轉成 TypeScript 型別</button>
+          </div>
+        </div>
+        <button data-action="diff">比對差異</button>
+        <button data-action="clear" class="ghost-btn">清空</button>
+        <div class="dropdown">
+          <button id="examples-toggle">載入範例 ▾</button>
+          <div class="dropdown-menu" id="examples-menu"></div>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button id="mask-toggle" class="ghost-btn">遮罩敏感欄位：關</button>
+        <button id="settings-btn" class="primary-outline">設定</button>
+      </div>
+    </section>
+
+    <section class="panels" aria-label="編輯器區域">
+      <div class="panel" id="input-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">輸入</p>
+            <p id="status-message" class="status neutral">等待輸入...</p>
+          </div>
+          <div class="metrics" id="input-metrics">0 字元 · 0 行 · 0 KB</div>
+        </div>
+        <div class="dual-input" id="diff-inputs" hidden>
+          <div class="editor-wrap">
+            <div class="label-row"><span>版本 A</span></div>
+            <textarea id="editor-a" spellcheck="false"></textarea>
+          </div>
+          <div class="editor-wrap">
+            <div class="label-row"><span>版本 B</span></div>
+            <textarea id="editor-b" spellcheck="false"></textarea>
+          </div>
+        </div>
+        <textarea id="editor" spellcheck="false"></textarea>
+        <div class="error-line" id="error-line"></div>
+      </div>
+
+      <div class="panel" id="output-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">輸出</p>
+            <p class="status neutral" id="output-status">尚未產生輸出</p>
+          </div>
+          <div class="output-actions">
+            <input id="search-box" type="search" placeholder="搜尋鍵名或值..." />
+            <label class="checkbox"><input type="checkbox" id="search-keys" checked />只搜尋鍵名</label>
+            <label class="checkbox"><input type="checkbox" id="search-values" checked />只搜尋值</label>
+            <label class="checkbox"><input type="checkbox" id="case-sensitive" />大小寫敏感</label>
+            <button id="copy-btn" class="ghost-btn">複製</button>
+            <button id="download-btn" class="ghost-btn">下載</button>
+          </div>
+        </div>
+
+        <div class="view-toggle" role="tablist">
+          <button data-view="raw" class="active">原始</button>
+          <button data-view="tree">樹狀</button>
+        </div>
+
+        <div class="output-body">
+          <pre id="output-raw" class="code"></pre>
+          <div id="output-tree" class="tree" hidden></div>
+          <div id="diff-view" class="code" hidden></div>
+          <div id="large-file-tip" class="tip" hidden>檔案較大，已啟用大檔模式（樹狀最多展開 4 層）。</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div id="settings-modal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="modal-header">
+        <h2 id="settings-title">設定</h2>
+        <button id="settings-close" aria-label="關閉設定">×</button>
+      </div>
+      <div class="modal-body">
+        <label class="field">
+          <span>縮排</span>
+          <select id="indent-size">
+            <option value="2">2 空白</option>
+            <option value="4">4 空白</option>
+            <option value="tab">Tab</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>自動格式化</span>
+          <input type="checkbox" id="auto-format" />
+        </label>
+        <label class="field">
+          <span>JSON5 模式（寬鬆解析）</span>
+          <input type="checkbox" id="json5-mode" />
+        </label>
+        <label class="field">
+          <span>遮罩敏感欄位（逗號分隔）</span>
+          <input type="text" id="mask-keys" placeholder="password,token,idNumber" />
+        </label>
+        <label class="field">
+          <span>大檔模式層級上限</span>
+          <input type="number" id="max-depth" min="1" max="10" value="4" />
+        </label>
+        <p class="hint">超過 1MB 會自動啟用大檔模式，限制樹狀展開層數。</p>
+      </div>
+      <div class="modal-footer">
+        <button id="save-settings" class="primary">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

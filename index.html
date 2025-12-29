@@ -1,151 +1,242 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html class="dark" lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 工具坊 | 小工具集合首頁</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <script id="tailwind-config">
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "wood-light": "#e3caa5",
-            "wood-medium": "#d4b589",
-            "wood-dark": "#8b5e3c",
-            "wood-deep": "#5d3a24",
-            "accent-red": "#cd4631",
-            "paper": "#fbf9f5",
-            "ink": "#2c2c2c",
-          },
-          fontFamily: {
-            display: ["Shippori Mincho", "serif"],
-            body: ["Noto Sans JP", "sans-serif"],
-          },
-        },
-      },
-    };
-  </script>
-  <style>
-    .bg-washi {
-      background-color: #fbf9f5;
-      background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuAkB6fFl9zayDAfHQM01tyhInmntSjOPOFhJDw22pf6KesxkB2ETA-elibBjz6R74xywXJK08eAYpaYFAJAwITOrtY7LX23-5imsyug2UxkicGSl2oMJ1-NupeOws8BRyIvXVSgvJSBwsjupwFVjTvwm-xWb-Aqzz8ZaB-aJ8M-Dm88CRjAcKGkr6ykfqdXSFkKJM3MZC51lR7WqVet_WuB3JlZChgK4cNfvQjQouX5r8E6EGcIGPaTEiJYV3E_eaVsXmddglZvkilh);
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DevPortfolio - Side Project Collection</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5b13ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#161022",
+                        "card-dark": "#1e1629",
+                        "input-dark": "#2f2348"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-washi text-ink font-body flex flex-col">
-  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-wood-medium/20">
-    <div class="max-w-6xl mx-auto px-4 lg:px-8 py-3 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="size-10 rounded-full bg-accent-red text-white flex items-center justify-center shadow-sm ring-2 ring-accent-red/20">
-          <span class="material-symbols-outlined">auto_awesome</span>
-        </div>
-        <div>
-          <p class="text-xs uppercase tracking-widest text-wood-dark/70 font-semibold">AI 工具坊</p>
-          <h1 class="text-xl lg:text-2xl font-display font-bold">迷你 AI 小工具集合</h1>
-        </div>
-      </div>
-      <nav class="flex flex-wrap gap-2 text-sm font-bold">
-        <a class="px-3 py-1.5 rounded-full border border-wood-medium/30 text-wood-deep hover:bg-wood-light/30" href="lottery.html">抽獎機</a>
-        <a class="px-3 py-1.5 rounded-full border border-wood-medium/30 text-wood-deep hover:bg-wood-light/30" href="chat.html">對話助手</a>
-        <a class="px-3 py-1.5 rounded-full border border-wood-medium/30 text-wood-deep hover:bg-wood-light/30" href="notes.html">靈感速記</a>
-      </nav>
-    </div>
-  </header>
-
-  <main class="flex-1">
-    <section class="relative overflow-hidden border-b border-wood-medium/20 bg-gradient-to-br from-wood-light/40 via-white to-sky-50">
-      <div class="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/asfalt-light.png')]"></div>
-      <div class="relative max-w-6xl mx-auto px-4 lg:px-8 py-10 lg:py-16 grid lg:grid-cols-[1.2fr_0.8fr] items-center gap-10">
-        <div class="space-y-4">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-wood-medium/20 shadow-sm">
-            <span class="material-symbols-outlined text-accent-red text-lg">hive</span>
-            <span class="text-wood-deep text-xs font-bold tracking-widest uppercase">多工具入口</span>
-          </div>
-          <h2 class="text-3xl lg:text-4xl font-display font-bold leading-tight">把實驗性的 AI 小工具放在同一個首頁</h2>
-          <p class="text-wood-dark/80 leading-relaxed">每個工具擁有獨立頁面與樣式：日式搖球抽獎機、對話助手與靈感速記。從這裡快速進入或分享連結，方便擴充更多創意。</p>
-          <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-wood-medium/30 text-wood-deep">即開即用</span>
-            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-wood-medium/30 text-wood-deep">跨裝置</span>
-            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-wood-medium/30 text-wood-deep">可擴充</span>
-          </div>
-          <div class="flex flex-wrap gap-3 pt-2">
-            <a href="lottery.html" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-accent-red text-white font-bold shadow-md hover:-translate-y-0.5 transition-transform">
-              <span class="material-symbols-outlined text-sm">casino</span>前往抽獎機
-            </a>
-            <a href="chat.html" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-wood-medium/40 bg-white text-wood-deep font-bold shadow-sm hover:bg-wood-light/30">
-              <span class="material-symbols-outlined text-sm">forum</span>開啟對話助手
-            </a>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="rounded-2xl border border-wood-medium/20 bg-white/80 shadow-md p-4 space-y-3">
-            <div class="flex items-center gap-2 text-wood-dark/80">
-              <span class="material-symbols-outlined">casino</span>
-              <p class="font-bold">日式搖球抽獎機</p>
-            </div>
-            <p class="text-sm text-wood-dark/80 leading-relaxed">木紋造型與彩球動畫，支援名單匯入、得獎紀錄與手機彈窗。</p>
-            <a class="inline-flex items-center gap-2 text-sm font-bold text-accent-red" href="lottery.html">打開抽獎<span class="material-symbols-outlined text-base">north_east</span></a>
-          </div>
-          <div class="rounded-2xl border border-wood-medium/20 bg-white/80 shadow-md p-4 space-y-3">
-            <div class="flex items-center gap-2 text-wood-dark/80">
-              <span class="material-symbols-outlined">forum</span>
-              <p class="font-bold">對話助手</p>
-            </div>
-            <p class="text-sm text-wood-dark/80 leading-relaxed">預留角色與語氣模板，讓你快速組合 prompt 並取得回覆。</p>
-            <a class="inline-flex items-center gap-2 text-sm font-bold text-accent-red" href="chat.html">立即試用<span class="material-symbols-outlined text-base">north_east</span></a>
-          </div>
-          <div class="rounded-2xl border border-wood-medium/20 bg-white/80 shadow-md p-4 space-y-3">
-            <div class="flex items-center gap-2 text-wood-dark/80">
-              <span class="material-symbols-outlined">lightbulb</span>
-              <p class="font-bold">靈感速記</p>
-            </div>
-            <p class="text-sm text-wood-dark/80 leading-relaxed">三行筆記格式，附色票與標籤，適合快速收集靈感。</p>
-            <a class="inline-flex items-center gap-2 text-sm font-bold text-accent-red" href="notes.html">開啟速記<span class="material-symbols-outlined text-base">north_east</span></a>
-          </div>
-          <div class="rounded-2xl border border-wood-medium/20 bg-white/80 shadow-md p-4 space-y-3">
-            <div class="flex items-center gap-2 text-wood-dark/80">
-              <span class="material-symbols-outlined">add_circle</span>
-              <p class="font-bold">未來擴充</p>
-            </div>
-            <p class="text-sm text-wood-dark/80 leading-relaxed">保留卡片位置，方便再加入新的 AI 小工具或互動實驗。</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="max-w-6xl mx-auto px-4 lg:px-8 py-10 grid lg:grid-cols-3 gap-6">
-      <div class="col-span-2 space-y-4">
-        <h3 class="text-2xl font-display font-bold">你可以怎麼使用</h3>
-        <ul class="space-y-3 text-wood-dark/90 leading-relaxed">
-          <li class="flex gap-3"><span class="material-symbols-outlined text-accent-red">check_circle</span><div><strong>活動抽獎</strong>：使用獨立的抽獎頁面，在聚會、線上直播或團隊會議上抽出幸運參與者。</div></li>
-          <li class="flex gap-3"><span class="material-symbols-outlined text-accent-red">check_circle</span><div><strong>快速提問</strong>：到對話助手頁面貼上需求，透過角色/語氣模板獲得更一致的回答。</div></li>
-          <li class="flex gap-3"><span class="material-symbols-outlined text-accent-red">check_circle</span><div><strong>靈感收集</strong>：在速記頁面寫下三行想法，附上標籤與色票，稍後再整理。</div></li>
-        </ul>
-      </div>
-      <div class="bg-white/80 border border-wood-medium/20 rounded-2xl shadow-sm p-5 space-y-3">
-        <p class="text-xs uppercase tracking-widest text-wood-dark/60 font-bold">導覽</p>
-        <p class="text-lg font-display font-bold">每個工具都有自己的網址</p>
-        <p class="text-sm text-wood-dark/80 leading-relaxed">將頁面當成入口網站，複製卡片連結即可分享給同事或朋友，沒有互相干擾的腳本，也方便日後擴充。</p>
-        <div class="grid grid-cols-1 gap-2 text-sm font-semibold text-wood-deep">
-          <a class="flex items-center justify-between px-3 py-2 rounded-lg border border-wood-medium/30 hover:bg-wood-light/30" href="lottery.html"><span>lottery.html</span><span class="material-symbols-outlined text-base">north_east</span></a>
-          <a class="flex items-center justify-between px-3 py-2 rounded-lg border border-wood-medium/30 hover:bg-wood-light/30" href="chat.html"><span>chat.html</span><span class="material-symbols-outlined text-base">north_east</span></a>
-          <a class="flex items-center justify-between px-3 py-2 rounded-lg border border-wood-medium/30 hover:bg-wood-light/30" href="notes.html"><span>notes.html</span><span class="material-symbols-outlined text-base">north_east</span></a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="border-t border-wood-medium/20 bg-white/80">
-    <div class="max-w-6xl mx-auto px-4 lg:px-8 py-4 text-sm text-wood-dark/70 flex flex-wrap justify-between gap-2">
-      <span>AI 工具坊 · 單頁入口</span>
-      <span>每個工具皆為獨立 HTML，方便部署與分享</span>
-    </div>
-  </footer>
-</body>
-</html>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased min-h-screen flex flex-col">
+<!-- Navbar -->
+<div class="w-full border-b border-solid border-slate-200 dark:border-[#2f2348]">
+<div class="px-4 md:px-10 flex justify-center py-3">
+<div class="flex flex-1 items-center justify-between max-w-[1200px]">
+<div class="flex items-center gap-4 text-slate-900 dark:text-white">
+<div class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined">terminal</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">AI 工具坊</h2>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg size-10 bg-slate-100 hover:bg-slate-200 dark:bg-[#2f2348] dark:hover:bg-[#3d2e5e] text-slate-600 dark:text-white transition-colors" aria-label="工具清單">
+<span class="material-symbols-outlined text-[20px]">account_tree</span>
+</button>
+<button class="flex items-center justify-center rounded-lg size-10 bg-slate-100 hover:bg-slate-200 dark:bg-[#2f2348] dark:hover:bg-[#3d2e5e] text-slate-600 dark:text-white transition-colors" aria-label="交流">
+<span class="material-symbols-outlined text-[20px]">forum</span>
+</button>
+<button class="flex items-center justify-center rounded-lg size-10 bg-slate-100 hover:bg-slate-200 dark:bg-[#2f2348] dark:hover:bg-[#3d2e5e] text-slate-600 dark:text-white transition-colors" aria-label="作品">
+<span class="material-symbols-outlined text-[20px]">work</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Layout -->
+<div class="flex flex-1 justify-center px-4 md:px-10 py-6">
+<div class="flex flex-col max-w-[1200px] flex-1 w-full gap-10">
+<!-- Hero Section -->
+<div class="@container">
+<div class="flex flex-col gap-6 py-4 @[480px]:gap-8 @[864px]:flex-row items-center">
+<div class="flex flex-col gap-6 flex-1 @[480px]:gap-8">
+<div class="flex flex-col gap-4 text-left">
+<h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl lg:text-6xl">
+                                Building the Future,<br/> <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">One AI Mini Tool</span> at a Time
+                            </h1>
+<h2 class="text-slate-600 dark:text-slate-300 text-lg font-normal leading-relaxed max-w-2xl">
+                                獨立的編號資料夾承載每一個小工具，點擊卡片即在新分頁開啟。首頁保持純淨，專注於引導你探索每個專題。
+                            </h2>
+</div>
+<div class="flex gap-4">
+<a class="flex items-center justify-center rounded-lg h-12 px-6 bg-primary hover:bg-primary/90 text-white text-base font-bold shadow-lg shadow-primary/25 transition-all hover:translate-y-[-2px]" href="#selected-works">
+<span class="truncate">Browse Tools</span>
+</a>
+<a class="flex items-center justify-center rounded-lg h-12 px-6 bg-slate-200 dark:bg-[#2f2348] hover:bg-slate-300 dark:hover:bg-[#3d2e5e] text-slate-900 dark:text-white text-base font-bold transition-all" href="https://github.com" target="_blank" rel="noopener">
+<span>GitHub</span>
+</a>
+</div>
+</div>
+<!-- Hero Image / Visual -->
+<div class="w-full flex-1 aspect-[4/3] rounded-2xl bg-gradient-to-br from-[#2f2348] to-primary/20 flex items-center justify-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-overlay transition-transform duration-700 group-hover:scale-105" data-alt="Abstract futuristic technology background with glowing nodes"></div>
+<div class="relative z-10 p-8 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10 shadow-2xl">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-3 h-3 rounded-full bg-red-500"></div>
+<div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+<div class="w-3 h-3 rounded-full bg-green-500"></div>
+</div>
+<div class="space-y-2 w-64">
+<div class="h-2 w-3/4 bg-white/20 rounded"></div>
+<div class="h-2 w-full bg-white/10 rounded"></div>
+<div class="h-2 w-5/6 bg-white/10 rounded"></div>
+<div class="h-2 w-4/5 bg-white/10 rounded"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Filters & Search Toolbar -->
+<div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center sticky top-0 z-20 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md py-4 -mx-4 px-4 border-b border-transparent dark:border-white/5 transition-all">
+<!-- Search -->
+<div class="w-full lg:w-96">
+<label class="flex w-full items-center h-12 rounded-lg bg-white dark:bg-[#2f2348] border border-slate-200 dark:border-transparent focus-within:border-primary dark:focus-within:border-primary shadow-sm transition-colors overflow-hidden">
+<div class="grid place-items-center h-full w-12 text-slate-400 dark:text-[#a492c9]">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="h-full w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#a492c9] text-base" placeholder="Search tools (e.g., lottery, chat, notes)"/>
+</label>
+</div>
+<!-- Chips -->
+<div class="flex gap-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar mask-linear">
+<button class="flex h-9 items-center justify-center px-4 rounded-full bg-primary text-white text-sm font-medium transition-transform active:scale-95 whitespace-nowrap shadow-md shadow-primary/20">
+                        All
+                    </button>
+<button class="flex h-9 items-center justify-center px-4 rounded-full bg-white dark:bg-[#2f2348] hover:bg-slate-100 dark:hover:bg-[#3d2e5e] text-slate-700 dark:text-white border border-slate-200 dark:border-transparent text-sm font-medium transition-all active:scale-95 whitespace-nowrap">
+                        Creativity
+                    </button>
+<button class="flex h-9 items-center justify-center px-4 rounded-full bg-white dark:bg-[#2f2348] hover:bg-slate-100 dark:hover:bg-[#3d2e5e] text-slate-700 dark:text-white border border-slate-200 dark:border-transparent text-sm font-medium transition-all active:scale-95 whitespace-nowrap">
+                        Utilities
+                    </button>
+<button class="flex h-9 items-center justify-center px-4 rounded-full bg-white dark:bg-[#2f2348] hover:bg-slate-100 dark:hover:bg-[#3d2e5e] text-slate-700 dark:text-white border border-slate-200 dark:border-transparent text-sm font-medium transition-all active:scale-95 whitespace-nowrap">
+                        Prototypes
+                    </button>
+<button class="flex h-9 items-center justify-center px-4 rounded-full bg-white dark:bg-[#2f2348] hover:bg-slate-100 dark:hover:bg-[#3d2e5e] text-slate-700 dark:text-white border border-slate-200 dark:border-transparent text-sm font-medium transition-all active:scale-95 whitespace-nowrap">
+                        UI/UX
+                    </button>
+</div>
+</div>
+<!-- Content Grid -->
+<div id="selected-works" class="space-y-6">
+<div class="flex items-center gap-2">
+<h2 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">Selected Works</h2>
+<span class="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 text-xs font-bold text-slate-600 dark:text-slate-300">3</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<article class="group relative flex flex-col bg-white dark:bg-[#1e1629] rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5">
+<div class="absolute top-3 left-3 z-10 px-2 py-1 rounded-full bg-primary/90 text-white text-xs font-bold tracking-wide">01</div>
+<div class="aspect-video w-full bg-slate-200 dark:bg-[#2f2348] relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Lottery machine wooden cabinet" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDyoom1qORvjLVAnDeU6QceWM5iVDwSqiGDZ5WJBciXy7DNyg9WFzXQJNkycgGoiUOrY-lR61KWF9y1sgaW5kD1uzyL7dS2A_Iv6lL42tLw7i7LgqMktbWVq-dtufc6eQ8WiQDEM578AwSl9pxLcMMTAYd5EB-ppAwrhwlaYtbW-cllGPYX62cso55-O2T4VrAW4lbAFp2flwEebE_h-6dXJplXSt8kt9cDXLHVo5JLesjs_RnNtCQCbgSGcNyTAuwZXez');"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+<div class="absolute bottom-3 left-3 flex gap-2">
+<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-amber-500/90 text-white backdrop-blur-md">UI</span>
+<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-indigo-500/90 text-white backdrop-blur-md">Animation</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-1">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">日式搖球抽獎機</h3>
+<p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 line-clamp-2">
+                                維持原汁原味的木質質感與抽獎流程，集中於獨立頁面，減少對其他工具的干擾。
+                            </p>
+<div class="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
+<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="01-lottery/index.html" target="_blank" rel="noopener">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+                                    Open
+                                </a>
+<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="01-lottery/" target="_blank" rel="noopener">
+<span class="material-symbols-outlined text-[18px]">code</span>
+                                    Folder
+                                </a>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="group relative flex flex-col bg-white dark:bg-[#1e1629] rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5">
+<div class="absolute top-3 left-3 z-10 px-2 py-1 rounded-full bg-primary/90 text-white text-xs font-bold tracking-wide">02</div>
+<div class="aspect-video w-full bg-slate-200 dark:bg-[#2f2348] relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Chat interface illustration" style="background-image: url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80');"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+<div class="absolute bottom-3 left-3 flex gap-2">
+<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-green-500/90 text-white backdrop-blur-md">Dialogue</span>
+<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-yellow-500/90 text-white backdrop-blur-md">Prompt</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-1">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">對話助手</h3>
+<p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 line-clamp-2">
+                                獨立頁面展示對話模板與角色設定，保留日後串接 API 的空間，點擊即可在新分頁預覽。
+                            </p>
+<div class="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
+<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="02-chat/index.html" target="_blank" rel="noopener">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+                                    Open
+                                </a>
+<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="02-chat/" target="_blank" rel="noopener">
+<span class="material-symbols-outlined text-[18px]">code</span>
+                                    Folder
+                                </a>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="group relative flex flex-col bg-white dark:bg-[#1e1629] rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5">
+<div class="absolute top-3 left-3 z-10 px-2 py-1 rounded-full bg-primary/90 text-white text-xs font-bold tracking-wide">03</div>
+<div class="aspect-video w-full bg-slate-200 dark:bg-[#2f2348] relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Notebook with pen" style="background-image: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80');"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+<div class="absolute bottom-3 left-3 flex gap-2">
+<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-cyan-500/90 text-white backdrop-blur-md">Notes</span>
+<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-purple-500/90 text-white backdrop-blur-md">Ideas</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-1">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">靈感速記</h3>
+<p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 line-clamp-2">
+                                三行筆記的簡潔頁面，適合快速記錄靈感並可依需求擴充儲存或標籤功能。
+                            </p>
+<div class="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
+<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="03-notes/index.html" target="_blank" rel="noopener">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+                                    Open
+                                </a>
+<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="03-notes/" target="_blank" rel="noopener">
+<span class="material-symbols-outlined text-[18px]">code</span>
+                                    Folder
+                                </a>
+</div>
+</div>
+</article>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="mt-auto border-t border-slate-200 dark:border-white/5 py-8 bg-white dark:bg-[#120d1d]">
+<div class="flex flex-col items-center justify-center gap-4 px-4 text-center">
+<p class="text-slate-500 dark:text-[#a492c9] text-sm">© 2024 DevPortfolio · AI 工具坊。每個工具都在獨立分頁中開啟。</p>
+<div class="flex gap-4">
+<a class="text-slate-400 hover:text-primary transition-colors" href="mailto:hello@example.com"><span class="material-symbols-outlined text-[20px]">mail</span></a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="https://github.com" target="_blank" rel="noopener"><span class="material-symbols-outlined text-[20px]">public</span></a>
+</div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>靈感速記 | AI 工具坊</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "wood-light": "#e3caa5",
+            "wood-medium": "#d4b589",
+            "wood-dark": "#8b5e3c",
+            "wood-deep": "#5d3a24",
+            "accent-red": "#cd4631",
+            "paper": "#fbf9f5",
+            "ink": "#2c2c2c",
+          },
+          fontFamily: {
+            display: ["Shippori Mincho", "serif"],
+            body: ["Noto Sans JP", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    .bg-washi {
+      background-color: #fbf9f5;
+      background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuAkB6fFl9zayDAfHQM01tyhInmntSjOPOFhJDw22pf6KesxkB2ETA-elibBjz6R74xywXJK08eAYpaYFAJAwITOrtY7LX23-5imsyug2UxkicGSl2oMJ1-NupeOws8BRyIvXVSgvJSBwsjupwFVjTvwm-xWb-Aqzz8ZaB-aJ8M-Dm88CRjAcKGkr6ykfqdXSFkKJM3MZC51lR7WqVet_WuB3JlZChgK4cNfvQjQouX5r8E6EGcIGPaTEiJYV3E_eaVsXmddglZvkilh);
+    }
+  </style>
+</head>
+  <body class="min-h-screen bg-washi text-ink font-body flex flex-col">
+
+    <main class="flex-1 py-4">
+    <section class="relative overflow-hidden border-b border-wood-medium/20 bg-gradient-to-br from-wood-light/40 via-white to-sky-50">
+      <div class="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/asfalt-light.png')]"></div>
+      <div class="relative max-w-6xl mx-auto px-4 lg:px-8 py-10 lg:py-14 grid lg:grid-cols-[1.1fr_0.9fr] items-center gap-8">
+        <div class="space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-wood-medium/20 shadow-sm">
+              <span class="material-symbols-outlined text-accent-red text-lg">edit_note</span>
+              <span class="text-wood-deep text-xs font-bold tracking-widest uppercase">03 · 三行想法簿</span>
+            </div>
+          <h2 class="text-3xl lg:text-4xl font-display font-bold leading-tight">快速寫下靈感、網址或待辦，保留色票與標籤</h2>
+          <p class="text-wood-dark/80 leading-relaxed">獨立的速記頁面，方便之後串接後端或匯出功能，不會影響其他工具。</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-wood-medium/30 text-wood-deep">筆記格式</span>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-wood-medium/30 text-wood-deep">色票標籤</span>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-wood-medium/30 text-wood-deep">分享連結</span>
+          </div>
+        </div>
+        <div class="rounded-2xl border border-wood-medium/20 bg-white/90 shadow-lg p-6 space-y-4">
+          <div class="space-y-2">
+            <label class="text-xs font-bold uppercase tracking-widest text-wood-dark/60">重點</label>
+            <input class="w-full rounded-lg border border-wood-medium/40 px-3 py-2 text-sm" placeholder="一句話重點" value="AI 工具坊的導覽" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-bold uppercase tracking-widest text-wood-dark/60">補充</label>
+            <textarea class="w-full min-h-[120px] rounded-lg border border-wood-medium/40 px-3 py-2 text-sm" placeholder="補充想法">把抽獎機、對話助手與速記分開成獨立頁面。</textarea>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-bold uppercase tracking-widest text-wood-dark/60">心情色票</label>
+            <div class="grid grid-cols-5 gap-2">
+              <button class="h-10 rounded-lg bg-gradient-to-br from-emerald-300 to-emerald-500 border border-white/40 shadow-inner"></button>
+              <button class="h-10 rounded-lg bg-gradient-to-br from-sky-300 to-blue-500 border border-white/40 shadow-inner"></button>
+              <button class="h-10 rounded-lg bg-gradient-to-br from-amber-300 to-orange-500 border border-white/40 shadow-inner"></button>
+              <button class="h-10 rounded-lg bg-gradient-to-br from-rose-300 to-rose-500 border border-white/40 shadow-inner"></button>
+              <button class="h-10 rounded-lg bg-gradient-to-br from-slate-200 to-slate-400 border border-white/40 shadow-inner"></button>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-bold uppercase tracking-widest text-wood-dark/60">標籤</label>
+            <div class="flex gap-2 flex-wrap text-xs font-semibold">
+              <span class="px-2 py-1 rounded bg-wood-light/40 text-wood-deep">#UX</span>
+              <span class="px-2 py-1 rounded bg-wood-light/40 text-wood-deep">#介面</span>
+              <span class="px-2 py-1 rounded bg-wood-light/40 text-wood-deep">#demo</span>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button class="px-4 py-2 rounded-lg bg-accent-red text-white font-bold text-sm shadow hover:-translate-y-0.5 transition-transform">送往對話助手（示意）</button>
+            <button class="px-4 py-2 rounded-lg border border-wood-medium/40 bg-white text-sm font-bold text-wood-deep">匯出文字</button>
+          </div>
+          <div class="rounded-xl border border-wood-medium/40 bg-wood-light/20 p-4 space-y-2">
+            <p class="text-xs font-bold uppercase tracking-widest text-wood-dark/60">已存卡片（展示）</p>
+            <ul class="space-y-1 text-sm text-wood-deep">
+              <li>✓ 使用者導覽文案</li>
+              <li>✓ 新工具卡片清單</li>
+              <li>• 要加入的圖示樣式</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

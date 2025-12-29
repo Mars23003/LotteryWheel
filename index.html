@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="dark" lang="en"><head>
+<html class="dark" lang="en">
+<head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Refined Japanese Lottery Shaker</title>
+<title>AI 工具坊 - Side Project Collection</title>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&amp;family=Noto+Sans+JP:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script id="tailwind-config">
         tailwind.config = {
@@ -14,657 +16,261 @@
             theme: {
                 extend: {
                     colors: {
-                        "wood-light": "#e3caa5",
-                        "wood-medium": "#d4b589",
-                        "wood-dark": "#8b5e3c",
-                        "wood-deep": "#5d3a24",
-                        "accent-red": "#cd4631",
-                        "paper": "#fbf9f5",
-                        "ink": "#2c2c2c",
-                        "primary": "#cd4631",
+                        "primary": "#5b13ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#161022",
+                        "card-dark": "#1e1629",
+                        "input-dark": "#2f2348"
                     },
                     fontFamily: {
-                        "display": ["Shippori Mincho", "serif"],
-                        "body": ["Noto Sans JP", "sans-serif"],
+                        "display": ["Inter", "sans-serif"]
                     },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "1rem", "full": "9999px"},
-                    animation: {
-                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite',
-                        'tumble': 'tumble 4s linear infinite',
-                        'bounce-slow': 'bounce 3s infinite',
-                        'float': 'float 3s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        shake: {
-                            '10%, 90%': { transform: 'rotate(-1deg)' },
-                            '20%, 80%': { transform: 'rotate(2deg)' },
-                            '30%, 50%, 70%': { transform: 'rotate(-4deg)' },
-                            '40%, 60%': { transform: 'rotate(4deg)' }
-                        },
-                        tumble: {
-                            '0%': { transform: 'rotate(0deg)' },
-                            '100%': { transform: 'rotate(360deg)' }
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-5px)' }
-                        }
-                    }
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
                 },
             },
         }
     </script>
 <style>
-        .bg-wood {
-            background-color: #d4b589;
-            background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDyoom1qORvjLVAnDeU6QceWM5iVDwSqiGDZ5WJBciXy7DNyg9WFzXQJNkycgGoiUOrY-lR61KWF9y1sgaW5kD1uzyL7dS2A_Iv6lL42tLw7i7LgqMktbWVq-dtufc6eQ8WiQDEM578AwSl9pxLcMMTAYd5EB-ppAwHaUSAIBfwrhwlaYtbW-cllGPYX62cso55-O2T4VrAW4lbAFp2flwEebE_h-6dXJplXSt8kt9cDXLHVo5JLesjs_RnNtCQCbgSGcNyTAuwZXez)
-        }
-        .bg-wood-dark {
-            background-color: #8b5e3c;
-            background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuB9Ve26xYlnDhaSh_rcI3MEdV-SQxx1b64Lri7_3tH_uPY1yH2bLC9sUsKmT5Ym2Q7huN_tOK4absp4zEwbuSullXzVP4Uv5oZEYOeQ4O5qbJYOfpkESe5felmn7aVvTsJudwAJdGjL0UWzAkvNPMsJbWrpmp_p4C3myXiPwcmJcdIayEr4sNv4iYB3xZ24EFbSU48Bmip5nQ8f0jtiUQz_b-XXKHo_HalSQhEkNIMn0RfgBlUbtayxLcG8tGsPt5C-kbbevQB2yiFJ)
-        }.hexagon {
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-        }
-        .bg-washi {
-            background-color: #fbf9f5;
-            background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuAkB6fFl9zayDAfHQM01tyhInmntSjOPOFhJDw22pf6KesxkB2ETA-elibBjz6R74xywXJK08eAYpaYFAJAwITOrtY7LX23-5imsyug2UxkicGSl2oMJ1-NupeOws8BRyIvXVSgvJSBwsjupwFVjTvwm-xWb-Aqzz8ZaB-aJ8M-Dm88CRjAcKGkr6ykfqdXSFkKJM3MZC51lR7WqVet_WuB3JlZChgK4cNfvQjQouX5r8E6EGcIGPaTEiJYV3E_eaVsXmddglZvkilh)
-        }.wood-texture-rich {
-            background-color: #8b5e3c;
-            background-image: 
-                repeating-linear-gradient(105deg, transparent 0, transparent 4px, rgba(50, 30, 10, 0.1) 4px, rgba(50, 30, 10, 0.15) 6px),
-                linear-gradient(to bottom right, #a06e48, #5d3a24);
-        }
-        .wood-texture-light {
-            background-color: #d4b589;
-            background-image: 
-                repeating-linear-gradient(45deg, rgba(93, 58, 36, 0.08) 0px, rgba(93, 58, 36, 0.08) 2px, transparent 2px, transparent 8px),
-                linear-gradient(to bottom, #e3caa5, #c19e6e);
-        }
-        .wood-bevel {
-            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.3) 100%);
-        }
-        .ball-shadow-inset {
-            box-shadow: inset 0 -6px 8px rgba(0,0,0,0.4), inset 0 2px 6px rgba(255,255,255,0.5);
-        }
-        .ball-shadow-drop {
-            box-shadow: 2px 4px 8px rgba(0,0,0,0.3);
-        }
-        .ball-specular {
-            background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 15%, rgba(255,255,255,0) 60%);
-        }
-        .metallic-gold {
-            background: linear-gradient(135deg, #fce38a 0%, #bf953f 50%, #fcf6ba 100%);
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-        }
-        .glass-shine {
-            background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.15) 55%, rgba(255,255,255,0) 100%);
-        }
-        @keyframes crank {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .animate-crank {
-            animation: crank 1s linear infinite;
-        }
-        @keyframes dropOut {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            60% { transform: translateY(150px) rotate(180deg); opacity: 1; }
-            80% { transform: translateY(140px) rotate(180deg); opacity: 1; }
-            100% { transform: translateY(200px) rotate(200deg); opacity: 0; }
-        }
-        .animate-drop {
-            animation: dropOut 1s ease-in-out forwards;
-        }
-        @keyframes box-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .animate-box-spin {
-            animation: box-spin 1s linear infinite;
-        }
-        @keyframes spin-slow-down {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .animate-spin-slow-down {
-            animation: spin-slow-down 2.5s ease-out forwards;
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
     </style>
 </head>
-<body class="bg-paper text-ink font-body min-h-screen h-[100dvh] flex flex-col overflow-hidden bg-washi relative">
-<header class="flex items-center justify-between whitespace-nowrap border-b border-wood-medium/30 px-4 py-2.5 lg:px-12 lg:py-4 bg-paper/90 backdrop-blur-md sticky top-0 z-50">
-<div class="flex items-center gap-3 lg:gap-4">
-<div class="size-8 lg:size-10 flex items-center justify-center rounded bg-accent-red text-white shadow-sm ring-2 ring-accent-red/20">
-<span class="material-symbols-outlined text-[20px] lg:text-[24px]">casino</span>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased min-h-screen flex flex-col">
+<!-- Navbar -->
+<div class="w-full border-b border-solid border-slate-200 dark:border-[#2f2348]">
+<div class="px-4 md:px-10 flex justify-center py-3">
+<div class="flex flex-1 items-center justify-between max-w-[1200px]">
+<div class="flex items-center gap-4 text-slate-900 dark:text-white">
+<div class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined">terminal</span>
 </div>
-<div>
-<h2 class="text-ink text-base lg:text-xl font-display font-bold leading-tight tracking-wide">隨機抽獎機</h2>
-<p class="text-[9px] lg:text-xs text-wood-dark tracking-widest uppercase opacity-80">Lottery System</p>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">AI 工具坊</h2>
 </div>
-</div>
-<div class="flex flex-1 justify-end gap-2 lg:gap-4 items-center">
-<button id="mobile-winners-btn" class="lg:hidden flex size-9 items-center justify-center rounded-lg border border-wood-medium text-wood-deep hover:bg-wood-light/20 transition-colors">
-<span class="material-symbols-outlined text-[20px]">trophy</span>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg size-10 bg-slate-100 hover:bg-slate-200 dark:bg-[#2f2348] dark:hover:bg-[#3d2e5e] text-slate-600 dark:text-white transition-colors" aria-label="工具清單">
+<span class="material-symbols-outlined text-[20px]">account_tree</span>
 </button>
-<button id="settings-btn" class="flex h-9 lg:h-10 items-center justify-center gap-2 rounded-lg border border-wood-medium text-wood-deep text-xs lg:text-sm font-medium px-3 lg:px-4 hover:bg-wood-light/20 transition-colors">
-<span class="material-symbols-outlined text-[16px] lg:text-[18px]">settings</span>
-<span class="hidden sm:inline">Settings</span>
+<button class="flex items-center justify-center rounded-lg size-10 bg-slate-100 hover:bg-slate-200 dark:bg-[#2f2348] dark:hover:bg-[#3d2e5e] text-slate-600 dark:text-white transition-colors" aria-label="交流">
+<span class="material-symbols-outlined text-[20px]">forum</span>
 </button>
-<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8 lg:size-10 border-2 border-wood-light shadow-sm" data-alt="User avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDGBjz4kL8UKcXX8UT2c5GL00q-61Ny6w5O68CxRj5spEcTkjPpr9UqmKIVpCzNuwNWIPqFk77iLRLvFoxWuH6gVmXu_hFnPO9XkBT0pe04Vo0yoeselg_mD_ryEo38_foKKFO7cYo4aQ7PCW1r8VEDl0UCJ0wDZD-6KJy2rqtKmzmO7-J7MVqIX0N5FqBtPqOGLrCx0SXXMoS1tgVB5GIoAVD8rqK1FBlb3Y5CsM-qfg38gGZKFC8Ytc8-r8T9BVIcAc99DfusRtdk");'></div>
-</div>
-</header>
-<main class="flex-1 flex flex-col lg:flex-row relative overflow-hidden">
-<div class="flex-1 lg:static lg:flex-1 flex items-center justify-center bg-paper relative p-3 overflow-hidden lg:pb-12">
-<div class="absolute top-10 left-10 w-64 h-64 rounded-full border border-wood-medium/20 opacity-40"></div>
-<div class="absolute bottom-20 right-40 w-96 h-96 rounded-full bg-wood-light/10 blur-3xl"></div>
-<div class="relative w-full max-w-[600px] aspect-square flex items-center justify-center scale-75 sm:scale-85 lg:scale-100">
-<div class="absolute bottom-10 w-[260px] sm:w-[280px] lg:w-[320px] flex justify-between px-6 sm:px-8 z-0">
-<div class="w-6 h-48 bg-wood-deep rounded-t-lg origin-bottom -rotate-[12deg] shadow-lg relative overflow-hidden border-r border-black/20">
-<div class="absolute inset-0 bg-black/10 w-1/2"></div>
-<div class="wood-texture-rich absolute inset-0 opacity-80"></div>
-</div>
-<div class="w-6 h-48 bg-wood-deep rounded-t-lg origin-bottom rotate-[12deg] shadow-lg relative overflow-hidden border-l border-black/20">
-<div class="absolute inset-0 bg-white/10 w-1/2 right-0"></div>
-<div class="wood-texture-rich absolute inset-0 opacity-80"></div>
-</div>
-<div class="absolute bottom-12 left-[50px] right-[50px] h-4 bg-wood-dark rounded shadow-md flex items-center justify-center">
-<div class="w-full h-full wood-texture-rich rounded opacity-90"></div>
-</div>
-</div>
-<div class="relative w-[280px] h-[320px] sm:w-[294px] sm:h-[340px] lg:w-[364px] lg:h-[420px] z-10 transition-transform hover:scale-[1.01] duration-500 group">
-<div class="w-full h-full relative drop-shadow-2xl" id="shaker-body">
-<div class="absolute inset-0 hexagon wood-texture-rich flex items-center justify-center shadow-2xl border-b-4 border-black/20">
-<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-20 mix-blend-overlay"></div>
-<div class="absolute inset-0 wood-bevel mix-blend-soft-light opacity-50 pointer-events-none"></div>
-</div>
-<div class="absolute inset-[16px] lg:inset-[20px] hexagon bg-wood-deep shadow-[inset_0_0_15px_rgba(0,0,0,0.6)] flex items-center justify-center"></div>
-<div class="absolute inset-[24px] lg:inset-[30px] hexagon wood-texture-light shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] flex items-center justify-center border border-wood-dark/30">
-<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-10"></div>
-</div>
-<div class="absolute inset-[36px] lg:inset-[44px] hexagon bg-blue-50/10 backdrop-blur-[1px] border border-white/40 shadow-[inset_0_0_30px_rgba(0,0,0,0.2)] overflow-hidden z-10 ring-1 ring-white/20">
-<div class="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] glass-shine -rotate-45 pointer-events-none z-30"></div>
-<div class="absolute bottom-0 w-full h-2/3 bg-gradient-to-t from-black/20 via-black/5 to-transparent pointer-events-none z-0"></div>
-<div id="ball-container" class="absolute inset-0 flex flex-wrap content-end justify-center px-8 pb-10 lg:pb-14 gap-x-0.5 gap-y-0 z-10">
-<!-- Balls will be injected here by JS -->
-</div>
-</div>
-
-<!-- New Center Handle (Based on user image) -->
-<div id="handle-arm" class="absolute top-1/2 left-1/2 z-50 cursor-pointer transition-transform duration-300 hover:scale-105" style="width: 0; height: 0;">
-    <!-- Arm Container - Rotates around center -->
-    <div class="absolute top-1/2 left-1/2 -translate-y-1/2 h-10 w-40 bg-[#e8dcc5] rounded-full border border-[#ccbfa5] shadow-xl origin-[20px_50%] flex items-center" style="transform: translate(-20px, -50%);">
-            <!-- Wood Texture -->
-            <div class="absolute inset-0 rounded-full opacity-40" style="background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');"></div>
-            
-            <!-- Pivot (Center) -->
-            <div class="absolute left-1 top-1/2 -translate-y-1/2 size-8 rounded-full bg-[#e8dcc5] border border-[#b0a48b] flex items-center justify-center">
-                <span class="material-symbols-outlined text-black/80 font-bold text-2xl">add</span>
-            </div>
-
-            <!-- Knob (End) -->
-            <div class="absolute right-1 top-1/2 -translate-y-1/2 size-12 rounded-full bg-[#d69e58] border-b-4 border-[#a67c43] shadow-lg flex items-center justify-center">
-                <div class="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-black/10"></div>
-                <!-- Grid texture for grip -->
-                <div class="absolute inset-2 rounded-full border border-[#8b5e3c]/20 opacity-50" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px);"></div>
-            </div>
-    </div>
-</div>
-
-</div>
-<div class="absolute top-1/2 -right-12 z-0 group-hover:-right-10 transition-all duration-300 hidden">
-<!-- Old handle removed -->
-</div>
-</div>
-</div>
-</div>
-<div class="flex-shrink-0 w-full lg:static lg:w-[480px] lg:h-full flex flex-col justify-center px-4 py-4 lg:p-12 border-t lg:border-l border-wood-medium/20 bg-paper relative z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] lg:shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.05)]">
-<div class="flex flex-col gap-2 lg:gap-8 max-w-md mx-auto w-full">
-<div class="hidden lg:flex flex-col gap-3 border-b border-wood-medium/20 pb-6">
-<div class="flex items-center gap-2 mb-1">
-<span class="px-3 py-1 rounded-full text-xs font-bold bg-wood-dark text-white uppercase tracking-widest shadow-sm">Live Draw</span>
-</div>
-<h1 class="text-ink text-4xl font-display font-bold leading-tight">日式搖球機</h1>
-<p class="text-wood-dark/70 text-base font-normal leading-relaxed">轉動把手即可釋放獎品球。評選過程公平透明。</p>
-</div>
-<div class="hidden lg:grid grid-cols-2 gap-3 lg:gap-4">
-<div class="flex flex-col gap-1 rounded-xl p-3 lg:p-5 border border-wood-medium/30 bg-white shadow-sm hover:shadow-md transition-shadow">
-<div class="flex items-center gap-2 text-wood-dark/60 mb-1">
-<span class="material-symbols-outlined text-[18px] lg:text-[20px]">group</span>
-<p class="text-[10px] lg:text-xs font-bold uppercase tracking-wider">參與者</p>
-</div>
-<p id="participants-count" class="text-ink text-2xl lg:text-3xl font-display font-bold">0</p>
-</div>
-<div class="flex flex-col gap-1 rounded-xl p-3 lg:p-5 border border-wood-medium/30 bg-white shadow-sm hover:shadow-md transition-shadow">
-<div class="flex items-center gap-2 text-wood-dark/60 mb-1">
-<span class="material-symbols-outlined text-[18px] lg:text-[20px]">redeem</span>
-<p class="text-[10px] lg:text-xs font-bold uppercase tracking-wider">剩餘數量</p>
-</div>
-<p id="prizes-left" class="text-accent-red text-2xl lg:text-3xl font-display font-bold">0</p>
-</div>
-</div>
-<div class="hidden lg:block bg-wood-light/20 rounded-lg p-4 border border-wood-medium/20">
-<div class="flex gap-3">
-<span class="material-symbols-outlined text-[20px] text-wood-dark mt-0.5">info</span>
-<p class="text-wood-deep/80 text-sm leading-relaxed font-medium">
-                           每個球代表一名獨特的參賽者。
-                        </p>
-</div>
-</div>
-<div class="flex flex-row lg:flex-col gap-2 lg:gap-4 mt-0 lg:mt-2">
-<button id="draw-btn" class="flex-[2] group relative flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 lg:h-16 bg-accent-red hover:bg-[#b03a27] transition-all text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
-<div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')]"></div>
-<span class="material-symbols-outlined mr-2 lg:mr-3 text-xl lg:text-2xl group-hover:rotate-180 transition-transform duration-500">sync</span>
-<span class="text-lg lg:text-xl font-display font-bold tracking-wide">開始抽獎</span>
-</button>
-<button id="reset-btn" class="flex-1 flex w-full cursor-pointer items-center justify-center rounded-lg h-11 lg:h-12 bg-transparent border border-wood-medium/50 hover:bg-wood-medium/10 transition-colors text-wood-deep text-sm lg:text-base font-bold tracking-wide">
-<span class="material-symbols-outlined mr-1 lg:mr-2 text-lg">restart_alt</span>
-<span>重置</span>
+<button class="flex items-center justify-center rounded-lg size-10 bg-slate-100 hover:bg-slate-200 dark:bg-[#2f2348] dark:hover:bg-[#3d2e5e] text-slate-600 dark:text-white transition-colors" aria-label="作品">
+<span class="material-symbols-outlined text-[20px]">work</span>
 </button>
 </div>
-<div class="hidden lg:block mt-2 lg:mt-6 pt-3 lg:pt-6 border-t border-wood-medium/20">
-<p class="text-[10px] lg:text-xs text-wood-dark/50 font-bold uppercase tracking-widest mb-2 lg:mb-4">Recent Winners</p>
-<div id="recent-winners" class="flex flex-nowrap lg:flex-wrap overflow-x-auto lg:overflow-visible gap-3 pb-2 lg:pb-0 scrollbar-hide">
-<!-- Winners will be injected here -->
+</div>
+</div>
+</div>
+<!-- Main Layout -->
+<div class="flex flex-1 justify-center px-4 md:px-10 py-6">
+<div class="flex flex-col max-w-[1200px] flex-1 w-full gap-10">
+<!-- Hero Section -->
+<div class="@container">
+<div class="flex flex-col gap-6 py-4 @[480px]:gap-8 @[864px]:flex-row items-center">
+<div class="flex flex-col gap-6 flex-1 @[480px]:gap-8">
+<div class="flex flex-col gap-4 text-left">
+<h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl lg:text-6xl">
+                                用簡潔工具，完成複雜任務<br/> <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">AI 工具坊</span>
+                            </h1>
+<h2 class="text-slate-600 dark:text-slate-300 text-lg font-normal leading-relaxed max-w-2xl">
+                                每個編號資料夾都承載一個獨立小工具。點擊卡片以新分頁開啟，讓開發與測試更專注。
+                            </h2>
+</div>
+<div class="flex gap-4">
+<a class="flex items-center justify-center rounded-lg h-12 px-6 bg-primary hover:bg-primary/90 text-white text-base font-bold shadow-lg shadow-primary/25 transition-all hover:translate-y-[-2px]" href="#selected-works">
+<span class="truncate">Browse Tools</span>
+</a>
+<a class="flex items-center justify-center rounded-lg h-12 px-6 bg-slate-200 dark:bg-[#2f2348] hover:bg-slate-300 dark:hover:bg-[#3d2e5e] text-slate-900 dark:text-white text-base font-bold transition-all" href="https://github.com" target="_blank" rel="noopener">
+<span>GitHub</span>
+</a>
+</div>
+</div>
+<!-- Hero Image / Visual -->
+<div class="w-full flex-1 aspect-[4/3] rounded-2xl bg-gradient-to-br from-[#2f2348] to-primary/20 flex items-center justify-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-overlay transition-transform duration-700 group-hover:scale-105" data-alt="Abstract futuristic technology background with glowing nodes"></div>
+<div class="relative z-10 p-8 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10 shadow-2xl">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-3 h-3 rounded-full bg-red-500"></div>
+<div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+<div class="w-3 h-3 rounded-full bg-green-500"></div>
+</div>
+<div class="space-y-2 w-64">
+<div class="h-2 w-3/4 bg-white/20 rounded"></div>
+<div class="h-2 w-full bg-white/10 rounded"></div>
+<div class="h-2 w-5/6 bg-white/10 rounded"></div>
+<div class="h-2 w-4/5 bg-white/10 rounded"></div>
 </div>
 </div>
 </div>
 </div>
-</main>
-<div id="winner-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-wood-deep/80 backdrop-blur-sm p-4">
-<div class="bg-paper border-2 border-wood-medium rounded-xl p-10 max-w-sm w-full shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
-<div class="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/seigaiha.png')]"></div>
-<div class="size-20 rounded-full bg-accent-red text-white flex items-center justify-center mb-6 shadow-lg border-4 border-white relative z-10">
-<span class="material-symbols-outlined text-[40px]">celebration</span>
 </div>
-<h3 class="text-ink text-3xl font-display font-bold mb-2 relative z-10">恭喜!</h3>
-<p class="text-wood-dark mb-8 text-sm uppercase tracking-widest relative z-10">You Are Winner!</p>
-<div id="winner-name" class="text-accent-red text-5xl font-display font-black mb-10 relative z-10 animate-bounce">
-                Winner
-            </div>
-<button id="close-modal-btn" class="w-full h-12 rounded-lg bg-wood-dark text-white font-bold hover:bg-wood-deep transition-colors relative z-10 uppercase tracking-wider text-sm">
-                Close
-            </button>
+<!-- Filters & Search Toolbar -->
+<div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center sticky top-0 z-20 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md py-4 -mx-4 px-4 border-b border-transparent dark:border-white/5 transition-all">
+<!-- Search -->
+<div class="w-full lg:w-96">
+<label class="flex w-full items-center h-12 rounded-lg bg-white dark:bg-[#2f2348] border border-slate-200 dark:border-transparent focus-within:border-primary dark:focus-within:border-primary shadow-sm transition-colors overflow-hidden">
+<div class="grid place-items-center h-full w-12 text-slate-400 dark:text-[#a492c9]">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input id="search-input" class="h-full w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#a492c9] text-base" placeholder="搜尋工具（名稱、標籤）"/>
+</label>
+</div>
+<!-- Chips -->
+<div id="chips" class="flex gap-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar mask-linear"></div>
+</div>
+<!-- Content Grid -->
+<div id="selected-works" class="space-y-6">
+<div class="flex items-center gap-2">
+<h2 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">工具清單</h2>
+<span id="projects-count" class="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 text-xs font-bold text-slate-600 dark:text-slate-300">0</span>
+</div>
+<div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+<div id="empty-state" class="hidden border border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-6 text-center text-slate-500 dark:text-slate-300 bg-white/60 dark:bg-white/5">
+    <p class="font-semibold mb-1">目前沒有可顯示的專案</p>
+    <p class="text-sm">請確認 <code class="font-mono text-xs">projects.json</code> 是否包含資料。</p>
 </div>
 </div>
-
-<!-- Settings Modal -->
-<div id="settings-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-wood-deep/80 backdrop-blur-sm p-4">
-    <div class="bg-paper border-2 border-wood-medium rounded-xl p-6 max-w-md w-full shadow-2xl flex flex-col relative overflow-hidden">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-ink text-xl font-display font-bold">設定</h3>
-            <button id="close-settings-btn" class="text-wood-dark hover:text-accent-red">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        <div class="mb-4">
-            <label class="block text-xs font-bold uppercase tracking-wider text-wood-dark mb-2">參與者 (每行一人)</label>
-            <textarea id="participants-input" class="w-full h-48 p-3 rounded-lg border border-wood-medium/50 bg-white text-ink font-body text-sm focus:ring-2 focus:ring-accent-red focus:border-transparent resize-none" placeholder="Enter names..."></textarea>
-        </div>
-        <div class="flex justify-end gap-3">
-            <button id="save-settings-btn" class="px-4 py-2 rounded-lg bg-accent-red text-white font-bold hover:bg-[#b03a27] transition-colors text-sm">
-                儲存和重設
-            </button>
-        </div>
-    </div>
 </div>
-
-<!-- Winners Modal (Mobile) -->
-<div id="winners-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-wood-deep/80 backdrop-blur-sm p-4">
-    <div class="bg-paper border-2 border-wood-medium rounded-xl p-6 max-w-md w-full shadow-2xl flex flex-col relative overflow-hidden max-h-[80vh]">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-ink text-xl font-display font-bold">得獎名單</h3>
-            <button id="close-winners-btn" class="text-wood-dark hover:text-accent-red">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        <div id="mobile-winners-list" class="flex flex-col gap-2 overflow-y-auto pr-2">
-            <!-- Winners will be injected here -->
-        </div>
-    </div>
 </div>
-
+<!-- Footer -->
+<footer class="mt-auto border-t border-slate-200 dark:border-white/5 py-8 bg-white dark:bg-[#120d1d]">
+<div class="flex flex-col items-center justify-center gap-4 px-4 text-center">
+<p class="text-slate-500 dark:text-[#a492c9] text-sm">© 2024 DevPortfolio · AI 工具坊。每個工具都在獨立分頁中開啟。</p>
+<div class="flex gap-4">
+<a class="text-slate-400 hover:text-primary transition-colors" href="mailto:hello@example.com"><span class="material-symbols-outlined text-[20px]">mail</span></a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="https://github.com" target="_blank" rel="noopener"><span class="material-symbols-outlined text-[20px]">public</span></a>
+</div>
+</div>
+</footer>
 <script>
-    // Configuration
-    const COLORS = [
-        { bg: 'bg-gradient-to-br from-slate-100 to-slate-300', text: 'text-slate-800', ring: 'ring-slate-200' },
-        { bg: 'bg-gradient-to-br from-pink-400 to-rose-600', text: 'text-white', ring: 'ring-rose-200' },
-        { bg: 'bg-gradient-to-br from-sky-400 to-blue-600', text: 'text-white', ring: 'ring-blue-200' },
-        { bg: 'bg-gradient-to-br from-red-500 to-red-700', text: 'text-white', ring: 'ring-red-200' },
-        { bg: 'bg-gradient-to-br from-emerald-400 to-emerald-600', text: 'text-white', ring: 'ring-emerald-200' },
-        { bg: 'bg-gradient-to-br from-violet-400 to-purple-700', text: 'text-white', ring: 'ring-purple-200' },
-        { bg: 'bg-gradient-to-br from-orange-400 to-orange-600', text: 'text-white', ring: 'ring-orange-200' },
-        { bg: 'bg-gradient-to-br from-teal-400 to-teal-600', text: 'text-white', ring: 'ring-teal-200' },
-        { bg: 'bg-gradient-to-br from-indigo-400 to-indigo-600', text: 'text-white', ring: 'ring-indigo-200' },
-        { bg: 'bg-gradient-to-br from-lime-400 to-lime-600', text: 'text-white', ring: 'ring-lime-200' },
-    ];
+  const projectsGrid = document.getElementById('projects-grid');
+  const projectsCount = document.getElementById('projects-count');
+  const emptyState = document.getElementById('empty-state');
+  const searchInput = document.getElementById('search-input');
+  const chipsContainer = document.getElementById('chips');
+  let projects = [];
+  let selectedTag = 'All';
+  const DEFAULT_IMAGE = 'https://placehold.co/1200x675/eeeeee/666666.png?text=AI+Tool';
 
-    // State
-    let participants = [
-        "Kenji", "Yuki", "Hana", "Taro", "Sakura", 
-        "Hiro", "Mika", "Ren", "Aiko", "Daiki", 
-        "Emi", "Kaito"
-    ].map(name => ({ name, color: getRandomColor() }));
-    let winners = [];
-    let isSpinning = false;
+  const normalize = (value) => (value || '').toLowerCase();
+  const formatDate = (value) => {
+    if (!value) return '';
+    const parsed = new Date(value);
+    return isNaN(parsed) ? value : parsed.toLocaleDateString('zh-TW');
+  };
 
-    // DOM Elements
-    const ballContainer = document.getElementById('ball-container');
-    const participantsCountEl = document.getElementById('participants-count');
-    const prizesLeftEl = document.getElementById('prizes-left');
-    const recentWinnersEl = document.getElementById('recent-winners');
-    const drawBtn = document.getElementById('draw-btn');
-    const resetBtn = document.getElementById('reset-btn');
-    const settingsBtn = document.getElementById('settings-btn');
-    const winnerModal = document.getElementById('winner-modal');
-    const winnerNameEl = document.getElementById('winner-name');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    const settingsModal = document.getElementById('settings-modal');
-    const closeSettingsBtn = document.getElementById('close-settings-btn');
-    const saveSettingsBtn = document.getElementById('save-settings-btn');
-    const participantsInput = document.getElementById('participants-input');
-    const shakerBody = document.getElementById('shaker-body');
-    const handleArm = document.getElementById('handle-arm');
-    
-    // Mobile Winners Modal
-    const mobileWinnersBtn = document.getElementById('mobile-winners-btn');
-    const winnersModal = document.getElementById('winners-modal');
-    const closeWinnersBtn = document.getElementById('close-winners-btn');
-    const mobileWinnersList = document.getElementById('mobile-winners-list');
+  const createCard = (project) => {
+    const article = document.createElement('article');
+    article.className = 'group relative flex flex-col bg-white dark:bg-[#1e1629] rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5';
+    const tags = (project.tags || []).map((tag) => `<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-primary/90 text-white backdrop-blur-md">${tag}</span>`).join('');
+    article.innerHTML = `
+      <div class="absolute top-3 left-3 z-10 px-2 py-1 rounded-full bg-primary/90 text-white text-xs font-bold tracking-wide">${project.id || ''}</div>
+      <div class="aspect-video w-full bg-slate-200 dark:bg-[#2f2348] relative overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" style="background-image: url('${project.image || DEFAULT_IMAGE}');"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+        <div class="absolute bottom-3 left-3 flex gap-2">${tags}</div>
+      </div>
+      <div class="p-5 flex flex-col flex-1">
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">${project.name || '未命名專案'}</h3>
+        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">${project.description || ''}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">${formatDate(project.date)}</p>
+        <div class="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
+          <a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="${project.path || '#'}" target="_blank" rel="noopener">
+            <span class="material-symbols-outlined text-[18px]">visibility</span>
+            開啟工具
+          </a>
+          <a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="${project.folder || project.path || '#'}" target="_blank" rel="noopener">
+            <span class="material-symbols-outlined text-[18px]">code</span>
+            檔案夾
+          </a>
+        </div>
+      </div>
+    `;
+    return article;
+  };
 
-    // Initialization
-    function init() {
-        renderBalls();
-        updateStats();
-        renderRecentWinners();
+  const renderProjects = (list) => {
+    projectsGrid.innerHTML = '';
+    if (!list.length) {
+      projectsCount.textContent = '0';
+      emptyState.classList.remove('hidden');
+      return;
     }
+    emptyState.classList.add('hidden');
+    projectsCount.textContent = list.length;
+    list.forEach((project) => projectsGrid.appendChild(createCard(project)));
+  };
 
-    // Helper: Get Random Color
-    function getRandomColor() {
-        return COLORS[Math.floor(Math.random() * COLORS.length)];
-    }
+  const setChipAppearance = (button, isActive) => {
+    const baseClass = 'flex h-9 items-center justify-center px-4 rounded-full text-sm font-medium transition-all active:scale-95 whitespace-nowrap border';
+    const activeClass = 'bg-primary text-white border-primary shadow-md shadow-primary/20';
+    const inactiveClass = 'bg-white dark:bg-[#2f2348] hover:bg-slate-100 dark:hover:bg-[#3d2e5e] text-slate-700 dark:text-white border-slate-200 dark:border-transparent';
+    button.className = `${baseClass} ${isActive ? activeClass : inactiveClass}`;
+  };
 
-    // Helper: Generate Random Position Style
-    function getRandomPositionStyle(index, total) {
-        // Simple messy pile logic
-        // We want them to cluster at the bottom
-        // x: random spread
-        // y: based on index (stacking up)
-        // rotate: random
-        
-        const x = (Math.random() - 0.5) * 40; // -20 to 20px
-        const y = (Math.random() * 20) - (index * 2); // Stack upwards slightly
-        const r = (Math.random() - 0.5) * 60; // -30 to 30 deg
-        
-        return `transform: translate(${x}px, ${y}px) rotate(${r}deg); z-index: ${index};`;
-    }
-
-    // Render Balls
-    function renderBalls() {
-        ballContainer.innerHTML = '';
-        const availableParticipants = participants.filter(p => !winners.find(w => w.name === p.name));
-        
-        availableParticipants.forEach((p, index) => {
-            const color = p.color;
-            const ball = document.createElement('div');
-            
-            // Base classes
-            let classes = `size-11 lg:size-12 rounded-full ${color.bg} ball-shadow-inset ball-shadow-drop flex items-center justify-center relative border border-white/20 transition-all duration-500`;
-            
-            ball.className = classes;
-            ball.style.cssText = getRandomPositionStyle(index, availableParticipants.length);
-            
-            ball.innerHTML = `
-                <div class="absolute inset-0 rounded-full ball-specular"></div>
-                <span class="relative font-black ${color.text} text-xs font-display shadow-black/10 drop-shadow-sm overflow-hidden whitespace-nowrap px-1" style="max-width: 100%;">${p.name}</span>
-            `;
-            
-            ballContainer.appendChild(ball);
+  const renderChips = (tags) => {
+    const uniqueTags = Array.from(new Set(tags));
+    const chipLabels = ['All', ...uniqueTags];
+    chipsContainer.innerHTML = '';
+    chipLabels.forEach((tag) => {
+      const button = document.createElement('button');
+      button.dataset.tag = tag;
+      button.textContent = tag;
+      setChipAppearance(button, selectedTag === tag);
+      button.addEventListener('click', () => {
+        selectedTag = tag;
+        chipsContainer.querySelectorAll('button').forEach((chip) => {
+          setChipAppearance(chip, chip.dataset.tag === selectedTag);
         });
+        applyFilters();
+      });
+      chipsContainer.appendChild(button);
+    });
+  };
+
+  const filterProjects = (term, tag) => {
+    let filtered = [...projects];
+    const normalizedTag = normalize(tag);
+
+    if (normalizedTag && normalizedTag !== 'all') {
+      filtered = filtered.filter((project) => (project.tags || []).some((item) => normalize(item) === normalizedTag));
     }
 
-    // Update Stats
-    function updateStats() {
-        const availableCount = participants.length - winners.length;
-        participantsCountEl.textContent = availableCount;
-        prizesLeftEl.textContent = availableCount; // Or separate prize logic if needed
+    if (term) {
+      const query = normalize(term);
+      filtered = filtered.filter((project) => {
+        const haystack = [project.name, project.description, ...(project.tags || [])].map(normalize).join(' ');
+        return haystack.includes(query);
+      });
     }
 
-    // Render Recent Winners
-    function renderRecentWinners() {
-        // Desktop List
-        recentWinnersEl.innerHTML = '';
-        // Mobile List
-        mobileWinnersList.innerHTML = '';
+    return filtered;
+  };
 
-        if (winners.length === 0) {
-            const emptyState = `
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-wood-light/10 border border-wood-medium/10 border-dashed">
-                    <span class="text-xs text-wood-dark/60">Waiting for next...</span>
-                </div>
-            `;
-            recentWinnersEl.innerHTML = emptyState;
-            mobileWinnersList.innerHTML = `<p class="text-center text-wood-dark/50 text-sm py-4">尚無得獎者</p>`;
-            return;
-        }
+  const applyFilters = () => {
+    const filtered = filterProjects(searchInput?.value, selectedTag);
+    renderProjects(filtered);
+  };
 
-        winners.forEach((winner, index) => {
-            // Desktop Item
-            const el = document.createElement('div');
-            el.className = 'flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full bg-white border border-wood-medium/20 shadow-sm animate-fade-in flex-shrink-0';
-            el.innerHTML = `
-                <div class="size-6 rounded-full ${winner.color.bg} ${winner.color.text} text-xs font-bold flex items-center justify-center border border-white/30">${index + 1}</div>
-                <span class="text-sm font-medium text-ink">${winner.name}</span>
-            `;
-            recentWinnersEl.appendChild(el);
-
-            // Mobile Item
-            const mobileEl = document.createElement('div');
-            mobileEl.className = 'flex items-center justify-between p-3 rounded-lg bg-white border border-wood-medium/20 shadow-sm';
-            mobileEl.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <div class="size-8 rounded-full ${winner.color.bg} ${winner.color.text} text-sm font-bold flex items-center justify-center border border-white/30">${index + 1}</div>
-                    <span class="text-base font-medium text-ink">${winner.name}</span>
-                </div>
-                <span class="text-xs text-wood-dark/50 font-bold uppercase tracking-wider">Winner</span>
-            `;
-            // Prepend to show newest first on mobile list
-            mobileWinnersList.insertBefore(mobileEl, mobileWinnersList.firstChild);
-        });
+  const init = async () => {
+    try {
+      const response = await fetch('projects.json');
+      projects = await response.json();
+      const allTags = projects.flatMap((project) => project.tags || []);
+      renderChips(allTags);
+      renderProjects(projects);
+    } catch (error) {
+      console.error('Failed to load projects.json', error);
+      emptyState.classList.remove('hidden');
+      emptyState.querySelector('p').textContent = '無法載入 projects.json';
     }
+  };
 
-    // Draw Prize
-    function drawPrize() {
-        const availableParticipants = participants.filter(p => !winners.find(w => w.name === p.name));
-        
-        if (availableParticipants.length === 0 || isSpinning) return;
-        
-        isSpinning = true;
-        drawBtn.disabled = true;
-        drawBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        
-        // Shake Animation
-        shakerBody.classList.add('animate-box-spin');
-        handleArm.classList.add('animate-crank');
-        
-        // Tumble balls inside (Simulate Physics Chaos)
-        const balls = ballContainer.children;
-        
-        // Helper for physics
-        const applyPhysics = (intensity, duration, gravity = 0) => {
-            for(let ball of balls) {
-                // High intensity = flying around
-                // Low intensity = settling/rolling
-                const range = 80 * intensity;
-                const tx = (Math.random() - 0.5) * range;
-                
-                // Gravity bias: more likely to be positive (down)
-                let ty = (Math.random() - 0.5) * range;
-                if (gravity > 0) {
-                    // Bias towards bottom (positive Y)
-                    ty = (Math.random() * range * 0.5) + (gravity * 20);
-                }
+  searchInput?.addEventListener('input', () => {
+    applyFilters();
+  });
 
-                const rot = (Math.random() * 360 - 180) * intensity; 
-                
-                ball.style.transition = `transform ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
-                ball.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg)`;
-            }
-        };
-
-        // Phase 1: High Chaos
-        const tumbleInterval = setInterval(() => applyPhysics(1.0, 0.3), 300);
-
-        // Seamless Transition Logic
-        let spinStartTime = Date.now();
-        const minSpinTime = 2000; // Minimum 2 seconds fast spin
-
-        const onAnimationIteration = () => {
-            const elapsed = Date.now() - spinStartTime;
-            if (elapsed >= minSpinTime) {
-                // Remove listener to prevent multiple triggers
-                shakerBody.removeEventListener('animationiteration', onAnimationIteration);
-                
-                // Phase 2: Slow Down (Seamlessly starts from 0deg)
-                clearInterval(tumbleInterval);
-                shakerBody.classList.remove('animate-box-spin');
-                handleArm.classList.remove('animate-crank');
-                
-                void shakerBody.offsetWidth; // Force reflow
-                
-                shakerBody.classList.add('animate-spin-slow-down');
-                handleArm.classList.add('animate-spin-slow-down');
-                
-                // Phase 2 Physics: Settling with Gravity
-                // Gradually reduce intensity
-                let slowDownStep = 0;
-                const slowTumbleInterval = setInterval(() => {
-                    slowDownStep++;
-                    // Intensity drops: 0.8 -> 0.5 -> 0.2
-                    // Gravity increases: 0.2 -> 0.5 -> 0.8
-                    const intensity = Math.max(0.1, 0.8 - (slowDownStep * 0.2));
-                    const gravity = Math.min(1.0, 0.2 + (slowDownStep * 0.2));
-                    
-                    applyPhysics(intensity, 0.6, gravity);
-                }, 600);
-
-                // Wait for slow down animation to finish (2.5s)
-                setTimeout(() => {
-                    clearInterval(slowTumbleInterval);
-                    shakerBody.classList.remove('animate-spin-slow-down');
-                    handleArm.classList.remove('animate-spin-slow-down');
-                    
-                    // Settle balls back to bottom (Gravity)
-                    const remainingBalls = Array.from(balls); // Copy array before removing winner
-                    
-                    // Pick Winner
-                    const winnerIndex = Math.floor(Math.random() * availableParticipants.length);
-                    const winner = availableParticipants[winnerIndex];
-                    const winnerName = winner.name;
-                    const winnerColor = winner.color; 
-
-                    // Remove the winner ball from the box without re-rendering others
-                    // The DOM order matches availableParticipants because we haven't re-rendered
-                    if (ballContainer.children[winnerIndex]) {
-                        ballContainer.children[winnerIndex].remove();
-                    }
-
-                    // Update State Immediately
-                    winners.push({ name: winnerName, color: winnerColor });
-                    updateStats();
-                    renderRecentWinners();
-                    // renderBalls(); // REMOVED: Do not re-render to keep positions
-                    
-                    // Create dropping ball
-                    const dropBall = document.createElement('div');
-                    const shakerRect = shakerBody.getBoundingClientRect();
-                    
-                    // Use absolute positioning relative to document body (which is relative)
-                    // Add window.scrollY to account for mobile scrolling
-                    dropBall.className = `absolute size-12 rounded-full ${winnerColor.bg} ball-shadow-inset ball-shadow-drop flex items-center justify-center border border-white/20 z-50`;
-                    dropBall.style.left = (shakerRect.left + shakerRect.width / 2 - 24) + 'px'; 
-                    dropBall.style.top = (shakerRect.bottom - 60 + window.scrollY) + 'px'; 
-                    
-                    dropBall.innerHTML = `
-                        <div class="absolute inset-0 rounded-full ball-specular"></div>
-                        <span class="relative font-black ${winnerColor.text} text-xs font-display shadow-black/10 drop-shadow-sm overflow-hidden whitespace-nowrap px-1" style="max-width: 100%;">${winnerName}</span>
-                    `;
-                    
-                    document.body.appendChild(dropBall);
-                    
-                    // Force reflow
-                    dropBall.offsetHeight;
-                    
-                    dropBall.classList.add('animate-drop');
-
-                    // Wait for drop animation
-                    setTimeout(() => {
-                        dropBall.remove();
-                        
-                        // Show Modal
-                        winnerNameEl.textContent = winnerName;
-                        winnerModal.classList.remove('hidden');
-                        
-                        isSpinning = false;
-                        drawBtn.disabled = false;
-                        drawBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    }, 1000);
-                }, 2500); // Wait for slow down
-            }
-        };
-
-        // Listen for the end of a spin loop to transition smoothly
-        shakerBody.addEventListener('animationiteration', onAnimationIteration);
-    }
-
-    drawBtn.addEventListener('click', drawPrize);
-    handleArm.addEventListener('click', drawPrize);
-
-    // Reset
-    resetBtn.addEventListener('click', () => {
-        if (confirm('Reset all winners?')) {
-            winners = [];
-            init();
-        }
-    });
-
-    // Modal Close
-    closeModalBtn.addEventListener('click', () => {
-        winnerModal.classList.add('hidden');
-    });
-
-    // Settings
-    settingsBtn.addEventListener('click', () => {
-        participantsInput.value = participants.map(p => p.name).join('\n');
-        settingsModal.classList.remove('hidden');
-    });
-
-    closeSettingsBtn.addEventListener('click', () => {
-        settingsModal.classList.add('hidden');
-    });
-
-    saveSettingsBtn.addEventListener('click', () => {
-        const text = participantsInput.value.trim();
-        if (text) {
-            participants = text.split('\n')
-                .map(line => line.trim())
-                .filter(line => line.length > 0)
-                .map(name => ({ name, color: getRandomColor() }));
-            winners = []; // Reset winners on list change
-            init();
-            settingsModal.classList.add('hidden');
-        }
-    });
-
-    // Mobile Winners Modal Events
-    mobileWinnersBtn.addEventListener('click', () => {
-        winnersModal.classList.remove('hidden');
-    });
-
-    closeWinnersBtn.addEventListener('click', () => {
-        winnersModal.classList.add('hidden');
-    });
-
-    // Start
-    init();
+  init();
 </script>
+
 </body></html>

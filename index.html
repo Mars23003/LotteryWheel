@@ -112,7 +112,7 @@
 <div class="grid place-items-center h-full w-12 text-slate-400 dark:text-[#a492c9]">
 <span class="material-symbols-outlined">search</span>
 </div>
-<input class="h-full w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#a492c9] text-base" placeholder="Search tools (e.g., lottery, chat, notes)"/>
+<input id="search-input" class="h-full w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#a492c9] text-base" placeholder="Search tools (e.g., lottery, chat, notes)"/>
 </label>
 </div>
 <!-- Chips -->
@@ -138,93 +138,12 @@
 <div id="selected-works" class="space-y-6">
 <div class="flex items-center gap-2">
 <h2 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">Selected Works</h2>
-<span class="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 text-xs font-bold text-slate-600 dark:text-slate-300">3</span>
+<span id="projects-count" class="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 text-xs font-bold text-slate-600 dark:text-slate-300">0</span>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-<!-- Card 1 -->
-<article class="group relative flex flex-col bg-white dark:bg-[#1e1629] rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5">
-<div class="absolute top-3 left-3 z-10 px-2 py-1 rounded-full bg-primary/90 text-white text-xs font-bold tracking-wide">01</div>
-<div class="aspect-video w-full bg-slate-200 dark:bg-[#2f2348] relative overflow-hidden">
-<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Lottery machine wooden cabinet" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDyoom1qORvjLVAnDeU6QceWM5iVDwSqiGDZ5WJBciXy7DNyg9WFzXQJNkycgGoiUOrY-lR61KWF9y1sgaW5kD1uzyL7dS2A_Iv6lL42tLw7i7LgqMktbWVq-dtufc6eQ8WiQDEM578AwSl9pxLcMMTAYd5EB-ppAwrhwlaYtbW-cllGPYX62cso55-O2T4VrAW4lbAFp2flwEebE_h-6dXJplXSt8kt9cDXLHVo5JLesjs_RnNtCQCbgSGcNyTAuwZXez');"></div>
-<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
-<div class="absolute bottom-3 left-3 flex gap-2">
-<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-amber-500/90 text-white backdrop-blur-md">UI</span>
-<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-indigo-500/90 text-white backdrop-blur-md">Animation</span>
-</div>
-</div>
-<div class="p-5 flex flex-col flex-1">
-<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">日式搖球抽獎機</h3>
-<p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 line-clamp-2">
-                                維持原汁原味的木質質感與抽獎流程，集中於獨立頁面，減少對其他工具的干擾。
-                            </p>
-<div class="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
-<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="01-lottery/index.html" target="_blank" rel="noopener">
-<span class="material-symbols-outlined text-[18px]">visibility</span>
-                                    Open
-                                </a>
-<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="01-lottery/" target="_blank" rel="noopener">
-<span class="material-symbols-outlined text-[18px]">code</span>
-                                    Folder
-                                </a>
-</div>
-</div>
-</article>
-<!-- Card 2 -->
-<article class="group relative flex flex-col bg-white dark:bg-[#1e1629] rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5">
-<div class="absolute top-3 left-3 z-10 px-2 py-1 rounded-full bg-primary/90 text-white text-xs font-bold tracking-wide">02</div>
-<div class="aspect-video w-full bg-slate-200 dark:bg-[#2f2348] relative overflow-hidden">
-<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Chat interface illustration" style="background-image: url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80');"></div>
-<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
-<div class="absolute bottom-3 left-3 flex gap-2">
-<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-green-500/90 text-white backdrop-blur-md">Dialogue</span>
-<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-yellow-500/90 text-white backdrop-blur-md">Prompt</span>
-</div>
-</div>
-<div class="p-5 flex flex-col flex-1">
-<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">對話助手</h3>
-<p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 line-clamp-2">
-                                獨立頁面展示對話模板與角色設定，保留日後串接 API 的空間，點擊即可在新分頁預覽。
-                            </p>
-<div class="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
-<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="02-chat/index.html" target="_blank" rel="noopener">
-<span class="material-symbols-outlined text-[18px]">visibility</span>
-                                    Open
-                                </a>
-<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="02-chat/" target="_blank" rel="noopener">
-<span class="material-symbols-outlined text-[18px]">code</span>
-                                    Folder
-                                </a>
-</div>
-</div>
-</article>
-<!-- Card 3 -->
-<article class="group relative flex flex-col bg-white dark:bg-[#1e1629] rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5">
-<div class="absolute top-3 left-3 z-10 px-2 py-1 rounded-full bg-primary/90 text-white text-xs font-bold tracking-wide">03</div>
-<div class="aspect-video w-full bg-slate-200 dark:bg-[#2f2348] relative overflow-hidden">
-<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Notebook with pen" style="background-image: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80');"></div>
-<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
-<div class="absolute bottom-3 left-3 flex gap-2">
-<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-cyan-500/90 text-white backdrop-blur-md">Notes</span>
-<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-purple-500/90 text-white backdrop-blur-md">Ideas</span>
-</div>
-</div>
-<div class="p-5 flex flex-col flex-1">
-<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">靈感速記</h3>
-<p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 line-clamp-2">
-                                三行筆記的簡潔頁面，適合快速記錄靈感並可依需求擴充儲存或標籤功能。
-                            </p>
-<div class="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
-<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="03-notes/index.html" target="_blank" rel="noopener">
-<span class="material-symbols-outlined text-[18px]">visibility</span>
-                                    Open
-                                </a>
-<a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="03-notes/" target="_blank" rel="noopener">
-<span class="material-symbols-outlined text-[18px]">code</span>
-                                    Folder
-                                </a>
-</div>
-</div>
-</article>
+<div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+<div id="empty-state" class="hidden border border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-6 text-center text-slate-500 dark:text-slate-300 bg-white/60 dark:bg-white/5">
+    <p class="font-semibold mb-1">目前沒有可顯示的專案</p>
+    <p class="text-sm">請確認 <code class="font-mono text-xs">projects.json</code> 是否包含資料。</p>
 </div>
 </div>
 </div>
@@ -239,4 +158,89 @@
 </div>
 </div>
 </footer>
+<script>
+  const projectsGrid = document.getElementById('projects-grid');
+  const projectsCount = document.getElementById('projects-count');
+  const emptyState = document.getElementById('empty-state');
+  const searchInput = document.getElementById('search-input');
+  let projects = [];
+
+  const normalize = (value) => (value || '').toLowerCase();
+  const formatDate = (value) => {
+    if (!value) return '';
+    const parsed = new Date(value);
+    return isNaN(parsed) ? value : parsed.toLocaleDateString('zh-TW');
+  };
+
+  const createCard = (project) => {
+    const article = document.createElement('article');
+    article.className = 'group relative flex flex-col bg-white dark:bg-[#1e1629] rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5';
+    const tags = (project.tags || []).map((tag) => `<span class="px-2 py-1 text-[10px] uppercase font-bold tracking-wider rounded bg-primary/90 text-white backdrop-blur-md">${tag}</span>`).join('');
+    article.innerHTML = `
+      <div class="absolute top-3 left-3 z-10 px-2 py-1 rounded-full bg-primary/90 text-white text-xs font-bold tracking-wide">${project.id || ''}</div>
+      <div class="aspect-video w-full bg-slate-200 dark:bg-[#2f2348] relative overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" style="background-image: url('${project.image || ''}');"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+        <div class="absolute bottom-3 left-3 flex gap-2">${tags}</div>
+      </div>
+      <div class="p-5 flex flex-col flex-1">
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">${project.name || '未命名專案'}</h3>
+        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">${project.description || ''}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">${formatDate(project.date)}</p>
+        <div class="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
+          <a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="${project.path || '#'}" target="_blank" rel="noopener">
+            <span class="material-symbols-outlined text-[18px]">visibility</span>
+            Open
+          </a>
+          <a class="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="${project.folder || project.path || '#'}" target="_blank" rel="noopener">
+            <span class="material-symbols-outlined text-[18px]">code</span>
+            Folder
+          </a>
+        </div>
+      </div>
+    `;
+    return article;
+  };
+
+  const renderProjects = (list) => {
+    projectsGrid.innerHTML = '';
+    if (!list.length) {
+      projectsCount.textContent = '0';
+      emptyState.classList.remove('hidden');
+      return;
+    }
+    emptyState.classList.add('hidden');
+    projectsCount.textContent = list.length;
+    list.forEach((project) => projectsGrid.appendChild(createCard(project)));
+  };
+
+  const filterProjects = (term) => {
+    if (!term) return projects;
+    const query = normalize(term);
+    return projects.filter((project) => {
+      const haystack = [project.name, project.description, ...(project.tags || [])].map(normalize).join(' ');
+      return haystack.includes(query);
+    });
+  };
+
+  const init = async () => {
+    try {
+      const response = await fetch('projects.json');
+      projects = await response.json();
+      renderProjects(projects);
+    } catch (error) {
+      console.error('Failed to load projects.json', error);
+      emptyState.classList.remove('hidden');
+      emptyState.querySelector('p').textContent = '無法載入 projects.json';
+    }
+  };
+
+  searchInput?.addEventListener('input', (event) => {
+    const filtered = filterProjects(event.target.value);
+    renderProjects(filtered);
+  });
+
+  init();
+</script>
+
 </body></html>

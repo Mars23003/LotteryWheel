@@ -1,0 +1,32 @@
+[
+  {
+    "id": "01",
+    "name": "日式搖球抽獎機",
+    "path": "01-lottery/index.html",
+    "folder": "01-lottery/",
+    "tags": ["UI", "Animation"],
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDyoom1qORvjLVAnDeU6QceWM5iVDwSqiGDZ5WJBciXy7DNyg9WFzXQJNkycgGoiUOrY-lR61KWF9y1sgaW5kD1uzyL7dS2A_Iv6lL42tLw7i7LgqMktbWVq-dtufc6eQ8WiQDEM578AwSl9pxLcMMTAYd5EB-ppAwrhwlaYtbW-cllGPYX62cso55-O2T4VrAW4lbAFp2flwEebE_h-6dXJplXSt8kt9cDXLHVo5JLesjs_RnNtCQCbgSGcNyTAuwZXez",
+    "date": "2024-03-05",
+    "description": "維持木質質感與抽獎流程的互動搖球機，集中於獨立頁面降低干擾。"
+  },
+  {
+    "id": "02",
+    "name": "對話助手",
+    "path": "02-chat/index.html",
+    "folder": "02-chat/",
+    "tags": ["Dialogue", "Prompt"],
+    "image": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
+    "date": "2024-03-10",
+    "description": "獨立頁面展示對話模板與角色設定，預留串接 API 的空間。"
+  },
+  {
+    "id": "03",
+    "name": "靈感速記",
+    "path": "03-notes/index.html",
+    "folder": "03-notes/",
+    "tags": ["Notes", "Ideation"],
+    "image": "https://images.unsplash.com/photo-1508830524289-0adcbe822b40?auto=format&fit=crop&w=1200&q=80",
+    "date": "2024-03-12",
+    "description": "簡潔的靈感草稿頁，方便快速紀錄並保留日後擴展。"
+  }
+]

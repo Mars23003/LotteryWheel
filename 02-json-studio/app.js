@@ -573,22 +573,14 @@
   };
 
   const toggleView = (view) => {
-    state.view = view;
-    viewButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.view === view));
     if (state.diffMode) {
-      outputRaw.hidden = true;
-      outputTree.hidden = true;
-      diffView.hidden = false;
+      viewButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.view === 'raw'));
       return;
     }
-    if (view === 'tree') {
-      outputTree.hidden = false;
-      outputRaw.hidden = true;
-    } else {
-      outputTree.hidden = true;
-      outputRaw.hidden = false;
-      renderRaw(state.lastOutput || '');
-    }
+    state.view = view;
+    viewButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.view === view));
+    updateOutputVisibility();
+    if (view === 'raw') renderRaw(state.lastOutput || '');
     persist();
   };
 
@@ -644,6 +636,37 @@
     closeSettings();
   };
 
+  const updateOutputVisibility = () => {
+    if (state.diffMode) {
+      diffView.hidden = false;
+      outputRaw.hidden = true;
+      outputTree.hidden = true;
+      return;
+    }
+    diffView.hidden = true;
+    outputRaw.hidden = state.view !== 'raw';
+    outputTree.hidden = state.view !== 'tree';
+  };
+
+  const setDiffMode = (enabled) => {
+    state.diffMode = enabled;
+    diffInputs.hidden = !enabled;
+    editor.hidden = enabled;
+    document.body.classList.toggle('diff-mode', enabled);
+    viewButtons.forEach((btn) => btn.classList.remove('active'));
+    if (enabled) {
+      setOutputStatus('差異模式：請輸入 A / B', 'neutral');
+      showToast('已開啟差異模式');
+    } else {
+      diffView.innerHTML = '';
+      state.view = 'raw';
+      viewButtons[0].classList.add('active');
+      setOutputStatus('回到單一輸入模式', 'neutral');
+    }
+    updateOutputVisibility();
+    persist();
+  };
+
   const clearAll = () => {
     editor.value = '';
     editorA.value = '';
@@ -653,13 +676,7 @@
     diffView.innerHTML = '';
     state.lastOutput = '';
     state.lastTreeData = null;
-    state.diffMode = false;
-    diffInputs.hidden = true;
-    editor.hidden = false;
-    diffView.hidden = true;
-    viewButtons.forEach((btn) => btn.classList.remove('active'));
-    viewButtons[0].classList.add('active');
-    state.view = 'raw';
+    setDiffMode(false);
     setStatus('等待輸入...', 'neutral');
     setOutputStatus('尚未產生輸出', 'neutral');
     errorLine.textContent = '';
@@ -668,23 +685,7 @@
   };
 
   const toggleDiffMode = () => {
-    state.diffMode = !state.diffMode;
-    diffInputs.hidden = !state.diffMode;
-    editor.hidden = state.diffMode;
-    diffView.hidden = !state.diffMode;
-    outputRaw.hidden = true;
-    outputTree.hidden = true;
-    viewButtons.forEach((btn) => btn.classList.remove('active'));
-    if (state.diffMode) {
-      setOutputStatus('差異模式：請輸入 A / B', 'neutral');
-      showToast('已開啟差異模式');
-    } else {
-      setOutputStatus('回到單一輸入模式', 'neutral');
-      diffView.innerHTML = '';
-      state.view = 'raw';
-      viewButtons[0].classList.add('active');
-    }
-    persist();
+    setDiffMode(!state.diffMode);
   };
 
   const runDiff = () => {
@@ -814,6 +815,7 @@
     updateLargeFileState();
     attachToolbar();
     initExamples();
+    updateOutputVisibility();
     if (state.settings.autoFormat && editor.value) formatAction();
   };
 

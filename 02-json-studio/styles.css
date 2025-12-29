@@ -70,6 +70,8 @@ textarea { width: 100%; min-height: 340px; border: 1px solid var(--border); bord
 .editor-wrap textarea { min-height: 280px; }
 .dual-input { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
 .label-row { display: flex; justify-content: space-between; margin-bottom: 6px; color: var(--muted); font-size: 13px; }
+body:not(.diff-mode) #diff-inputs { display: none; }
+body.diff-mode #editor { display: none; }
 
 .error-line { margin-top: 10px; color: #b91c1c; font-weight: 600; min-height: 20px; }
 .status { margin: 0; font-weight: 600; font-size: 15px; }

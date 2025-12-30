@@ -18,5 +18,15 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Tool",
     "date": "2024-04-18",
     "description": "純前端的 JSON 格式化、驗證、轉換與差異比對工作台，支援遮罩敏感欄位與樹狀檢視。"
+  },
+  {
+    "id": "03",
+    "name": "Cron 工作室",
+    "path": "03-cron-studio/index.html",
+    "folder": "03-cron-studio/",
+    "tags": ["Cron", "Scheduler", "Generator"],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Cron+Studio",
+    "date": "2024-12-29",
+    "description": "同時提供 Cron 解讀、人類語句複製與引導式產生器，支援 Linux/Quartz、時區、預覽與自然語句解析。"
   }
 ]

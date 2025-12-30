@@ -31,8 +31,6 @@ const elements = {
   validationList: document.getElementById('validation-list'),
   fieldBreakdown: document.getElementById('field-breakdown'),
   nextRuns: document.getElementById('next-runs'),
-  listView: document.getElementById('list-view'),
-  treeView: document.getElementById('tree-view'),
   themeToggle: document.getElementById('theme-toggle'),
   resetSettings: document.getElementById('reset-settings'),
   toast: document.getElementById('toast'),
@@ -55,8 +53,6 @@ const elements = {
   copyBuilderCron: document.getElementById('copy-builder-cron'),
   copyBuilderHuman: document.getElementById('copy-builder-human'),
   applyToDecoder: document.getElementById('apply-to-decoder'),
-  saveSample: document.getElementById('save-sample'),
-  savedSamples: document.getElementById('saved-samples'),
 };
 
 const state = {
@@ -81,8 +77,6 @@ const state = {
       year: '*'
     }
   },
-  nextRunView: 'list',
-  samples: [],
   forcedQuartz: false
 };
 
@@ -102,8 +96,6 @@ function loadPrefs() {
       const prefs = JSON.parse(saved);
       Object.assign(state.decoder, prefs.decoder || {});
       Object.assign(state.builder, prefs.builder || {});
-      state.samples = prefs.samples || [];
-      state.nextRunView = prefs.nextRunView || 'list';
       if (prefs.theme === 'dark') {
         document.documentElement.classList.add('dark');
         elements.themeToggle.checked = true;
@@ -118,8 +110,6 @@ function savePrefs() {
   const prefs = {
     decoder: state.decoder,
     builder: state.builder,
-    nextRunView: state.nextRunView,
-    samples: state.samples,
     theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
   };
   localStorage.setItem('cron-studio-prefs', JSON.stringify(prefs));
@@ -235,27 +225,9 @@ function renderRuns(runs) {
     elements.nextRuns.textContent = '暫無資料';
     return;
   }
-  if (state.nextRunView === 'list') {
-    elements.nextRuns.innerHTML = `<ul class="bullet">${runs
-      .map((dt) => `<li>${dt.toFormat('yyyy/MM/dd HH:mm:ss ZZZZ')}</li>`)
-      .join('')}</ul>`;
-    return;
-  }
-  const grouped = runs.reduce((acc, dt) => {
-    const key = dt.toFormat('yyyy/MM/dd');
-    acc[key] = acc[key] || [];
-    acc[key].push(dt.toFormat('HH:mm:ss'));
-    return acc;
-  }, {});
-  elements.nextRuns.innerHTML = Object.entries(grouped)
-    .map(
-      ([date, times]) => `
-      <div class="mono small">
-        <div>📅 ${date}</div>
-        <div style="padding-left:12px">• ${times.join('、')}</div>
-      </div>`
-    )
-    .join('');
+  elements.nextRuns.innerHTML = `<ul class="bullet">${runs
+    .map((dt) => `<li>${dt.toFormat('yyyy/MM/dd HH:mm:ss ZZZZ')}</li>`)
+    .join('')}</ul>`;
 }
 
 function decodeCron() {
@@ -294,14 +266,6 @@ function decodeCron() {
     renderRuns([]);
     renderBreakdown(null);
   }
-}
-
-function setViewMode(mode) {
-  state.nextRunView = mode;
-  elements.listView.classList.toggle('active', mode === 'list');
-  elements.treeView.classList.toggle('active', mode === 'tree');
-  savePrefs();
-  decodeCron();
 }
 
 function renderFrequencyFields(freq) {
@@ -483,8 +447,9 @@ function updateBuilderCron() {
     const minute = time[1];
     const sec = document.getElementById('f-week-sec')?.value || '0';
     if (!days.length) {
-      elements.builderPreview.textContent = '請先選擇頻率與時間';
+      elements.builderPreview.textContent = '請先選擇星期與時間';
       elements.builderCron.textContent = '＊ 尚未生成';
+      elements.builderMeta.textContent = `模式：${mode === 'quartz' ? 'Quartz' : 'Linux'}｜時區：${tz}｜欄位：—`;
       elements.builderHuman.textContent = '人類語句：—';
       return;
     }
@@ -646,41 +611,6 @@ function applyToDecoder() {
   toast('已套用到解讀器');
 }
 
-function saveSampleEntry() {
-  const cron = elements.builderCron.textContent;
-  if (!cron || cron.includes('尚未')) return;
-  const item = {
-    cron,
-    mode: state.builder.mode,
-    tz: state.builder.tz,
-    human: elements.builderHuman.textContent.replace('人類語句：', '')
-  };
-  state.samples.unshift(item);
-  state.samples = state.samples.slice(0, 6);
-  renderSavedSamples();
-  savePrefs();
-  toast('已另存範例');
-}
-
-function renderSavedSamples() {
-  elements.savedSamples.innerHTML = '';
-  state.samples.forEach((s, idx) => {
-    const btn = document.createElement('button');
-    btn.textContent = `${idx + 1}. ${s.cron}`;
-    btn.title = s.human;
-    btn.addEventListener('click', () => {
-      elements.builderCron.textContent = s.cron;
-      elements.builderMode.value = s.mode;
-      elements.builderTz.value = s.tz;
-      state.builder.mode = s.mode;
-      state.builder.tz = s.tz;
-      decodeCron();
-      updateBuilderCron();
-    });
-    elements.savedSamples.appendChild(btn);
-  });
-}
-
 function loadSampleDecoder() {
   elements.decoderInput.value = '0 9 * * 1-5';
   elements.decoderMode.value = 'linux';
@@ -706,9 +636,6 @@ function attachEvents() {
     const detail = `${elements.humanMain.textContent}\n${elements.humanSub.textContent}\n原始：${elements.decoderInput.value}`;
     copyToClipboard(detail, '已複製人類語句');
   });
-  elements.listView.addEventListener('click', () => setViewMode('list'));
-  elements.treeView.addEventListener('click', () => setViewMode('tree'));
-
   elements.frequencySegment.addEventListener('click', handleFrequencyClick);
   elements.pills.forEach((p) => p.addEventListener('click', handleInputModeSwitch));
   elements.naturalForm.addEventListener('submit', (e) => e.preventDefault());
@@ -725,7 +652,6 @@ function attachEvents() {
   elements.copyBuilderCron.addEventListener('click', () => copyToClipboard(elements.builderCron.textContent));
   elements.copyBuilderHuman.addEventListener('click', () => copyToClipboard(elements.builderHuman.textContent.replace('人類語句：', ''), '已複製人類語句'));
   elements.applyToDecoder.addEventListener('click', applyToDecoder);
-  elements.saveSample.addEventListener('click', saveSampleEntry);
 
   elements.themeToggle.addEventListener('change', () => {
     document.documentElement.classList.toggle('dark', elements.themeToggle.checked);
@@ -747,9 +673,7 @@ function init() {
   elements.builderTz.value = state.builder.tz;
   elements.builderMode.value = state.builder.mode;
   elements.builderCount.value = state.builder.count;
-  renderSavedSamples();
   renderFrequencyFields(state.builder.frequency);
-  setViewMode(state.nextRunView);
   attachEvents();
   updateBuilderCron();
   decodeCron();

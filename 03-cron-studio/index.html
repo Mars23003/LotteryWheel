@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cron 工作室 | 純前端工具</title>
+  <!-- CDN 1：Luxon，用於時區日期時間處理 -->
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <!-- CDN 2：cron-parser，用於 Cron 驗證與下一次執行時間計算 -->
+  <script src="https://cdn.jsdelivr.net/npm/cron-parser@4.9.0/dist/cron-parser.min.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="title-block">
+      <div class="logo">⏱️</div>
+      <div>
+        <p class="eyebrow">AI 工具坊</p>
+        <h1>Cron 工作室</h1>
+        <p class="subtitle">Cron → 解讀與人類語句 · 人類語句 → Cron 引導式產生器 · 支援 Linux/Quartz、時區與即時預覽</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <label class="switch" title="切換深色模式">
+        <input type="checkbox" id="theme-toggle" aria-label="切換深色模式" />
+        <span class="slider"></span>
+      </label>
+      <button class="ghost" id="reset-settings" aria-label="清除偏好">重置偏好</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="tab-row" role="tablist">
+      <button id="tab-decoder" class="tab active" role="tab" aria-controls="decoder-panel">解讀器（Cron → 人類語句）</button>
+      <button id="tab-builder" class="tab" role="tab" aria-controls="builder-panel">產生器（人類語句 → Cron）</button>
+    </div>
+
+    <section id="decoder-panel" class="panel active" role="tabpanel">
+      <div class="grid two">
+        <article class="card">
+          <header class="card-title">A. Cron → 解讀</header>
+          <div class="field-grid">
+            <label>
+              <span>模式</span>
+              <select id="decoder-mode" aria-label="選擇 Cron 模式">
+                <option value="linux">Linux（5 欄）</option>
+                <option value="quartz">Quartz（6-7 欄）</option>
+              </select>
+            </label>
+            <label>
+              <span>時區</span>
+              <select id="decoder-timezone" aria-label="選擇時區"></select>
+            </label>
+            <label>
+              <span>預覽次數</span>
+              <input type="number" id="decoder-count" min="1" max="20" value="5" aria-label="預覽次數" />
+            </label>
+          </div>
+          <label class="full">
+            <span>Cron 表達式</span>
+            <textarea id="decoder-input" rows="2" aria-label="Cron 輸入" placeholder="例如：0 9 * * 1-5"></textarea>
+          </label>
+          <div class="actions">
+            <button id="decode-btn" class="primary">立即解讀</button>
+            <button id="load-sample" class="ghost">載入示例</button>
+          </div>
+        </article>
+
+        <article class="card" id="human-card">
+          <header class="card-title">A-1. 人類語句</header>
+          <div class="human-preview">
+            <div>
+              <p id="human-main" class="human-main">請輸入 Cron</p>
+              <p id="human-sub" class="human-sub">時區：—｜模式：—｜起算：現在</p>
+            </div>
+            <div class="btn-group">
+              <button id="copy-human" class="outline">複製人類語句</button>
+              <button id="copy-human-detail" class="outline">複製含詳細資訊</button>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="grid three">
+        <article class="card">
+          <header class="card-title">欄位拆解</header>
+          <div id="field-breakdown" class="mono small"></div>
+        </article>
+        <article class="card">
+          <header class="card-title">驗證與提醒</header>
+          <ul id="validation-list" class="bullet"></ul>
+        </article>
+        <article class="card">
+          <header class="card-title">Tree / 列表輸出</header>
+          <div class="toggle-row">
+            <button id="list-view" class="chip active">列表</button>
+            <button id="tree-view" class="chip">樹狀</button>
+          </div>
+          <div id="next-runs"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="builder-panel" class="panel" role="tabpanel" aria-hidden="true">
+      <div class="card">
+        <header class="card-title">B-1. 排程語句</header>
+        <div class="pill-row">
+          <button data-input-mode="guided" class="pill active">引導選擇</button>
+          <button data-input-mode="natural" class="pill">自然語句輸入</button>
+        </div>
+        <div id="guided-form">
+          <div class="field-grid">
+            <label>
+              <span>模式</span>
+              <select id="builder-mode">
+                <option value="linux">Linux（5 欄）</option>
+                <option value="quartz">Quartz（6-7 欄）</option>
+              </select>
+            </label>
+            <label>
+              <span>時區</span>
+              <select id="builder-timezone"></select>
+            </label>
+            <label>
+              <span>預覽次數</span>
+              <input type="number" id="builder-count" min="1" max="20" value="5" />
+            </label>
+          </div>
+          <div class="segmented" id="frequency-segment">
+            <button data-frequency="minute" class="active">每分鐘</button>
+            <button data-frequency="hour">每小時</button>
+            <button data-frequency="day">每天</button>
+            <button data-frequency="week">每週</button>
+            <button data-frequency="month">每月</button>
+            <button data-frequency="custom">自訂</button>
+          </div>
+          <div id="frequency-fields"></div>
+        </div>
+        <div id="natural-form" class="hidden">
+          <label>
+            <span>自然語句</span>
+            <input id="natural-input" type="text" placeholder="例如：每 5 分鐘 / 每天 09:30 / 週一到週五 09:00" />
+          </label>
+          <p class="hint">目前支援：每 N 分鐘 / 每天 HH:mm / 每週(星期) HH:mm / 每月(日期) HH:mm</p>
+          <div class="actions">
+            <button id="parse-natural" class="primary">解析語句</button>
+            <button id="reset-natural" class="ghost">清空</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <article class="card">
+          <header class="card-title">B-2. 產生的 Cron</header>
+          <div class="cron-output" aria-live="polite">
+            <p id="builder-cron" class="cron-text">＊ 尚未生成</p>
+            <p id="builder-meta" class="small">模式：—｜時區：—｜欄位：—</p>
+            <p id="builder-human" class="human-sub">人類語句：—</p>
+          </div>
+          <div class="btn-group">
+            <button id="copy-builder-cron" class="outline">複製 Cron</button>
+            <button id="copy-builder-human" class="outline">複製人類語句</button>
+            <button id="apply-to-decoder" class="primary">套用到解讀器</button>
+            <button id="save-sample" class="ghost">另存為範例</button>
+          </div>
+          <div id="saved-samples" class="chips"></div>
+        </article>
+
+        <article class="card">
+          <header class="card-title">B-3. 執行預覽</header>
+          <div id="builder-preview" class="mono small">請先選擇頻率與時間</div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 const { DateTime } = luxon;
+const cronParser = window.cronParser || window["cron-parser"] || window.parser;
 
 const timezoneList = [
   'Asia/Taipei',
@@ -206,6 +207,9 @@ function renderValidations(list) {
 }
 
 function computeNextRuns(cronText, mode, tz, count) {
+  if (!cronParser || !cronParser.parseExpression) {
+    throw new Error('cron-parser 未成功載入，請確認網路或重新整理');
+  }
   const options = {
     currentDate: DateTime.now().setZone(tz).toJSDate(),
     iterator: true,

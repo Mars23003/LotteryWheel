@@ -6,8 +6,8 @@
   <title>Cron 工作室 | 純前端工具</title>
   <!-- CDN 1：Luxon，用於時區日期時間處理 -->
   <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-  <!-- CDN 2：cron-parser，用於 Cron 驗證與下一次執行時間計算 -->
-  <script src="https://cdn.jsdelivr.net/npm/cron-parser@4.9.0/dist/cron-parser.min.js"></script>
+  <!-- 本地版 cron 解析（避免瀏覽器阻擋外部 CDN） -->
+  <script src="cron-lite.js"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>

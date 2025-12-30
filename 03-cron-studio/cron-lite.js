@@ -165,21 +165,86 @@
       this.tz = options.tz || "UTC";
       const start = options.currentDate ? options.currentDate : new Date();
       this.current = DateTime.fromJSDate(start, { zone: this.tz });
-      this._safety = 0;
+      this._limit = this.current.plus({ years: 2 }); // safety horizon
+
+      const sortedValues = (field) => Array.from(field.values).sort((a, b) => a - b);
+      this._allowed = {
+        second: sortedValues(fields.second),
+        minute: sortedValues(fields.minute),
+        hour: sortedValues(fields.hour),
+        dom: sortedValues(fields.dom),
+        month: sortedValues(fields.month),
+        dow: sortedValues(fields.dow),
+        year: sortedValues(fields.year)
+      };
     }
 
     next() {
-      this.current = this.current.plus({ second: 1 });
-      while (this._safety < 1000000) {
-        if (matches(this.current, this._fields)) {
-          const dt = this.current;
-          this._safety = 0;
-          return { value: { toDate: () => dt.toJSDate(), getTime: () => dt.toMillis() }, done: false };
+      const check = (dt, field, ctx) => {
+        if (!field) return true;
+        const lastDay = dt.endOf("month").day;
+        const valueMap = {
+          sec: dt.second,
+          min: dt.minute,
+          hour: dt.hour,
+          dom: dt.day,
+          month: dt.month,
+          dow: dt.weekday % 7,
+          year: dt.year
+        };
+        const value = valueMap[ctx];
+        if (field.ignore) return true;
+        if (field.last && ctx === "dom") return value === lastDay;
+        if (field.nth && ctx === "dow") {
+          const desired = field.nth.weekday === 7 ? 0 : field.nth.weekday;
+          return isNthWeekday(dt, desired, field.nth.nth);
         }
-        this.current = this.current.plus({ second: 1 });
-        this._safety++;
+        if (field.any) return true;
+        return field.values.has(value);
+      };
+
+      let candidate = this.current.plus({ second: 1 });
+      let attempts = 0;
+      while (candidate < this._limit && attempts < 200000) {
+        attempts++;
+
+        if (!check(candidate, this._fields.year, "year")) {
+          candidate = candidate.plus({ years: 1 }).startOf("year");
+          continue;
+        }
+        if (!check(candidate, this._fields.month, "month")) {
+          candidate = candidate.plus({ months: 1 }).startOf("month");
+          continue;
+        }
+        if (!check(candidate, this._fields.dom, "dom") || !check(candidate, this._fields.dow, "dow")) {
+          candidate = candidate.plus({ days: 1 }).startOf("day");
+          continue;
+        }
+        if (!check(candidate, this._fields.hour, "hour")) {
+          candidate = candidate.plus({ hours: 1 }).set({ minute: 0, second: 0 });
+          continue;
+        }
+        if (!check(candidate, this._fields.minute, "min")) {
+          candidate = candidate.plus({ minutes: 1 }).set({ second: 0 });
+          continue;
+        }
+
+        const nextSec = this._allowed.second.find((s) => s >= candidate.second);
+        if (nextSec === undefined) {
+          candidate = candidate.plus({ minutes: 1 }).set({ second: 0 });
+          continue;
+        }
+
+        candidate = candidate.set({ second: nextSec });
+        if (matches(candidate, this._fields)) {
+          this.current = candidate;
+          return { value: { toDate: () => candidate.toJSDate(), getTime: () => candidate.toMillis() }, done: false };
+        }
+
+        candidate = candidate.plus({ second: 1 });
       }
-      throw new Error("找不到下一個時間，請檢查表達式");
+
+      throw new Error("找不到下一個時間，請檢查表達式或改用較短的週期");
     }
   }
 

@@ -298,6 +298,36 @@
       .replace(/,/g, '\\,')
       .replace(/\r?\n/g, '\\n');
 
+    const hasNonASCII = (value) => /[^\x00-\x7F]/.test(value);
+
+    const normalizeNewlines = (value) => value.replace(/\r\n|\n|\r/g, '\r\n');
+
+    const toQuotedPrintable = (value) => {
+      const normalized = normalizeNewlines(value);
+      const bytes = new TextEncoder().encode(normalized);
+      let out = '';
+      for (let i = 0; i < bytes.length; i++) {
+        const b = bytes[i];
+        if (b === 13 && bytes[i + 1] === 10) { // CRLF
+          out += '=0D=0A';
+          i++;
+          continue;
+        }
+        const shouldEncode = b === 61 || b < 32 || b > 126 || b === 59 || b === 44; // = or control/non-ascii/;,
+        out += shouldEncode ? `=${b.toString(16).toUpperCase().padStart(2, '0')}` : String.fromCharCode(b);
+      }
+      return out;
+    };
+
+    const encodeValue = (value) => {
+      const trimmed = value.trim();
+      const needsQP = hasNonASCII(trimmed);
+      return {
+        value: needsQP ? toQuotedPrintable(trimmed) : escapeVCardValue(trimmed),
+        params: needsQP ? ';CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE' : ''
+      };
+    };
+
     const buildVCard = () => {
       const first = getInput('firstName');
       const last = getInput('lastName');
@@ -313,22 +343,40 @@
       const lines = ['BEGIN:VCARD', `VERSION:${version}`];
 
       if (isChecked('name') && (first || last)) {
-        const escapedFirst = escapeVCardValue(first);
-        const escapedLast = escapeVCardValue(last);
-        lines.push(`N:${escapedLast};${escapedFirst};;;`);
-        lines.push(`FN:${escapeVCardValue(`${first} ${last}`.trim().replace(/\s+/g, ' '))}`);
+        const components = [last, first, '', '', ''];
+        const needsQP = components.some((c) => hasNonASCII(c));
+        const encodedParts = components.map((part) => {
+          if (!part) return '';
+          const encoded = needsQP ? toQuotedPrintable(part.trim()) : escapeVCardValue(part);
+          return encoded;
+        });
+        const params = needsQP ? ';CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE' : '';
+        lines.push(`N${params}:${encodedParts.join(';')}`);
+        const fnValue = `${first} ${last}`.trim().replace(/\s+/g, ' ');
+        const fn = encodeValue(fnValue);
+        lines.push(`FN${fn.params}:${fn.value}`);
       }
-      if (isChecked('company') && company) lines.push(`ORG:${escapeVCardValue(company)}`);
-      if (isChecked('title') && title) lines.push(`TITLE:${escapeVCardValue(title)}`);
+      if (isChecked('company') && company) {
+        const org = encodeValue(company);
+        lines.push(`ORG${org.params}:${org.value}`);
+      }
+      if (isChecked('title') && title) {
+        const titleVal = encodeValue(title);
+        lines.push(`TITLE${titleVal.params}:${titleVal.value}`);
+      }
       if (isChecked('phone') && phone) lines.push(`TEL;TYPE=CELL:${escapeVCardValue(phone)}`);
       if (isChecked('email') && email) lines.push(`EMAIL:${escapeVCardValue(email)}`);
       if (isChecked('website') && website) lines.push(`URL:${escapeVCardValue(website)}`);
       if (isChecked('address') && address) {
-        const escapedAddress = escapeVCardValue(address);
-        lines.push(`ADR;TYPE=HOME:;;${escapedAddress};;;;`);
-        lines.push(`LABEL;TYPE=HOME:${escapedAddress}`);
+        const needsQP = hasNonASCII(address);
+        const encodedAddress = needsQP ? toQuotedPrintable(address.trim()) : escapeVCardValue(address);
+        const params = needsQP ? ';CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE' : '';
+        lines.push(`ADR${params};TYPE=HOME:;;${encodedAddress};;;;`);
       }
-      if (isChecked('note') && note) lines.push(`NOTE:${escapeVCardValue(note)}`);
+      if (isChecked('note') && note) {
+        const noteVal = encodeValue(note);
+        lines.push(`NOTE${noteVal.params}:${noteVal.value}`);
+      }
 
       lines.push('END:VCARD');
       return lines.join('\n') + '\n';

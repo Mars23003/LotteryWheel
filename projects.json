@@ -28,5 +28,15 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Cron+Studio",
     "date": "2024-12-29",
     "description": "同時提供 Cron 解讀、人類語句複製與引導式產生器，支援 Linux/Quartz、時區、預覽與自然語句解析。"
+  },
+  {
+    "id": "04",
+    "name": "vCard + QRCode + 電子名片產生器",
+    "path": "04-vcard-ecard/index.html",
+    "folder": "04-vcard-ecard/",
+    "tags": ["vCard", "QRCode", "Business Card"],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=vCard+Generator",
+    "date": "2025-02-08",
+    "description": "純前端的 vCard 生成、QR 碼與電子名片匯出工具，支援欄位勾選、版本與樣式切換。"
   }
 ]

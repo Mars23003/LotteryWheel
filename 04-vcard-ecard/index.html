@@ -134,6 +134,11 @@
     .style-toggle { display: flex; gap: 8px; flex-wrap: wrap; }
     .style-toggle button { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-weight: 600; color: var(--muted); }
     .style-toggle button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .share-mode .card { display: none; }
+    .share-mode .card:last-child { display: block; }
+    .share-mode .topbar .inline-controls { display: none; }
+    .share-mode .badge { display: none; }
+    .share-mode .grid { grid-template-columns: 1fr; }
 
     /* Theme Variants */
     .card-minimal { background: linear-gradient(135deg, #ffffff, #f4f7ff); color: #111827; }
@@ -287,6 +292,12 @@
     const getInput = (id) => document.getElementById(id).value.trim();
     const isChecked = (field) => form.querySelector(`input[data-field="${field}"]`).checked;
 
+    const escapeVCardValue = (value) => value
+      .replace(/\\/g, '\\\\')
+      .replace(/;/g, '\\;')
+      .replace(/,/g, '\\,')
+      .replace(/\r?\n/g, '\\n');
+
     const buildVCard = () => {
       const first = getInput('firstName');
       const last = getInput('lastName');
@@ -302,16 +313,22 @@
       const lines = ['BEGIN:VCARD', `VERSION:${version}`];
 
       if (isChecked('name') && (first || last)) {
-        lines.push(`N:${last};${first};;;`);
-        lines.push(`FN:${first} ${last}`.trim());
+        const escapedFirst = escapeVCardValue(first);
+        const escapedLast = escapeVCardValue(last);
+        lines.push(`N:${escapedLast};${escapedFirst};;;`);
+        lines.push(`FN:${escapeVCardValue(`${first} ${last}`.trim().replace(/\s+/g, ' '))}`);
       }
-      if (isChecked('company') && company) lines.push(`ORG:${company}`);
-      if (isChecked('title') && title) lines.push(`TITLE:${title}`);
-      if (isChecked('phone') && phone) lines.push(`TEL;TYPE=CELL:${phone}`);
-      if (isChecked('email') && email) lines.push(`EMAIL:${email}`);
-      if (isChecked('website') && website) lines.push(`URL:${website}`);
-      if (isChecked('address') && address) lines.push(`ADR;TYPE=HOME:;;${address};;;;`);
-      if (isChecked('note') && note) lines.push(`NOTE:${note.replace(/\n/g, '\\n')}`);
+      if (isChecked('company') && company) lines.push(`ORG:${escapeVCardValue(company)}`);
+      if (isChecked('title') && title) lines.push(`TITLE:${escapeVCardValue(title)}`);
+      if (isChecked('phone') && phone) lines.push(`TEL;TYPE=CELL:${escapeVCardValue(phone)}`);
+      if (isChecked('email') && email) lines.push(`EMAIL:${escapeVCardValue(email)}`);
+      if (isChecked('website') && website) lines.push(`URL:${escapeVCardValue(website)}`);
+      if (isChecked('address') && address) {
+        const escapedAddress = escapeVCardValue(address);
+        lines.push(`ADR;TYPE=HOME:;;${escapedAddress};;;;`);
+        lines.push(`LABEL;TYPE=HOME:${escapedAddress}`);
+      }
+      if (isChecked('note') && note) lines.push(`NOTE:${escapeVCardValue(note)}`);
 
       lines.push('END:VCARD');
       return lines.join('\n');
@@ -374,23 +391,36 @@
       previewActions.innerHTML = actions.join('');
     };
 
-    const buildCardHTML = () => {
-      const style = previewCard.dataset.style || 'minimal';
+    const buildCardData = () => ({
+      first: getInput('firstName'),
+      last: getInput('lastName'),
+      company: getInput('company'),
+      title: getInput('title'),
+      phone: getInput('phone'),
+      email: getInput('email'),
+      website: getInput('website'),
+      address: getInput('address'),
+      note: getInput('note'),
+      style: previewCard.dataset.style || 'minimal'
+    });
+
+    const buildCardHTML = (data = buildCardData()) => {
+      const style = data.style || 'minimal';
       const classes = {
         minimal: 'card-minimal',
         engineer: 'card-engineer',
         business: 'card-business'
       }[style];
 
-      const first = getInput('firstName');
-      const last = getInput('lastName');
-      const company = getInput('company');
-      const title = getInput('title');
-      const phone = getInput('phone');
-      const email = getInput('email');
-      const website = getInput('website');
-      const address = getInput('address');
-      const note = getInput('note');
+      const first = data.first;
+      const last = data.last;
+      const company = data.company;
+      const title = data.title;
+      const phone = data.phone;
+      const email = data.email;
+      const website = data.website;
+      const address = data.address;
+      const note = data.note;
 
       return `<!DOCTYPE html>
 <html lang="zh-Hant">
@@ -443,9 +473,8 @@ body { margin:0; font-family:'Inter',sans-serif; background:#f3f4f6; color:#1118
       const vcard = renderVCardText();
       vcardQRInstance = clearAndRenderQR(document.getElementById('vcardQR'), vcard);
 
-      const cardHTML = buildCardHTML();
-      const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(cardHTML);
-      cardQRInstance = clearAndRenderQR(document.getElementById('cardQR'), dataUrl);
+      const shareUrl = buildShareURL();
+      cardQRInstance = clearAndRenderQR(document.getElementById('cardQR'), shareUrl);
     };
 
     const exportVCF = () => {
@@ -462,6 +491,39 @@ body { margin:0; font-family:'Inter',sans-serif; background:#f3f4f6; color:#1118
       const url = URL.createObjectURL(blob);
       downloadDataURL(url, 'digital-card.html');
       URL.revokeObjectURL(url);
+    };
+
+    const encodeCardData = (data) => btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    const decodeCardData = (value) => JSON.parse(decodeURIComponent(escape(atob(value))));
+
+    const buildShareURL = () => {
+      const data = buildCardData();
+      const payload = encodeCardData(data);
+      const url = new URL(window.location.href);
+      url.search = '';
+      url.hash = '';
+      url.searchParams.set('card', payload);
+      return url.toString();
+    };
+
+    const applyDataToForm = (data) => {
+      document.getElementById('firstName').value = data.first || '';
+      document.getElementById('lastName').value = data.last || '';
+      document.getElementById('company').value = data.company || '';
+      document.getElementById('title').value = data.title || '';
+      document.getElementById('phone').value = data.phone || '';
+      document.getElementById('email').value = data.email || '';
+      document.getElementById('website').value = data.website || '';
+      document.getElementById('address').value = data.address || '';
+      document.getElementById('note').value = data.note || '';
+    };
+
+    const setStyle = (style) => {
+      styleToggle.querySelectorAll('button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.style === style);
+      });
+      previewCard.dataset.style = style;
+      previewCard.className = `preview-card card-${style}`;
     };
 
     const attachEvents = () => {
@@ -486,19 +548,41 @@ body { margin:0; font-family:'Inter',sans-serif; background:#f3f4f6; color:#1118
 
       styleToggle.addEventListener('click', (e) => {
         if (e.target.tagName !== 'BUTTON') return;
-        styleToggle.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-        e.target.classList.add('active');
         const style = e.target.dataset.style;
-        previewCard.dataset.style = style;
-        previewCard.className = `preview-card card-${style}`;
+        setStyle(style);
         renderQRs();
       });
+    };
+
+    const loadSharedCard = () => {
+      const params = new URLSearchParams(window.location.search);
+      const payload = params.get('card');
+      if (!payload) return false;
+
+      try {
+        const data = decodeCardData(payload);
+        applyDataToForm(data);
+        setStyle(data.style || 'minimal');
+        renderPreview();
+
+        document.body.classList.add('share-mode');
+        document.querySelector('.topbar p').textContent = '已載入分享的電子名片';
+        document.querySelector('.card.stack')?.remove();
+        document.getElementById('exportHTML').style.display = 'none';
+        return true;
+      } catch (err) {
+        console.error('Failed to load shared card', err);
+        return false;
+      }
     };
 
     const init = () => {
       attachEvents();
       renderPreview();
       renderQRs();
+      if (loadSharedCard()) {
+        renderQRs();
+      }
     };
 
     init();

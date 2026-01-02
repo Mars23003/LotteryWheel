@@ -331,7 +331,7 @@
       if (isChecked('note') && note) lines.push(`NOTE:${escapeVCardValue(note)}`);
 
       lines.push('END:VCARD');
-      return lines.join('\n');
+      return lines.join('\n') + '\n';
     };
 
     const renderVCardText = () => {
@@ -340,15 +340,15 @@
       return text;
     };
 
-    const normalizeVCardForExport = (text) => text.replace(/\n/g, '\r\n');
+    const normalizeVCardForExport = (text) => text.replace(/\r?\n/g, '\r\n');
 
     const clearAndRenderQR = (container, value) => {
       container.innerHTML = '';
       const canvas = document.createElement('canvas');
-      canvas.width = 180;
-      canvas.height = 180;
+      canvas.width = 240;
+      canvas.height = 240;
       container.appendChild(canvas);
-      new QRious({ element: canvas, value: value || ' ', size: 180, level: 'M' });
+      new QRious({ element: canvas, value: value || ' ', size: 240, level: 'L', padding: 10 });
       return canvas;
     };
 

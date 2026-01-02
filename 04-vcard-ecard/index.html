@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vCard + QRCode + 電子名片產生器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #4f46e5;
+      --border: #e5e7eb;
+      --accent: #e0e7ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+    }
+    h1 { margin: 0 0 8px; font-weight: 700; letter-spacing: -0.02em; }
+    h2 { margin: 0 0 12px; font-weight: 700; letter-spacing: -0.01em; }
+    p { margin: 0 0 12px; color: var(--muted); }
+    a { color: inherit; text-decoration: none; }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .topbar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    }
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .section-title small { color: var(--muted); }
+    form { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .field {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+    }
+    .field input[type="text"], .field input[type="tel"], .field input[type="email"], .field input[type="url"], .field textarea, .field select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: var(--bg);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field textarea { resize: vertical; min-height: 72px; }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+    }
+    .checkbox { display: flex; align-items: center; gap: 6px; min-width: 60px; color: var(--muted); font-size: 13px; }
+    .inline-controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.2s;
+    }
+    .button.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .button:active { transform: translateY(1px); }
+    .button:hover { box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
+    .stack { display: flex; flex-direction: column; gap: 12px; }
+    .muted-box { background: #f9fafb; border: 1px dashed var(--border); border-radius: 12px; padding: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; min-height: 140px; }
+    .preview-wrap { display: flex; flex-direction: column; gap: 12px; }
+    .preview-card {
+      border-radius: 16px;
+      padding: 18px;
+      transition: 0.25s;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, #ffffff, #f9fafb);
+      color: var(--text);
+    }
+    .preview-card .name { font-size: 22px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.01em; }
+    .preview-card .title { color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+    .preview-card .company { font-weight: 700; margin-bottom: 12px; }
+    .preview-card .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-weight: 600; font-size: 13px; }
+    .muted { color: var(--muted); }
+    .qr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .qr-box { border: 1px dashed var(--border); border-radius: 14px; padding: 12px; background: #fff; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+    .qr-box canvas, .qr-box img { width: 180px; height: 180px; }
+    .small-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .badge { display: inline-block; padding: 4px 8px; background: var(--accent); color: #4338ca; border-radius: 999px; font-weight: 700; font-size: 12px; }
+    .divider { height: 1px; background: var(--border); margin: 8px 0; }
+    .style-toggle { display: flex; gap: 8px; flex-wrap: wrap; }
+    .style-toggle button { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-weight: 600; color: var(--muted); }
+    .style-toggle button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* Theme Variants */
+    .card-minimal { background: linear-gradient(135deg, #ffffff, #f4f7ff); color: #111827; }
+    .card-engineer { background: linear-gradient(135deg, #0f172a, #111827); color: #e5e7eb; border-color: #1f2937; }
+    .card-engineer .title { color: #94a3b8; }
+    .card-engineer .pill { background: rgba(99,102,241,0.15); color: #c7d2fe; }
+    .card-business { background: linear-gradient(135deg, #0f172a, #312e81); color: #f8fafc; border-color: #1f2937; }
+    .card-business .title { color: #cbd5e1; }
+    .card-business .pill { background: rgba(255,255,255,0.12); color: #e0f2fe; }
+
+    @media (max-width: 720px) {
+      .page { padding: 24px 16px 32px; }
+      form { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="badge">純前端工具</div>
+      <h1>vCard + QRCode + 電子名片 產生器</h1>
+      <p>即時產生 vCard、行動 QRCode 與可匯出的電子名片 HTML，支援欄位勾選與版本切換。</p>
+      <div class="inline-controls">
+        <div class="style-toggle" id="styleToggle">
+          <button data-style="minimal" class="active">極簡風</button>
+          <button data-style="engineer">工程師風</button>
+          <button data-style="business">商務風</button>
+        </div>
+        <div class="inline-controls">
+          <label for="vcardVersion">vCard 版本</label>
+          <select id="vcardVersion">
+            <option value="3.0">3.0</option>
+            <option value="4.0">4.0</option>
+          </select>
+        </div>
+        <button class="button" id="copyVCard">複製 vCard 文字</button>
+        <button class="button primary" id="downloadVCF">下載 .vcf</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="section-title">
+          <h2>輸入表單</h2>
+          <small>勾選要輸出的欄位，未勾選或未填寫將略過。</small>
+        </div>
+        <form id="contactForm">
+          <div class="field">
+            <div class="checkbox"><input type="checkbox" data-field="name" checked> Name</div>
+            <div class="stack" style="flex:1;">
+              <div><label for="firstName">First Name</label><input id="firstName" type="text" placeholder="Tony"></div>
+              <div><label for="lastName">Last Name</label><input id="lastName" type="text" placeholder="Stark"></div>
+            </div>
+          </div>
+          <div class="field">
+            <div class="checkbox"><input type="checkbox" data-field="company" checked> Company</div>
+            <div style="flex:1;"><label for="company">Company</label><input id="company" type="text" placeholder="Stark Industries"></div>
+          </div>
+          <div class="field">
+            <div class="checkbox"><input type="checkbox" data-field="title" checked> Job Title</div>
+            <div style="flex:1;"><label for="title">Job Title</label><input id="title" type="text" placeholder="CTO"></div>
+          </div>
+          <div class="field">
+            <div class="checkbox"><input type="checkbox" data-field="phone" checked> Mobile</div>
+            <div style="flex:1;"><label for="phone">Mobile Phone</label><input id="phone" type="tel" placeholder="+886 900 000 000"></div>
+          </div>
+          <div class="field">
+            <div class="checkbox"><input type="checkbox" data-field="email" checked> Email</div>
+            <div style="flex:1;"><label for="email">Email</label><input id="email" type="email" placeholder="tony@example.com"></div>
+          </div>
+          <div class="field">
+            <div class="checkbox"><input type="checkbox" data-field="website" checked> Website</div>
+            <div style="flex:1;"><label for="website">Website</label><input id="website" type="url" placeholder="https://example.com"></div>
+          </div>
+          <div class="field">
+            <div class="checkbox"><input type="checkbox" data-field="address" checked> Address</div>
+            <div style="flex:1;"><label for="address">Address</label><input id="address" type="text" placeholder="123 Main St, Taipei"></div>
+          </div>
+          <div class="field">
+            <div class="checkbox"><input type="checkbox" data-field="note" checked> Note</div>
+            <div style="flex:1;"><label for="note">Note</label><textarea id="note" placeholder="備註 / Note"></textarea></div>
+          </div>
+        </form>
+      </div>
+
+      <div class="card stack">
+        <div class="section-title">
+          <h2>vCard & QR</h2>
+          <small>即時生成 vCard 文字與 QRCode</small>
+        </div>
+        <div class="stack">
+          <div class="muted-box" id="vcardText">BEGIN:VCARD\nVERSION:3.0\nEND:VCARD</div>
+          <div class="qr-grid">
+            <div class="qr-box">
+              <div class="small-label">vCard QRCode</div>
+              <div id="vcardQR"></div>
+              <div class="inline-controls">
+                <button class="button" id="downloadQR">下載 QR PNG</button>
+              </div>
+            </div>
+            <div class="qr-box">
+              <div class="small-label">電子名片頁 QRCode</div>
+              <div id="cardQR"></div>
+              <div class="inline-controls">
+                <button class="button" id="downloadCardQR">下載 QR PNG</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>電子名片預覽</h2>
+          <small>掃描 QR 即可開啟</small>
+        </div>
+        <div class="preview-wrap">
+          <div id="previewCard" class="preview-card card-minimal">
+            <div class="name" id="previewName">Your Name</div>
+            <div class="title" id="previewTitle">Job Title</div>
+            <div class="company" id="previewCompany">Company</div>
+            <div class="divider"></div>
+            <div class="stack" id="previewContacts"></div>
+            <div class="actions" id="previewActions"></div>
+          </div>
+          <div class="inline-controls">
+            <button class="button" id="exportHTML">匯出電子名片 HTML</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    const form = document.getElementById('contactForm');
+    const vcardTextEl = document.getElementById('vcardText');
+    const vcardVersionEl = document.getElementById('vcardVersion');
+    const previewCard = document.getElementById('previewCard');
+    const previewName = document.getElementById('previewName');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewCompany = document.getElementById('previewCompany');
+    const previewContacts = document.getElementById('previewContacts');
+    const previewActions = document.getElementById('previewActions');
+    const styleToggle = document.getElementById('styleToggle');
+
+    let vcardQRInstance = null;
+    let cardQRInstance = null;
+
+    const getInput = (id) => document.getElementById(id).value.trim();
+    const isChecked = (field) => form.querySelector(`input[data-field="${field}"]`).checked;
+
+    const buildVCard = () => {
+      const first = getInput('firstName');
+      const last = getInput('lastName');
+      const company = getInput('company');
+      const title = getInput('title');
+      const phone = getInput('phone');
+      const email = getInput('email');
+      const website = getInput('website');
+      const address = getInput('address');
+      const note = getInput('note');
+      const version = vcardVersionEl.value;
+
+      const lines = ['BEGIN:VCARD', `VERSION:${version}`];
+
+      if (isChecked('name') && (first || last)) {
+        lines.push(`N:${last};${first};;;`);
+        lines.push(`FN:${first} ${last}`.trim());
+      }
+      if (isChecked('company') && company) lines.push(`ORG:${company}`);
+      if (isChecked('title') && title) lines.push(`TITLE:${title}`);
+      if (isChecked('phone') && phone) lines.push(`TEL;TYPE=CELL:${phone}`);
+      if (isChecked('email') && email) lines.push(`EMAIL:${email}`);
+      if (isChecked('website') && website) lines.push(`URL:${website}`);
+      if (isChecked('address') && address) lines.push(`ADR;TYPE=HOME:;;${address};;;;`);
+      if (isChecked('note') && note) lines.push(`NOTE:${note.replace(/\n/g, '\\n')}`);
+
+      lines.push('END:VCARD');
+      return lines.join('\n');
+    };
+
+    const renderVCardText = () => {
+      const text = buildVCard();
+      vcardTextEl.textContent = text;
+      return text;
+    };
+
+    const clearAndRenderQR = (container, value) => {
+      container.innerHTML = '';
+      return new QRCode(container, { text: value || ' ', width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M });
+    };
+
+    const getQRCanvasData = (container) => {
+      const canvas = container.querySelector('canvas');
+      if (canvas) return canvas.toDataURL('image/png');
+      const img = container.querySelector('img');
+      if (img) return img.src;
+      return null;
+    };
+
+    const downloadDataURL = (dataURL, filename) => {
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = filename;
+      link.click();
+    };
+
+    const renderPreview = () => {
+      const first = getInput('firstName') || 'Your';
+      const last = getInput('lastName') || 'Name';
+      const company = getInput('company') || 'Company';
+      const title = getInput('title') || 'Job Title';
+      const phone = getInput('phone');
+      const email = getInput('email');
+      const website = getInput('website');
+      const address = getInput('address');
+
+      previewName.textContent = `${first} ${last}`.trim();
+      previewTitle.textContent = title;
+      previewCompany.textContent = company;
+
+      const contacts = [];
+      if (phone) contacts.push(`<div class="pill">📞 ${phone}</div>`);
+      if (email) contacts.push(`<div class="pill">✉️ ${email}</div>`);
+      if (address) contacts.push(`<div class="pill">📍 ${address}</div>`);
+      if (website) contacts.push(`<div class="pill">🌐 ${website}</div>`);
+      previewContacts.innerHTML = contacts.join('') || '<div class="muted">沒有聯絡方式</div>';
+
+      const actions = [];
+      if (phone) actions.push(`<a class="button" href="tel:${phone}">撥號</a>`);
+      if (email) actions.push(`<a class="button" href="mailto:${email}">寄信</a>`);
+      if (website) actions.push(`<a class="button" target="_blank" rel="noopener" href="${website}">網站</a>`);
+      previewActions.innerHTML = actions.join('');
+    };
+
+    const buildCardHTML = () => {
+      const style = previewCard.dataset.style || 'minimal';
+      const classes = {
+        minimal: 'card-minimal',
+        engineer: 'card-engineer',
+        business: 'card-business'
+      }[style];
+
+      const first = getInput('firstName');
+      const last = getInput('lastName');
+      const company = getInput('company');
+      const title = getInput('title');
+      const phone = getInput('phone');
+      const email = getInput('email');
+      const website = getInput('website');
+      const address = getInput('address');
+      const note = getInput('note');
+
+      return `<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>電子名片</title>
+<style>
+body { margin:0; font-family:'Inter',sans-serif; background:#f3f4f6; color:#111827; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+.card { max-width:360px; width:90%; border-radius:16px; padding:20px; border:1px solid #e5e7eb; box-shadow:0 10px 30px rgba(0,0,0,.08); }
+.card-minimal { background:linear-gradient(135deg,#ffffff,#f4f7ff); color:#111827; }
+.card-engineer { background:linear-gradient(135deg,#0f172a,#111827); color:#e5e7eb; border-color:#1f2937; }
+.card-engineer .title { color:#94a3b8; }
+.card-engineer .pill { background:rgba(99,102,241,0.15); color:#c7d2fe; }
+.card-business { background:linear-gradient(135deg,#0f172a,#312e81); color:#f8fafc; border-color:#1f2937; }
+.card-business .title { color:#cbd5e1; }
+.card-business .pill { background:rgba(255,255,255,0.12); color:#e0f2fe; }
+.name{font-size:24px;font-weight:700;letter-spacing:-0.01em;margin:0 0 4px;}
+.title{font-weight:600;color:#6b7280;margin:0 0 8px;}
+.company{font-weight:700;margin:0 0 12px;}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.button{padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;background:rgba(255,255,255,0.2);color:inherit;text-decoration:none;font-weight:700;}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:999px;background:#eef2ff;color:#4338ca;font-weight:600;font-size:13px;}
+.stack{display:flex;flex-direction:column;gap:10px;}
+</style>
+</head>
+<body>
+  <div class="card ${classes}">
+    <div class="name">${(first || '') + ' ' + (last || '')}</div>
+    <div class="title">${title || ''}</div>
+    <div class="company">${company || ''}</div>
+    <div class="stack">
+      ${phone ? `<div class="pill">📞 ${phone}</div>` : ''}
+      ${email ? `<div class="pill">✉️ ${email}</div>` : ''}
+      ${address ? `<div class="pill">📍 ${address}</div>` : ''}
+      ${website ? `<div class="pill">🌐 ${website}</div>` : ''}
+      ${note ? `<div class="pill">📝 ${note}</div>` : ''}
+    </div>
+    <div class="actions">
+      ${phone ? `<a class="button" href="tel:${phone}">撥號</a>` : ''}
+      ${email ? `<a class="button" href="mailto:${email}">寄信</a>` : ''}
+      ${website ? `<a class="button" href="${website}" target="_blank" rel="noopener">網站</a>` : ''}
+    </div>
+  </div>
+</body>
+</html>`;
+    };
+
+    const renderQRs = () => {
+      const vcard = renderVCardText();
+      vcardQRInstance = clearAndRenderQR(document.getElementById('vcardQR'), vcard);
+
+      const cardHTML = buildCardHTML();
+      const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(cardHTML);
+      cardQRInstance = clearAndRenderQR(document.getElementById('cardQR'), dataUrl);
+    };
+
+    const exportVCF = () => {
+      const content = renderVCardText();
+      const blob = new Blob([content], { type: 'text/vcard;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      downloadDataURL(url, 'contact.vcf');
+      URL.revokeObjectURL(url);
+    };
+
+    const exportHTML = () => {
+      const html = buildCardHTML();
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      downloadDataURL(url, 'digital-card.html');
+      URL.revokeObjectURL(url);
+    };
+
+    const attachEvents = () => {
+      form.addEventListener('input', () => { renderPreview(); renderQRs(); });
+      form.addEventListener('change', () => { renderPreview(); renderQRs(); });
+      vcardVersionEl.addEventListener('change', renderQRs);
+
+      document.getElementById('copyVCard').addEventListener('click', () => {
+        navigator.clipboard.writeText(renderVCardText());
+        alert('已複製 vCard 文字');
+      });
+      document.getElementById('downloadVCF').addEventListener('click', exportVCF);
+      document.getElementById('downloadQR').addEventListener('click', () => {
+        const data = getQRCanvasData(document.getElementById('vcardQR'));
+        if (data) downloadDataURL(data, 'vcard-qr.png');
+      });
+      document.getElementById('downloadCardQR').addEventListener('click', () => {
+        const data = getQRCanvasData(document.getElementById('cardQR'));
+        if (data) downloadDataURL(data, 'card-qr.png');
+      });
+      document.getElementById('exportHTML').addEventListener('click', exportHTML);
+
+      styleToggle.addEventListener('click', (e) => {
+        if (e.target.tagName !== 'BUTTON') return;
+        styleToggle.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        const style = e.target.dataset.style;
+        previewCard.dataset.style = style;
+        previewCard.className = `preview-card card-${style}`;
+        renderQRs();
+      });
+    };
+
+    const init = () => {
+      attachEvents();
+      renderPreview();
+      renderQRs();
+    };
+
+    init();
+  </script>
+</body>
+</html>

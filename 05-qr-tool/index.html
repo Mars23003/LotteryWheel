@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR Code 工具箱｜生成與掃描</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #111827;
+      --card: #111827;
+      --primary: #7c3aed;
+      --primary-2: #a855f7;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #1f2937;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.18), transparent 30%),
+                  radial-gradient(circle at 80% 0%, rgba(109, 40, 217, 0.2), transparent 32%),
+                  var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+    main {
+      width: min(1200px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    header {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(79, 70, 229, 0.1));
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      border-radius: 20px;
+      backdrop-filter: blur(6px);
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(26px, 3vw, 32px);
+      letter-spacing: -0.02em;
+    }
+    p.subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+    .section-title h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.01em;
+    }
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--text);
+      background: rgba(124, 58, 237, 0.18);
+      border: 1px solid rgba(124, 58, 237, 0.35);
+    }
+    label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0b1221;
+      color: var(--text);
+      font-size: 14px;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+    }
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s;
+      box-shadow: 0 14px 40px rgba(124, 58, 237, 0.3);
+    }
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: none;
+    }
+    button:active { transform: translateY(1px); }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: #0c1426;
+    }
+    .qr-preview {
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 30% 30%, rgba(124, 58, 237, 0.08), transparent 40%), #0b1221;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 220px;
+    }
+    .result-box {
+      border-radius: 12px;
+      border: 1px dashed var(--border);
+      background: #0b1221;
+      padding: 12px;
+      min-height: 80px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .muted { color: var(--muted); font-size: 13px; }
+    .upload {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    input[type="file"] { border: none; padding: 10px 0; }
+    video {
+      width: 100%;
+      border-radius: 12px;
+      background: #0b1221;
+      border: 1px solid var(--border);
+    }
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge { padding: 4px 8px; border-radius: 10px; background: rgba(124, 58, 237, 0.15); border: 1px solid rgba(124, 58, 237, 0.3); }
+    .flex-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    @media (max-width: 720px) { body { padding: 16px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="flex-between">
+        <div>
+          <h1>QR Code 工具箱</h1>
+          <p class="subtitle">純前端即可運作：即時生成、下載、上傳解析，或用相機掃描。適用 GitHub Pages，無需後端。</p>
+        </div>
+        <span class="pill">前端專用 · 離線亦可</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section id="generator">
+        <div class="section-title">
+          <h2>① QR Code 生成器</h2>
+          <span class="pill">PNG 下載 / ECL</span>
+        </div>
+        <div class="card">
+          <label for="text-input">內容（可為文字、URL、vCard、WiFi、Email ...）</label>
+          <textarea id="text-input" placeholder="輸入要轉成 QR Code 的內容，例如 https://example.com"></textarea>
+        </div>
+        <div class="row">
+          <div class="card" style="flex:1; min-width:160px;">
+            <label for="size-select">尺寸</label>
+            <select id="size-select">
+              <option value="180">180 px</option>
+              <option value="220">220 px</option>
+              <option value="260" selected>260 px</option>
+              <option value="320">320 px</option>
+            </select>
+          </div>
+          <div class="card" style="flex:1; min-width:160px;">
+            <label for="ecl-select">Error Correction Level</label>
+            <select id="ecl-select">
+              <option value="L">L - 7%</option>
+              <option value="M" selected>M - 15%</option>
+              <option value="Q">Q - 25%</option>
+              <option value="H">H - 30%</option>
+            </select>
+          </div>
+        </div>
+        <div class="card">
+          <div class="flex-between" style="margin-bottom:12px;">
+            <div>
+              <div class="status">即時預覽</div>
+              <p class="muted" style="margin:6px 0 0;">輸入變更即自動更新 QR Code。</p>
+            </div>
+            <div class="actions">
+              <button id="download-btn" aria-label="下載 PNG">下載 PNG</button>
+              <button class="secondary" id="refresh-btn" aria-label="刷新 QR">重新生成</button>
+            </div>
+          </div>
+          <div class="qr-preview" id="qr-preview"></div>
+        </div>
+      </section>
+
+      <section id="scanner">
+        <div class="section-title">
+          <h2>② QR Code 掃描 / 解析器</h2>
+          <span class="pill">圖片上傳 / 相機掃描</span>
+        </div>
+        <div class="card">
+          <label>方式 A：圖片解析</label>
+          <div class="upload">
+            <p class="muted" style="margin:0 0 8px;">上傳 PNG / JPG，立即解析 QR 內容。</p>
+            <input type="file" accept="image/png, image/jpeg" id="file-input" />
+            <div class="actions" style="justify-content:center; margin-top:8px;">
+              <button class="secondary" id="clear-upload">清除圖片</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="flex-between" style="margin-bottom:10px;">
+            <div>
+              <label style="margin-bottom:2px;">方式 B：相機掃描</label>
+              <div class="status" id="camera-status">待機中</div>
+            </div>
+            <div class="actions">
+              <button id="start-camera">開始掃描</button>
+              <button class="secondary" id="stop-camera">停止</button>
+            </div>
+          </div>
+          <video id="video" playsinline muted></video>
+        </div>
+
+        <div class="card">
+          <div class="flex-between" style="margin-bottom:6px;">
+            <label style="margin:0;">解析結果</label>
+            <div class="actions">
+              <button class="secondary" id="copy-result">複製內容</button>
+              <span class="badge" id="result-badge">待解析</span>
+            </div>
+          </div>
+          <div class="result-box" id="result-box">尚未解析</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <canvas id="hidden-canvas" style="display:none;"></canvas>
+
+  <script>
+    const textInput = document.getElementById('text-input');
+    const sizeSelect = document.getElementById('size-select');
+    const eclSelect = document.getElementById('ecl-select');
+    const qrPreview = document.getElementById('qr-preview');
+    const downloadBtn = document.getElementById('download-btn');
+    const refreshBtn = document.getElementById('refresh-btn');
+
+    const fileInput = document.getElementById('file-input');
+    const clearUploadBtn = document.getElementById('clear-upload');
+    const resultBox = document.getElementById('result-box');
+    const resultBadge = document.getElementById('result-badge');
+    const copyBtn = document.getElementById('copy-result');
+
+    const startCameraBtn = document.getElementById('start-camera');
+    const stopCameraBtn = document.getElementById('stop-camera');
+    const videoEl = document.getElementById('video');
+    const cameraStatus = document.getElementById('camera-status');
+    const hiddenCanvas = document.getElementById('hidden-canvas');
+
+    let qr;
+    let stream = null;
+    let scanInterval = null;
+    const ECL_MAP = { L: QRCode.CorrectLevel.L, M: QRCode.CorrectLevel.M, Q: QRCode.CorrectLevel.Q, H: QRCode.CorrectLevel.H };
+
+    const setResult = (text, badge = '完成', badgeColor = 'rgba(124,58,237,0.15)') => {
+      resultBox.textContent = text || '尚未解析';
+      resultBadge.textContent = badge;
+      resultBadge.style.background = badgeColor;
+      resultBadge.style.borderColor = badgeColor;
+    };
+
+    const generateQR = () => {
+      const value = textInput.value.trim() || 'https://example.com';
+      const size = Number(sizeSelect.value) || 260;
+      const level = ECL_MAP[eclSelect.value] || QRCode.CorrectLevel.M;
+      qrPreview.innerHTML = '';
+      qr = new QRCode(qrPreview, {
+        text: value,
+        width: size,
+        height: size,
+        colorDark: '#111827',
+        colorLight: '#ffffff',
+        correctLevel: level,
+      });
+    };
+
+    const downloadQR = () => {
+      const canvas = qrPreview.querySelector('canvas');
+      const img = qrPreview.querySelector('img');
+      const source = canvas || img;
+      if (!source) return alert('請先生成 QR Code');
+      const link = document.createElement('a');
+      link.download = 'qr-code.png';
+      link.href = canvas ? canvas.toDataURL('image/png') : img.src;
+      link.click();
+    };
+
+    const copyResult = async () => {
+      if (!resultBox.textContent || resultBox.textContent === '尚未解析') return;
+      try {
+        await navigator.clipboard.writeText(resultBox.textContent);
+        resultBadge.textContent = '已複製';
+      } catch (err) {
+        alert('無法複製，請手動選取。');
+      }
+    };
+
+    const loadImageAndDecode = (file) => {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = hiddenCanvas;
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, canvas.width, canvas.height);
+          if (code && code.data) {
+            setResult(code.data, '解析成功');
+          } else {
+            setResult('未找到 QR Code，請換張圖片試試', '未解析', 'rgba(239,68,68,0.15)');
+          }
+        };
+        img.onerror = () => setResult('圖片載入失敗', '錯誤', 'rgba(239,68,68,0.15)');
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const stopCamera = () => {
+      if (scanInterval) {
+        cancelAnimationFrame(scanInterval);
+        scanInterval = null;
+      }
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+      }
+      videoEl.srcObject = null;
+      cameraStatus.textContent = '已停止';
+    };
+
+    const scanWithBarcodeDetector = async (detector) => {
+      try {
+        const barcodes = await detector.detect(videoEl);
+        const qrCode = barcodes.find((b) => b.rawValue);
+        if (qrCode) {
+          setResult(qrCode.rawValue, '掃描成功');
+          stopCamera();
+          return true;
+        }
+      } catch (err) {
+        console.warn('BarcodeDetector detect error', err);
+      }
+      return false;
+    };
+
+    const scanWithJsQR = () => {
+      const canvas = hiddenCanvas;
+      const ctx = canvas.getContext('2d');
+      canvas.width = videoEl.videoWidth;
+      canvas.height = videoEl.videoHeight;
+      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, canvas.width, canvas.height);
+      if (code && code.data) {
+        setResult(code.data, '掃描成功');
+        stopCamera();
+        return true;
+      }
+      return false;
+    };
+
+    const loopScan = (detector) => {
+      const step = async () => {
+        if (!videoEl.srcObject) return;
+        let found = false;
+        if (detector) {
+          found = await scanWithBarcodeDetector(detector);
+        }
+        if (!found) {
+          found = scanWithJsQR();
+        }
+        if (!found) scanInterval = requestAnimationFrame(step);
+      };
+      scanInterval = requestAnimationFrame(step);
+    };
+
+    const startCamera = async () => {
+      stopCamera();
+      if (!navigator.mediaDevices?.getUserMedia) {
+        cameraStatus.textContent = '瀏覽器不支援相機，請改用圖片上傳。';
+        setResult('瀏覽器不支援相機，請改用圖片上傳', '未支援', 'rgba(239,68,68,0.15)');
+        return;
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        videoEl.srcObject = stream;
+        await videoEl.play();
+        cameraStatus.textContent = '相機啟動中...';
+        let detector = null;
+        if ('BarcodeDetector' in window) {
+          const formats = await BarcodeDetector.getSupportedFormats();
+          if (formats.includes('qr_code')) {
+            detector = new BarcodeDetector({ formats: ['qr_code'] });
+            cameraStatus.textContent = '使用 BarcodeDetector 掃描';
+          }
+        }
+        loopScan(detector);
+      } catch (err) {
+        console.error(err);
+        cameraStatus.textContent = '相機啟動失敗，請改用圖片上傳';
+        setResult('相機無法啟動，請檢查權限或改用圖片解析', '錯誤', 'rgba(239,68,68,0.15)');
+      }
+    };
+
+    textInput.addEventListener('input', generateQR);
+    sizeSelect.addEventListener('change', generateQR);
+    eclSelect.addEventListener('change', generateQR);
+    refreshBtn.addEventListener('click', generateQR);
+    downloadBtn.addEventListener('click', downloadQR);
+
+    fileInput.addEventListener('change', (e) => loadImageAndDecode(e.target.files[0]));
+    clearUploadBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      setResult('尚未解析', '待解析');
+    });
+    copyBtn.addEventListener('click', copyResult);
+
+    startCameraBtn.addEventListener('click', startCamera);
+    stopCameraBtn.addEventListener('click', stopCamera);
+
+    window.addEventListener('beforeunload', stopCamera);
+
+    // init defaults
+    textInput.value = 'https://github.com/';
+    generateQR();
+  </script>
+</body>
+</html>

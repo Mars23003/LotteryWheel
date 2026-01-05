@@ -38,5 +38,15 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=vCard+Generator",
     "date": "2025-02-08",
     "description": "純前端的 vCard 生成、QR 碼與電子名片匯出工具，支援欄位勾選、版本與樣式切換。"
+  },
+  {
+    "id": "05",
+    "name": "QR Code 工具箱",
+    "path": "05-qr-tool/index.html",
+    "folder": "05-qr-tool/",
+    "tags": ["QRCode", "Generator", "Scanner"],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=QR+Tool",
+    "date": "2025-03-07",
+    "description": "純前端的 QR 生成、下載、圖片解析與相機掃描工具，適用 GitHub Pages。"
   }
 ]

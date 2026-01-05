@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>反應與操作能力測試 | Reaction & Control Tests</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --accent: #22d3ee;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --danger: #f87171;
+      --success: #4ade80;
+      --warning: #facc15;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.08), transparent 25%),
+                  radial-gradient(circle at 80% 10%, rgba(250, 204, 21, 0.08), transparent 30%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 24px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 3vw, 32px);
+      letter-spacing: 0.5px;
+    }
+
+    p.subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 16px 16px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
+    .tab:hover { border-color: rgba(34, 211, 238, 0.5); }
+    .tab.active { background: rgba(34, 211, 238, 0.15); border-color: rgba(34, 211, 238, 0.8); color: #fff; }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 16px 48px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    button.primary {
+      background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+      color: #0b1224;
+      border: none;
+      border-radius: var(--radius);
+      padding: 10px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(14, 165, 233, 0.35);
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
+    button.primary:active { transform: translateY(1px); box-shadow: 0 6px 18px rgba(14, 165, 233, 0.3); }
+    button.secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius);
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: border 0.2s ease;
+    }
+    button.secondary:hover { border-color: rgba(34, 211, 238, 0.4); }
+
+    .status { color: var(--muted); font-size: 14px; }
+    .result { margin-top: 8px; font-size: 16px; font-weight: 700; }
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    /* Reaction Test */
+    #reaction-area {
+      margin-top: 16px;
+      height: 200px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      color: #0b1224;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    /* Click Speed */
+    .click-target {
+      margin-top: 16px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      background: radial-gradient(circle at 50% 40%, rgba(34, 211, 238, 0.25), rgba(34, 211, 238, 0.05));
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s ease, border 0.2s ease;
+    }
+    .click-target:active { transform: scale(0.98); border-color: rgba(34, 211, 238, 0.8); }
+
+    /* Tracking */
+    #tracking-area {
+      position: relative;
+      height: 320px;
+      margin-top: 16px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02));
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    #target-dot {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #facc15, #f97316);
+      box-shadow: 0 10px 30px rgba(249, 115, 22, 0.35);
+      touch-action: none;
+      user-select: none;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #0b1224;
+      cursor: grab;
+    }
+
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.06); color: var(--muted); font-size: 12px; }
+    .mono { font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace; }
+
+    @media (max-width: 640px) {
+      .controls { flex-direction: column; align-items: flex-start; }
+      .click-target { width: 160px; height: 160px; }
+      #tracking-area { height: 260px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>反應與操作能力測試</h1>
+    <p class="subtitle">Reaction & Control Tests · 純前端工具 · 適用滑鼠與觸控</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="reaction">反應時間</button>
+    <button class="tab" data-tab="click">點擊速度</button>
+    <button class="tab" data-tab="tracking">追蹤目標</button>
+  </div>
+
+  <main>
+    <section id="reaction" class="section active panel">
+      <div class="controls">
+        <button class="primary" id="reaction-start">開始 / 重來</button>
+        <span class="status" id="reaction-status">點擊開始後，等待顏色變化再點擊。</span>
+      </div>
+      <div id="reaction-area">準備</div>
+      <div class="card">
+        <div class="result" id="reaction-result">尚未測試</div>
+        <div class="status mono" id="reaction-detail"></div>
+      </div>
+    </section>
+
+    <section id="click" class="section panel">
+      <div class="controls">
+        <button class="primary" id="click-start">開始 5 秒挑戰</button>
+        <span class="badge">目前測試裝置：<span id="device-label"></span></span>
+      </div>
+      <div class="status" id="click-status">點擊開始後，儘快點擊下方圓形。</div>
+      <div class="click-target" id="click-target">點我</div>
+      <div class="card">
+        <div class="result" id="click-result">尚未開始</div>
+        <div class="status mono" id="click-detail"></div>
+      </div>
+    </section>
+
+    <section id="tracking" class="section panel">
+      <div class="controls">
+        <button class="primary" id="tracking-start">開始 / 重來</button>
+        <span class="status" id="tracking-status">按下目標並保持壓住，同時跟隨它的移動。</span>
+      </div>
+      <div id="tracking-area">
+        <div id="target-dot">●</div>
+      </div>
+      <div class="card">
+        <div class="result" id="tracking-result">尚未開始</div>
+        <div class="status mono" id="tracking-detail"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Tab switching
+    const tabs = document.querySelectorAll('.tab');
+    const sections = document.querySelectorAll('.section');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        sections.forEach(sec => sec.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Reaction Time Test
+    const reactionArea = document.getElementById('reaction-area');
+    const reactionStart = document.getElementById('reaction-start');
+    const reactionStatus = document.getElementById('reaction-status');
+    const reactionResult = document.getElementById('reaction-result');
+    const reactionDetail = document.getElementById('reaction-detail');
+
+    let reactionState = 'idle';
+    let reactionTimer = null;
+    let readyTimestamp = 0;
+
+    const reactionMessages = {
+      idle: '點擊開始後，等待顏色變化再點擊。',
+      waiting: '等待中...顏色變化後再點擊！',
+      ready: '變色了！立刻點擊！',
+      early: '太早了，再試一次。',
+    };
+
+    function resetReaction() {
+      clearTimeout(reactionTimer);
+      reactionState = 'waiting';
+      reactionArea.style.background = 'linear-gradient(135deg, #1e293b, #0f172a)';
+      reactionArea.style.color = '#cbd5e1';
+      reactionArea.textContent = '等待...';
+      reactionStatus.textContent = reactionMessages.waiting;
+      reactionResult.textContent = '等待中';
+      reactionDetail.textContent = '';
+      const delay = 2000 + Math.random() * 3000;
+      reactionTimer = setTimeout(() => {
+        reactionState = 'ready';
+        readyTimestamp = performance.now();
+        reactionArea.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
+        reactionArea.style.color = '#0b1224';
+        reactionArea.textContent = '點擊！';
+        reactionStatus.textContent = reactionMessages.ready;
+      }, delay);
+    }
+
+    function getReactionGrade(ms) {
+      if (ms < 200) return '等級：極快';
+      if (ms < 300) return '等級：很好';
+      if (ms < 400) return '等級：普通';
+      return '等級：偏慢';
+    }
+
+    reactionStart.addEventListener('click', () => {
+      resetReaction();
+    });
+
+    reactionArea.addEventListener('click', () => {
+      if (reactionState === 'waiting') {
+        reactionState = 'early';
+        clearTimeout(reactionTimer);
+        reactionStatus.textContent = reactionMessages.early;
+        reactionResult.textContent = '太早了！';
+        reactionDetail.textContent = '';
+        reactionArea.style.background = 'linear-gradient(135deg, #f87171, #ef4444)';
+        reactionArea.style.color = '#0b1224';
+        reactionArea.textContent = '太早';
+      } else if (reactionState === 'ready') {
+        const reactionTime = Math.round(performance.now() - readyTimestamp);
+        reactionState = 'done';
+        reactionStatus.textContent = '完成！';
+        reactionResult.textContent = `反應時間：${reactionTime} ms`;
+        reactionDetail.textContent = getReactionGrade(reactionTime);
+        reactionArea.style.background = 'linear-gradient(135deg, #22d3ee, #0ea5e9)';
+        reactionArea.style.color = '#0b1224';
+        reactionArea.textContent = `${reactionTime} ms`;
+      }
+    });
+
+    // Click Speed Test
+    const deviceLabel = document.getElementById('device-label');
+    const clickStart = document.getElementById('click-start');
+    const clickTarget = document.getElementById('click-target');
+    const clickStatus = document.getElementById('click-status');
+    const clickResult = document.getElementById('click-result');
+    const clickDetail = document.getElementById('click-detail');
+
+    function detectDevice() {
+      if (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) return '觸控';
+      if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return '觸控';
+      return '滑鼠';
+    }
+    deviceLabel.textContent = detectDevice();
+
+    let clickState = 'idle';
+    let clickCount = 0;
+    let clickStartTime = 0;
+    const clickDuration = 5000;
+    let clickRafId = null;
+
+    function updateClickUI() {
+      if (clickState === 'running') {
+        const now = performance.now();
+        const elapsed = now - clickStartTime;
+        const remaining = Math.max(0, clickDuration - elapsed);
+        clickStatus.textContent = `剩餘 ${(remaining / 1000).toFixed(2)} 秒`;
+        clickDetail.textContent = `目前 CPS：${(clickCount / (elapsed / 1000)).toFixed(2)}`;
+        if (remaining <= 0) {
+          endClickTest();
+          return;
+        }
+        clickRafId = requestAnimationFrame(updateClickUI);
+      }
+    }
+
+    function getClickGrade(cps) {
+      if (cps < 3) return '等級：新手';
+      if (cps < 6) return '等級：普通';
+      if (cps < 9) return '等級：快';
+      return '等級：非常快';
+    }
+
+    function endClickTest() {
+      clickState = 'done';
+      cancelAnimationFrame(clickRafId);
+      const cps = clickCount / (clickDuration / 1000);
+      clickStatus.textContent = '完成！';
+      clickResult.textContent = `總點擊：${clickCount} 次 · 平均 CPS：${cps.toFixed(2)}`;
+      clickDetail.textContent = getClickGrade(cps);
+    }
+
+    clickStart.addEventListener('click', () => {
+      clickState = 'running';
+      clickCount = 0;
+      clickStartTime = performance.now();
+      clickStatus.textContent = '開始！用力點擊！';
+      clickResult.textContent = '計時中...';
+      clickDetail.textContent = '';
+      cancelAnimationFrame(clickRafId);
+      updateClickUI();
+    });
+
+    clickTarget.addEventListener('click', () => {
+      if (clickState !== 'running') return;
+      clickCount += 1;
+      clickTarget.textContent = clickCount;
+    });
+
+    // Tracking Test
+    const trackingArea = document.getElementById('tracking-area');
+    const targetDot = document.getElementById('target-dot');
+    const trackingStartBtn = document.getElementById('tracking-start');
+    const trackingStatus = document.getElementById('tracking-status');
+    const trackingResult = document.getElementById('tracking-result');
+    const trackingDetail = document.getElementById('tracking-detail');
+
+    let trackingRunning = false;
+    let trackingRaf = null;
+    let targetPos = { x: 80, y: 80 };
+    let targetVel = { x: 120, y: 90 }; // px per second
+    let lastTimestamp = null;
+    let tracking = false;
+    let trackStartTime = 0;
+    let trackedDuration = 0;
+    const radius = 30;
+
+    function setDotPosition() {
+      targetDot.style.transform = `translate(${targetPos.x}px, ${targetPos.y}px)`;
+    }
+
+    function resetTracking() {
+      trackingRunning = true;
+      tracking = false;
+      trackedDuration = 0;
+      trackStartTime = 0;
+      targetVel = { x: (Math.random() * 160 + 60) * (Math.random() > 0.5 ? 1 : -1), y: (Math.random() * 160 + 60) * (Math.random() > 0.5 ? 1 : -1) };
+      targetPos = { x: Math.random() * (trackingArea.clientWidth - 60), y: Math.random() * (trackingArea.clientHeight - 60) };
+      setDotPosition();
+      trackingStatus.textContent = '按下目標並持續跟隨';
+      trackingResult.textContent = '計時中...';
+      trackingDetail.textContent = '';
+      cancelAnimationFrame(trackingRaf);
+      lastTimestamp = null;
+      trackingRaf = requestAnimationFrame(updateTarget);
+    }
+
+    function getTrackingGrade(ms) {
+      if (ms < 2000) return '等級：短';
+      if (ms < 4000) return '等級：普通';
+      if (ms < 8000) return '等級：穩定';
+      return '等級：非常穩定';
+    }
+
+    function updateTarget(timestamp) {
+      if (!trackingRunning) return;
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const delta = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+
+      // Slight speed drift
+      targetVel.x += (Math.random() - 0.5) * 20 * delta;
+      targetVel.y += (Math.random() - 0.5) * 20 * delta;
+
+      targetPos.x += targetVel.x * delta;
+      targetPos.y += targetVel.y * delta;
+
+      const maxX = trackingArea.clientWidth - 60;
+      const maxY = trackingArea.clientHeight - 60;
+      if (targetPos.x < 0) { targetPos.x = 0; targetVel.x *= -1; }
+      if (targetPos.x > maxX) { targetPos.x = maxX; targetVel.x *= -1; }
+      if (targetPos.y < 0) { targetPos.y = 0; targetVel.y *= -1; }
+      if (targetPos.y > maxY) { targetPos.y = maxY; targetVel.y *= -1; }
+
+      setDotPosition();
+
+      if (tracking) {
+        trackedDuration = performance.now() - trackStartTime;
+        trackingResult.textContent = `已追蹤：${Math.round(trackedDuration)} ms`;
+      }
+
+      trackingRaf = requestAnimationFrame(updateTarget);
+    }
+
+    function endTracking() {
+      if (!tracking) return;
+      tracking = false;
+      trackingRunning = false;
+      cancelAnimationFrame(trackingRaf);
+      const ms = Math.round(trackedDuration);
+      trackingStatus.textContent = '結束';
+      trackingResult.textContent = `成功追蹤：${ms} ms`;
+      trackingDetail.textContent = getTrackingGrade(ms);
+    }
+
+    function pointInDot(x, y) {
+      const rect = trackingArea.getBoundingClientRect();
+      const centerX = rect.left + targetPos.x + radius;
+      const centerY = rect.top + targetPos.y + radius;
+      const dx = x - centerX;
+      const dy = y - centerY;
+      return Math.sqrt(dx * dx + dy * dy) <= radius;
+    }
+
+    targetDot.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (!trackingRunning) return;
+      tracking = true;
+      trackStartTime = performance.now();
+      trackedDuration = 0;
+      trackingStatus.textContent = '持續壓住並跟隨';
+      targetDot.setPointerCapture(e.pointerId);
+    });
+
+    targetDot.addEventListener('pointerup', () => {
+      endTracking();
+    });
+
+    document.addEventListener('pointermove', (e) => {
+      if (!tracking) return;
+      if (!pointInDot(e.clientX, e.clientY)) {
+        endTracking();
+      }
+    });
+
+    trackingStartBtn.addEventListener('click', () => {
+      resetTracking();
+    });
+
+    // Initialize defaults
+    resetReaction();
+    resetTracking();
+  </script>
+</body>
+</html>

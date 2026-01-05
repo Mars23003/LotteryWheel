@@ -48,5 +48,15 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=QR+Tool",
     "date": "2025-03-07",
     "description": "純前端的 QR 生成、下載、圖片解析與相機掃描工具，適用 GitHub Pages。"
+  },
+  {
+    "id": "06",
+    "name": "反應與操作能力測試",
+    "path": "06-reaction-control-tests/index.html",
+    "folder": "06-reaction-control-tests/",
+    "tags": ["Reaction", "Game", "Performance"],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Reaction+&+Control+Tests",
+    "date": "2025-05-23",
+    "description": "單頁包含反應時間、連點速度與追蹤目標三種操作力測試，適合滑鼠與觸控裝置。"
   }
 ]

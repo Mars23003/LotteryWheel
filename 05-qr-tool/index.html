@@ -311,6 +311,7 @@
     let qr;
     let stream = null;
     let scanInterval = null;
+    const canvasCtx = hiddenCanvas.getContext('2d', { willReadFrequently: true });
     const ECL_MAP = { L: QRCode.CorrectLevel.L, M: QRCode.CorrectLevel.M, Q: QRCode.CorrectLevel.Q, H: QRCode.CorrectLevel.H };
 
     const setResult = (text, badge = '完成', badgeColor = 'rgba(124,58,237,0.15)') => {
@@ -365,9 +366,8 @@
           const canvas = hiddenCanvas;
           canvas.width = img.width;
           canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          canvasCtx.drawImage(img, 0, 0);
+          const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
           const code = jsQR(imageData.data, canvas.width, canvas.height);
           if (code && code.data) {
             setResult(code.data, '解析成功');
@@ -411,11 +411,10 @@
 
     const scanWithJsQR = () => {
       const canvas = hiddenCanvas;
-      const ctx = canvas.getContext('2d');
       canvas.width = videoEl.videoWidth;
       canvas.height = videoEl.videoHeight;
-      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      canvasCtx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+      const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
       const code = jsQR(imageData.data, canvas.width, canvas.height);
       if (code && code.data) {
         setResult(code.data, '掃描成功');

@@ -4,7 +4,10 @@
     "name": "日式搖球抽獎機",
     "path": "01-lottery/index.html",
     "folder": "01-lottery/",
-    "tags": ["UI", "Animation"],
+    "tags": [
+      "UI",
+      "Animation"
+    ],
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Tool",
     "date": "2024-03-05",
     "description": "維持木質質感與抽獎流程的互動搖球機，集中於獨立頁面降低干擾。"
@@ -14,7 +17,11 @@
     "name": "JSON 工作室",
     "path": "02-json-studio/index.html",
     "folder": "02-json-studio/",
-    "tags": ["JSON", "Converter", "Validator"],
+    "tags": [
+      "JSON",
+      "Converter",
+      "Validator"
+    ],
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Tool",
     "date": "2024-04-18",
     "description": "純前端的 JSON 格式化、驗證、轉換與差異比對工作台，支援遮罩敏感欄位與樹狀檢視。"
@@ -24,7 +31,11 @@
     "name": "Cron 工作室",
     "path": "03-cron-studio/index.html",
     "folder": "03-cron-studio/",
-    "tags": ["Cron", "Scheduler", "Generator"],
+    "tags": [
+      "Cron",
+      "Scheduler",
+      "Generator"
+    ],
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Cron+Studio",
     "date": "2024-12-29",
     "description": "同時提供 Cron 解讀、人類語句複製與引導式產生器，支援 Linux/Quartz、時區、預覽與自然語句解析。"
@@ -34,7 +45,11 @@
     "name": "vCard + QRCode + 電子名片產生器",
     "path": "04-vcard-ecard/index.html",
     "folder": "04-vcard-ecard/",
-    "tags": ["vCard", "QRCode", "Business Card"],
+    "tags": [
+      "vCard",
+      "QRCode",
+      "Business Card"
+    ],
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=vCard+Generator",
     "date": "2025-02-08",
     "description": "純前端的 vCard 生成、QR 碼與電子名片匯出工具，支援欄位勾選、版本與樣式切換。"
@@ -44,7 +59,11 @@
     "name": "QR Code 工具箱",
     "path": "05-qr-tool/index.html",
     "folder": "05-qr-tool/",
-    "tags": ["QRCode", "Generator", "Scanner"],
+    "tags": [
+      "QRCode",
+      "Generator",
+      "Scanner"
+    ],
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=QR+Tool",
     "date": "2025-03-07",
     "description": "純前端的 QR 生成、下載、圖片解析與相機掃描工具，適用 GitHub Pages。"
@@ -54,9 +73,27 @@
     "name": "反應與操作能力測試",
     "path": "06-reaction-control-tests/index.html",
     "folder": "06-reaction-control-tests/",
-    "tags": ["Reaction", "Game", "Performance"],
+    "tags": [
+      "Reaction",
+      "Game",
+      "Performance"
+    ],
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Reaction+&+Control+Tests",
     "date": "2025-05-23",
     "description": "單頁包含反應時間、連點速度與追蹤目標三種操作力測試，適合滑鼠與觸控裝置。"
+  },
+  {
+    "id": "07",
+    "name": "Keyboard & Mouse Tester",
+    "path": "07-keyboard-mouse-tester/index.html",
+    "folder": "07-keyboard-mouse-tester/",
+    "tags": [
+      "Input",
+      "Testing",
+      "Utility"
+    ],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Keyboard+%26+Mouse+Tester",
+    "date": "2025-06-06",
+    "description": "純前端的鍵盤與滑鼠檢測工具，含虛擬元件、真實輸入同步、統計與 JSON 匯出，適用 GitHub Pages。"
   }
 ]

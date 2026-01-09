@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>買車總成本試算（TCO）</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f7f9;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --border: #e5e7eb;
+      --danger: #dc2626;
+    }
+    * {
+      box-sizing: border-box;
+      font-family: "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 16px 60px;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin: 0;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: var(--card);
+      border-radius: 14px;
+      padding: 6px;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .tab-button {
+      border: none;
+      background: transparent;
+      padding: 10px 8px;
+      font-weight: 600;
+      color: var(--muted);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.92rem;
+    }
+    .tab-button.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .tab-panel.active {
+      display: flex;
+    }
+    .grid-2 {
+      display: grid;
+      gap: 12px;
+    }
+    .grid-3 {
+      display: grid;
+      gap: 12px;
+    }
+    @media (min-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+      .grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+    .card h2 {
+      font-size: 1.05rem;
+      margin: 0 0 12px 0;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    input[type="number"],
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      background: #fff;
+    }
+    input[type="number"]:focus,
+    input[type="text"]:focus,
+    select:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.2);
+      border-color: var(--accent);
+    }
+    .toggle {
+      display: inline-flex;
+      gap: 6px;
+      background: #f3f4f6;
+      padding: 4px;
+      border-radius: 999px;
+    }
+    .toggle button {
+      border: none;
+      background: transparent;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .toggle button.active {
+      background: #fff;
+      color: var(--accent);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+      font-weight: 600;
+    }
+    .kpi {
+      display: grid;
+      gap: 12px;
+    }
+    .kpi-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+    }
+    .kpi-card h3 {
+      margin: 0 0 6px 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .kpi-card .value {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .kpi-card .hint {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .bar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .bar-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .bar {
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #60a5fa);
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .table th,
+    .table td {
+      padding: 10px 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .table th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    button.primary,
+    button.ghost {
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    button.ghost {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .note {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .highlight {
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+    }
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .comparison-table th,
+    .comparison-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      text-align: left;
+    }
+    .comparison-table th {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfeff;
+      color: #0e7490;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .error {
+      color: var(--danger);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>買車總成本試算（TCO）</h1>
+      <p>輸入購車與用車條件，即時計算每月、每年與持有期間總成本，支援多方案比較與 JSON 匯出。</p>
+    </header>
+
+    <div class="tabs" role="tablist">
+      <button class="tab-button active" data-tab="basic" role="tab">基本輸入</button>
+      <button class="tab-button" data-tab="detail" role="tab">成本明細</button>
+      <button class="tab-button" data-tab="compare" role="tab">方案比較</button>
+      <button class="tab-button" data-tab="export" role="tab">匯出/分享</button>
+    </div>
+
+    <section class="tab-panel active" id="tab-basic">
+      <div class="card">
+        <h2>車輛與持有</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label for="vehiclePrice">車價（成交價，NT$）</label>
+            <input id="vehiclePrice" type="number" min="0" step="1000" />
+          </div>
+          <div class="field">
+            <label for="holdYears">預計持有年數 N</label>
+            <input id="holdYears" type="number" min="1" max="15" step="1" />
+          </div>
+          <div class="field">
+            <label>轉售價模式</label>
+            <div class="toggle" data-toggle="residualType">
+              <button data-value="amount" class="active">轉售價</button>
+              <button data-value="rate">殘值率%</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="residualValue">預估轉售價 / 殘值率</label>
+            <input id="residualValue" type="number" min="0" step="1000" />
+          </div>
+          <div class="field">
+            <label for="licenseFee">牌照登記/領牌一次性費用</label>
+            <input id="licenseFee" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="accessoryFee">交車一次性配件/選配費用</label>
+            <input id="accessoryFee" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="subsidy">政府補助/折扣（可負數）</label>
+            <input id="subsidy" type="number" step="100" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>付款方式</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label>付款選擇</label>
+            <div class="toggle" data-toggle="paymentType">
+              <button data-value="cash" class="active">現金全額</button>
+              <button data-value="loan">貸款</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>頭期款模式</label>
+            <div class="toggle" data-toggle="downPaymentType">
+              <button data-value="percent" class="active">%</button>
+              <button data-value="amount">金額</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="downPaymentValue">頭期款</label>
+            <input id="downPaymentValue" type="number" min="0" step="1000" />
+          </div>
+          <div class="field">
+            <label for="loanYears">貸款年限（年）</label>
+            <input id="loanYears" type="number" min="1" max="10" step="1" />
+          </div>
+          <div class="field">
+            <label for="loanRate">年利率（%）</label>
+            <input id="loanRate" type="number" min="0" max="20" step="0.1" />
+          </div>
+        </div>
+        <div class="grid-3" style="margin-top:12px;">
+          <div class="kpi-card">
+            <h3>貸款本金</h3>
+            <div class="value" id="loanPrincipal">-</div>
+          </div>
+          <div class="kpi-card">
+            <h3>月付金（本息攤還）</h3>
+            <div class="value" id="loanMonthly">-</div>
+          </div>
+          <div class="kpi-card">
+            <h3>貸款總利息 / 總還款</h3>
+            <div class="value" id="loanTotals">-</div>
+          </div>
+        </div>
+        <p class="note" id="loanNote"></p>
+      </div>
+
+      <div class="card">
+        <h2>使用情境</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label for="annualMileage">每年行駛里程（km/年）</label>
+            <input id="annualMileage" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label>動力模式</label>
+            <div class="toggle" data-toggle="fuelType">
+              <button data-value="fuel" class="active">燃油</button>
+              <button data-value="ev">電車</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="consumptionValue">油耗（km/L）或 電耗（kWh/100km）</label>
+            <input id="consumptionValue" type="number" min="0" step="0.1" />
+          </div>
+          <div class="field">
+            <label for="energyPrice">油價（NT$/L）或 電價（NT$/kWh）</label>
+            <input id="energyPrice" type="number" min="0" step="0.1" />
+          </div>
+          <div class="field">
+            <label for="basicToll">高速公路/過路費（NT$/月，可選）</label>
+            <input id="basicToll" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="basicParking">停車費（NT$/月，可選）</label>
+            <input id="basicParking" type="number" min="0" step="100" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>主要結果（含兩種口徑）</h2>
+        <div class="toggle" data-toggle="tcoMode">
+          <button data-value="cashflow" class="active">口徑 A：現金流</button>
+          <button data-value="cost" class="">口徑 B：成本拆解</button>
+        </div>
+        <p class="note">口徑 A 強調實付金額；口徑 B 以折舊與利息計成本，不重複計入本金。</p>
+        <div class="kpi" style="margin-top:12px;">
+          <div class="kpi-card">
+            <h3>每月平均總成本</h3>
+            <div class="value" id="monthlyTotal">-</div>
+            <div class="hint" id="monthlyTotalAlt"></div>
+          </div>
+          <div class="kpi-card">
+            <h3>每年總成本</h3>
+            <div class="value" id="annualTotal">-</div>
+            <div class="hint" id="annualTotalAlt"></div>
+          </div>
+          <div class="kpi-card">
+            <h3>N 年總成本（TCO）</h3>
+            <div class="value" id="totalTco">-</div>
+            <div class="hint" id="totalTcoAlt"></div>
+          </div>
+          <div class="kpi-card">
+            <h3>持有期末剩餘本金</h3>
+            <div class="value" id="remainingBalance">-</div>
+            <div class="hint" id="remainingBalanceHint"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-detail">
+      <div class="card">
+        <h2>年成本（/年）</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label for="insuranceAnnual">保險費（車體險+強制險）</label>
+            <input id="insuranceAnnual" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="taxAnnual">稅金合計（牌照稅+燃料稅）</label>
+            <input id="taxAnnual" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="maintenanceAnnual">定期保養</label>
+            <input id="maintenanceAnnual" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="repairAnnual">維修/耗材</label>
+            <input id="repairAnnual" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="washAnnual">洗車/美容（可選）</label>
+            <input id="washAnnual" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="otherAnnual">其他年成本（可選）</label>
+            <input id="otherAnnual" type="number" min="0" step="100" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>月成本（/月）</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label for="detailParking">停車費（若基本輸入無填，可在此填）</label>
+            <input id="detailParking" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="detailToll">過路費（若基本輸入無填，可在此填）</label>
+            <input id="detailToll" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="energyMonthly">充電/油費（自動計算）</label>
+            <input id="energyMonthly" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label>
+              <input id="energyOverride" type="checkbox" />
+              手動覆蓋油/電費
+            </label>
+            <p class="note">勾選後將使用上方數值。</p>
+          </div>
+          <div class="field">
+            <label for="otherMonthly">其他月成本（可選）</label>
+            <input id="otherMonthly" type="number" min="0" step="100" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>一次性成本（一次）</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label for="oneTimeLicense">領牌/規費</label>
+            <input id="oneTimeLicense" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="oneTimeAccessory">選配/配件</label>
+            <input id="oneTimeAccessory" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="oneTimeDelivery">交車雜費</label>
+            <input id="oneTimeDelivery" type="number" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="oneTimeOther">其他一次性</label>
+            <input id="oneTimeOther" type="number" min="0" step="100" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>成本拆解（口徑 B）</h2>
+        <div class="bar-list" id="costBreakdown"></div>
+      </div>
+
+      <div class="card">
+        <h2>明細表</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>類別</th>
+              <th>金額</th>
+            </tr>
+          </thead>
+          <tbody id="detailTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-compare">
+      <div class="card">
+        <h2>方案比較（A/B/C）</h2>
+        <p class="note">比較使用相同的年/月成本設定；僅以下欄位可獨立調整。</p>
+        <div class="grid-3">
+          <div class="card" style="padding:12px;">
+            <h2>方案 A</h2>
+            <div class="field">
+              <label for="planA-price">車價</label>
+              <input id="planA-price" type="number" min="0" step="1000" />
+            </div>
+            <div class="field">
+              <label for="planA-years">持有年數</label>
+              <input id="planA-years" type="number" min="1" max="15" step="1" />
+            </div>
+            <div class="field">
+              <label for="planA-resale">轉售價</label>
+              <input id="planA-resale" type="number" min="0" step="1000" />
+            </div>
+            <div class="field">
+              <label for="planA-payment">付款方式</label>
+              <select id="planA-payment">
+                <option value="cash">現金</option>
+                <option value="loan">貸款</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="planA-rate">年利率%</label>
+              <input id="planA-rate" type="number" min="0" step="0.1" />
+            </div>
+            <div class="field">
+              <label for="planA-loanYears">貸款年限</label>
+              <input id="planA-loanYears" type="number" min="1" step="1" />
+            </div>
+            <div class="field">
+              <label for="planA-mileage">年里程</label>
+              <input id="planA-mileage" type="number" min="0" step="100" />
+            </div>
+            <div class="field">
+              <label for="planA-consumption">油耗/電耗</label>
+              <input id="planA-consumption" type="number" min="0" step="0.1" />
+            </div>
+            <div class="field">
+              <label for="planA-energy">油價/電價</label>
+              <input id="planA-energy" type="number" min="0" step="0.1" />
+            </div>
+            <div class="field">
+              <label for="planA-fuelType">動力</label>
+              <select id="planA-fuelType">
+                <option value="fuel">燃油</option>
+                <option value="ev">電車</option>
+              </select>
+            </div>
+          </div>
+          <div class="card" style="padding:12px;">
+            <h2>方案 B</h2>
+            <div class="field">
+              <label for="planB-price">車價</label>
+              <input id="planB-price" type="number" min="0" step="1000" />
+            </div>
+            <div class="field">
+              <label for="planB-years">持有年數</label>
+              <input id="planB-years" type="number" min="1" max="15" step="1" />
+            </div>
+            <div class="field">
+              <label for="planB-resale">轉售價</label>
+              <input id="planB-resale" type="number" min="0" step="1000" />
+            </div>
+            <div class="field">
+              <label for="planB-payment">付款方式</label>
+              <select id="planB-payment">
+                <option value="cash">現金</option>
+                <option value="loan">貸款</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="planB-rate">年利率%</label>
+              <input id="planB-rate" type="number" min="0" step="0.1" />
+            </div>
+            <div class="field">
+              <label for="planB-loanYears">貸款年限</label>
+              <input id="planB-loanYears" type="number" min="1" step="1" />
+            </div>
+            <div class="field">
+              <label for="planB-mileage">年里程</label>
+              <input id="planB-mileage" type="number" min="0" step="100" />
+            </div>
+            <div class="field">
+              <label for="planB-consumption">油耗/電耗</label>
+              <input id="planB-consumption" type="number" min="0" step="0.1" />
+            </div>
+            <div class="field">
+              <label for="planB-energy">油價/電價</label>
+              <input id="planB-energy" type="number" min="0" step="0.1" />
+            </div>
+            <div class="field">
+              <label for="planB-fuelType">動力</label>
+              <select id="planB-fuelType">
+                <option value="fuel">燃油</option>
+                <option value="ev">電車</option>
+              </select>
+            </div>
+          </div>
+          <div class="card" style="padding:12px;">
+            <h2>方案 C</h2>
+            <div class="field">
+              <label for="planC-price">車價</label>
+              <input id="planC-price" type="number" min="0" step="1000" />
+            </div>
+            <div class="field">
+              <label for="planC-years">持有年數</label>
+              <input id="planC-years" type="number" min="1" max="15" step="1" />
+            </div>
+            <div class="field">
+              <label for="planC-resale">轉售價</label>
+              <input id="planC-resale" type="number" min="0" step="1000" />
+            </div>
+            <div class="field">
+              <label for="planC-payment">付款方式</label>
+              <select id="planC-payment">
+                <option value="cash">現金</option>
+                <option value="loan">貸款</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="planC-rate">年利率%</label>
+              <input id="planC-rate" type="number" min="0" step="0.1" />
+            </div>
+            <div class="field">
+              <label for="planC-loanYears">貸款年限</label>
+              <input id="planC-loanYears" type="number" min="1" step="1" />
+            </div>
+            <div class="field">
+              <label for="planC-mileage">年里程</label>
+              <input id="planC-mileage" type="number" min="0" step="100" />
+            </div>
+            <div class="field">
+              <label for="planC-consumption">油耗/電耗</label>
+              <input id="planC-consumption" type="number" min="0" step="0.1" />
+            </div>
+            <div class="field">
+              <label for="planC-energy">油價/電價</label>
+              <input id="planC-energy" type="number" min="0" step="0.1" />
+            </div>
+            <div class="field">
+              <label for="planC-fuelType">動力</label>
+              <select id="planC-fuelType">
+                <option value="fuel">燃油</option>
+                <option value="ev">電車</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>比較結果</h2>
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>方案</th>
+              <th>每月平均總成本</th>
+              <th>N 年 TCO（口徑 A）</th>
+              <th>N 年 TCO（口徑 B）</th>
+              <th>年油/電費</th>
+              <th>持有期末剩餘本金</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-export">
+      <div class="card">
+        <h2>匯出 / 分享</h2>
+        <div class="btn-row">
+          <button class="primary" id="downloadJson">下載 JSON</button>
+          <button class="ghost" id="copySummary">一鍵複製摘要</button>
+          <button class="ghost" id="fillSample">填入範例</button>
+          <button class="ghost" id="resetAll">全部重置</button>
+        </div>
+        <p class="note" id="copyStatus"></p>
+        <div class="card" style="margin-top:12px;">
+          <h2>摘要預覽</h2>
+          <pre id="summaryPreview" style="white-space: pre-wrap; font-size: 0.85rem; color: var(--muted);"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const defaultState = {
+      vehiclePrice: 1200000,
+      holdYears: 5,
+      residualType: 'amount',
+      residualValue: 500000,
+      subsidy: 0,
+      paymentType: 'cash',
+      downPaymentType: 'percent',
+      downPaymentValue: 30,
+      loanYears: 5,
+      loanRate: 2.5,
+      annualMileage: 15000,
+      fuelType: 'fuel',
+      consumptionValue: 14,
+      energyPrice: 32,
+      basicToll: 800,
+      basicParking: 2000,
+      insuranceAnnual: 18000,
+      taxAnnual: 12000,
+      maintenanceAnnual: 9000,
+      repairAnnual: 6000,
+      washAnnual: 2400,
+      otherAnnual: 0,
+      detailParking: 0,
+      detailToll: 0,
+      energyMonthly: 0,
+      energyOverride: false,
+      otherMonthly: 0,
+      oneTimeLicense: 12000,
+      oneTimeAccessory: 45000,
+      oneTimeDelivery: 5000,
+      oneTimeOther: 0,
+      tcoMode: 'cashflow',
+      plans: {
+        A: {
+          price: 1200000,
+          years: 5,
+          resale: 500000,
+          payment: 'loan',
+          rate: 2.5,
+          loanYears: 5,
+          mileage: 15000,
+          consumption: 14,
+          energy: 32,
+          fuelType: 'fuel'
+        },
+        B: {
+          price: 900000,
+          years: 5,
+          resale: 380000,
+          payment: 'cash',
+          rate: 0,
+          loanYears: 5,
+          mileage: 12000,
+          consumption: 17,
+          energy: 32,
+          fuelType: 'fuel'
+        },
+        C: {
+          price: 1500000,
+          years: 6,
+          resale: 650000,
+          payment: 'loan',
+          rate: 2.1,
+          loanYears: 6,
+          mileage: 18000,
+          consumption: 17.5,
+          energy: 3.5,
+          fuelType: 'ev'
+        }
+      }
+    };
+
+    let state = JSON.parse(JSON.stringify(defaultState));
+
+    const selectors = {
+      vehiclePrice: document.getElementById('vehiclePrice'),
+      holdYears: document.getElementById('holdYears'),
+      residualValue: document.getElementById('residualValue'),
+      licenseFee: document.getElementById('licenseFee'),
+      accessoryFee: document.getElementById('accessoryFee'),
+      subsidy: document.getElementById('subsidy'),
+      downPaymentValue: document.getElementById('downPaymentValue'),
+      loanYears: document.getElementById('loanYears'),
+      loanRate: document.getElementById('loanRate'),
+      annualMileage: document.getElementById('annualMileage'),
+      consumptionValue: document.getElementById('consumptionValue'),
+      energyPrice: document.getElementById('energyPrice'),
+      basicToll: document.getElementById('basicToll'),
+      basicParking: document.getElementById('basicParking'),
+      insuranceAnnual: document.getElementById('insuranceAnnual'),
+      taxAnnual: document.getElementById('taxAnnual'),
+      maintenanceAnnual: document.getElementById('maintenanceAnnual'),
+      repairAnnual: document.getElementById('repairAnnual'),
+      washAnnual: document.getElementById('washAnnual'),
+      otherAnnual: document.getElementById('otherAnnual'),
+      detailParking: document.getElementById('detailParking'),
+      detailToll: document.getElementById('detailToll'),
+      energyMonthly: document.getElementById('energyMonthly'),
+      energyOverride: document.getElementById('energyOverride'),
+      otherMonthly: document.getElementById('otherMonthly'),
+      oneTimeLicense: document.getElementById('oneTimeLicense'),
+      oneTimeAccessory: document.getElementById('oneTimeAccessory'),
+      oneTimeDelivery: document.getElementById('oneTimeDelivery'),
+      oneTimeOther: document.getElementById('oneTimeOther')
+    };
+
+    const resultEls = {
+      loanPrincipal: document.getElementById('loanPrincipal'),
+      loanMonthly: document.getElementById('loanMonthly'),
+      loanTotals: document.getElementById('loanTotals'),
+      loanNote: document.getElementById('loanNote'),
+      monthlyTotal: document.getElementById('monthlyTotal'),
+      monthlyTotalAlt: document.getElementById('monthlyTotalAlt'),
+      annualTotal: document.getElementById('annualTotal'),
+      annualTotalAlt: document.getElementById('annualTotalAlt'),
+      totalTco: document.getElementById('totalTco'),
+      totalTcoAlt: document.getElementById('totalTcoAlt'),
+      remainingBalance: document.getElementById('remainingBalance'),
+      remainingBalanceHint: document.getElementById('remainingBalanceHint'),
+      costBreakdown: document.getElementById('costBreakdown'),
+      detailTable: document.getElementById('detailTable'),
+      comparisonTable: document.getElementById('comparisonTable'),
+      summaryPreview: document.getElementById('summaryPreview')
+    };
+
+    const copyStatus = document.getElementById('copyStatus');
+
+    const formatCurrency = (value) => {
+      if (!isFinite(value)) return '-';
+      return `NT$ ${Math.round(value).toLocaleString('zh-Hant-TW')}`;
+    };
+
+    const clamp = (value, min, max) => {
+      if (!isFinite(value)) return min;
+      return Math.min(Math.max(value, min), max);
+    };
+
+    const parseInput = (value) => {
+      const num = Number(value);
+      return isFinite(num) ? num : 0;
+    };
+
+    const calcLoanPMT = (principal, annualRate, years) => {
+      const months = years * 12;
+      if (months <= 0) return 0;
+      const monthlyRate = annualRate / 12 / 100;
+      if (monthlyRate === 0) return principal / months;
+      return (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
+    };
+
+    const calcFuelCost = (annualMileage, consumption, energyPrice, fuelType) => {
+      if (consumption <= 0) return { annual: 0, monthly: 0 };
+      let annual = 0;
+      if (fuelType === 'fuel') {
+        annual = (annualMileage / consumption) * energyPrice;
+      } else {
+        annual = (annualMileage * consumption / 100) * energyPrice;
+      }
+      return { annual, monthly: annual / 12 };
+    };
+
+    const calcDepreciation = (price, oneTime, subsidy, resale, years) => {
+      const total = price + oneTime - subsidy;
+      const depreciation = total - resale;
+      return {
+        total: depreciation,
+        annual: depreciation / years,
+        monthly: depreciation / (years * 12)
+      };
+    };
+
+    const calcLoanDetail = (principal, rate, years, holdYears) => {
+      const monthlyRate = rate / 12 / 100;
+      const totalMonths = years * 12;
+      const holdMonths = holdYears * 12;
+      const monthlyPayment = calcLoanPMT(principal, rate, years);
+      const paidMonths = Math.min(holdMonths, totalMonths);
+      let balance = 0;
+      if (principal > 0 && monthlyRate > 0) {
+        balance = principal * Math.pow(1 + monthlyRate, paidMonths) - monthlyPayment * ((Math.pow(1 + monthlyRate, paidMonths) - 1) / monthlyRate);
+      } else {
+        balance = Math.max(principal - monthlyPayment * paidMonths, 0);
+      }
+      const totalPaid = monthlyPayment * paidMonths;
+      const principalPaid = principal - balance;
+      const interestPaid = Math.max(totalPaid - principalPaid, 0);
+      const totalInterest = monthlyPayment * totalMonths - principal;
+      const totalRepayment = monthlyPayment * totalMonths;
+      return {
+        monthlyPayment,
+        totalInterest,
+        totalRepayment,
+        interestPaid,
+        balance: balance < 1 ? 0 : balance,
+        paidMonths
+      };
+    };
+
+    const calcTCOCashflow = ({
+      downPayment,
+      monthlyPayment,
+      paidMonths,
+      oneTime,
+      annualCosts,
+      monthlyCosts,
+      holdYears,
+      resale
+    }) => {
+      const totalMonthly = monthlyPayment * paidMonths + monthlyCosts * holdYears * 12;
+      const totalAnnual = annualCosts * holdYears;
+      const total = downPayment + oneTime + totalMonthly + totalAnnual - resale;
+      return total;
+    };
+
+    const calcTCOCostModel = ({ depreciation, interestPaid, annualCosts, monthlyCosts, holdYears }) => {
+      return depreciation + interestPaid + annualCosts * holdYears + monthlyCosts * holdYears * 12;
+    };
+
+    const collectState = () => {
+      state.vehiclePrice = clamp(parseInput(selectors.vehiclePrice.value), 0, 999999999);
+      state.holdYears = clamp(parseInput(selectors.holdYears.value), 1, 30);
+      state.residualValue = clamp(parseInput(selectors.residualValue.value), 0, 999999999);
+      state.subsidy = parseInput(selectors.subsidy.value);
+      state.downPaymentValue = clamp(parseInput(selectors.downPaymentValue.value), 0, 999999999);
+      state.loanYears = clamp(parseInput(selectors.loanYears.value), 1, 10);
+      state.loanRate = clamp(parseInput(selectors.loanRate.value), 0, 30);
+      state.annualMileage = clamp(parseInput(selectors.annualMileage.value), 0, 200000);
+      state.consumptionValue = clamp(parseInput(selectors.consumptionValue.value), 0, 100);
+      state.energyPrice = clamp(parseInput(selectors.energyPrice.value), 0, 1000);
+      state.basicToll = clamp(parseInput(selectors.basicToll.value), 0, 999999);
+      state.basicParking = clamp(parseInput(selectors.basicParking.value), 0, 999999);
+      state.insuranceAnnual = clamp(parseInput(selectors.insuranceAnnual.value), 0, 999999);
+      state.taxAnnual = clamp(parseInput(selectors.taxAnnual.value), 0, 999999);
+      state.maintenanceAnnual = clamp(parseInput(selectors.maintenanceAnnual.value), 0, 999999);
+      state.repairAnnual = clamp(parseInput(selectors.repairAnnual.value), 0, 999999);
+      state.washAnnual = clamp(parseInput(selectors.washAnnual.value), 0, 999999);
+      state.otherAnnual = clamp(parseInput(selectors.otherAnnual.value), 0, 999999);
+      state.detailParking = clamp(parseInput(selectors.detailParking.value), 0, 999999);
+      state.detailToll = clamp(parseInput(selectors.detailToll.value), 0, 999999);
+      state.energyMonthly = clamp(parseInput(selectors.energyMonthly.value), 0, 999999);
+      state.energyOverride = selectors.energyOverride.checked;
+      state.otherMonthly = clamp(parseInput(selectors.otherMonthly.value), 0, 999999);
+      state.oneTimeLicense = clamp(parseInput(selectors.licenseFee.value), 0, 999999);
+      state.oneTimeAccessory = clamp(parseInput(selectors.accessoryFee.value), 0, 999999);
+      state.oneTimeDelivery = clamp(parseInput(selectors.oneTimeDelivery.value), 0, 999999);
+      state.oneTimeOther = clamp(parseInput(selectors.oneTimeOther.value), 0, 999999);
+    };
+
+    const updateInputs = () => {
+      selectors.vehiclePrice.value = state.vehiclePrice;
+      selectors.holdYears.value = state.holdYears;
+      selectors.residualValue.value = state.residualValue;
+      selectors.licenseFee.value = state.oneTimeLicense;
+      selectors.accessoryFee.value = state.oneTimeAccessory;
+      selectors.subsidy.value = state.subsidy;
+      selectors.downPaymentValue.value = state.downPaymentValue;
+      selectors.loanYears.value = state.loanYears;
+      selectors.loanRate.value = state.loanRate;
+      selectors.annualMileage.value = state.annualMileage;
+      selectors.consumptionValue.value = state.consumptionValue;
+      selectors.energyPrice.value = state.energyPrice;
+      selectors.basicToll.value = state.basicToll;
+      selectors.basicParking.value = state.basicParking;
+      selectors.insuranceAnnual.value = state.insuranceAnnual;
+      selectors.taxAnnual.value = state.taxAnnual;
+      selectors.maintenanceAnnual.value = state.maintenanceAnnual;
+      selectors.repairAnnual.value = state.repairAnnual;
+      selectors.washAnnual.value = state.washAnnual;
+      selectors.otherAnnual.value = state.otherAnnual;
+      selectors.detailParking.value = state.detailParking;
+      selectors.detailToll.value = state.detailToll;
+      selectors.energyMonthly.value = state.energyMonthly;
+      selectors.energyOverride.checked = state.energyOverride;
+      selectors.otherMonthly.value = state.otherMonthly;
+      selectors.oneTimeLicense.value = state.oneTimeLicense;
+      selectors.oneTimeAccessory.value = state.oneTimeAccessory;
+      selectors.oneTimeDelivery.value = state.oneTimeDelivery;
+      selectors.oneTimeOther.value = state.oneTimeOther;
+
+      document.querySelectorAll('[data-toggle="residualType"] button').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.value === state.residualType);
+      });
+      document.querySelectorAll('[data-toggle="paymentType"] button').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.value === state.paymentType);
+      });
+      document.querySelectorAll('[data-toggle="downPaymentType"] button').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.value === state.downPaymentType);
+      });
+      document.querySelectorAll('[data-toggle="fuelType"] button').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.value === state.fuelType);
+      });
+      document.querySelectorAll('[data-toggle="tcoMode"] button').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.value === state.tcoMode);
+      });
+    };
+
+    const setupPlanInputs = () => {
+      ['A', 'B', 'C'].forEach((key) => {
+        const plan = state.plans[key];
+        document.getElementById(`plan${key}-price`).value = plan.price;
+        document.getElementById(`plan${key}-years`).value = plan.years;
+        document.getElementById(`plan${key}-resale`).value = plan.resale;
+        document.getElementById(`plan${key}-payment`).value = plan.payment;
+        document.getElementById(`plan${key}-rate`).value = plan.rate;
+        document.getElementById(`plan${key}-loanYears`).value = plan.loanYears;
+        document.getElementById(`plan${key}-mileage`).value = plan.mileage;
+        document.getElementById(`plan${key}-consumption`).value = plan.consumption;
+        document.getElementById(`plan${key}-energy`).value = plan.energy;
+        document.getElementById(`plan${key}-fuelType`).value = plan.fuelType;
+      });
+    };
+
+    const readPlanInputs = () => {
+      ['A', 'B', 'C'].forEach((key) => {
+        state.plans[key] = {
+          price: clamp(parseInput(document.getElementById(`plan${key}-price`).value), 0, 999999999),
+          years: clamp(parseInput(document.getElementById(`plan${key}-years`).value), 1, 30),
+          resale: clamp(parseInput(document.getElementById(`plan${key}-resale`).value), 0, 999999999),
+          payment: document.getElementById(`plan${key}-payment`).value,
+          rate: clamp(parseInput(document.getElementById(`plan${key}-rate`).value), 0, 30),
+          loanYears: clamp(parseInput(document.getElementById(`plan${key}-loanYears`).value), 1, 10),
+          mileage: clamp(parseInput(document.getElementById(`plan${key}-mileage`).value), 0, 200000),
+          consumption: clamp(parseInput(document.getElementById(`plan${key}-consumption`).value), 0, 100),
+          energy: clamp(parseInput(document.getElementById(`plan${key}-energy`).value), 0, 1000),
+          fuelType: document.getElementById(`plan${key}-fuelType`).value
+        };
+      });
+    };
+
+    const renderResults = () => {
+      const holdYears = state.holdYears;
+      const oneTimeCost = state.oneTimeLicense + state.oneTimeAccessory + state.oneTimeDelivery + state.oneTimeOther;
+      const subsidy = state.subsidy;
+      const residual = state.residualType === 'rate' ? state.vehiclePrice * (state.residualValue / 100) : state.residualValue;
+      const depreciation = calcDepreciation(state.vehiclePrice, oneTimeCost, subsidy, residual, holdYears);
+
+      const downPayment = state.downPaymentType === 'percent'
+        ? (state.vehiclePrice - subsidy) * (state.downPaymentValue / 100)
+        : state.downPaymentValue;
+      const safeDownPayment = clamp(downPayment, 0, state.vehiclePrice - subsidy);
+      const loanPrincipal = Math.max(state.vehiclePrice - subsidy - safeDownPayment, 0);
+      const loanDetail = calcLoanDetail(loanPrincipal, state.loanRate, state.loanYears, holdYears);
+
+      const fuelCost = calcFuelCost(state.annualMileage, state.consumptionValue, state.energyPrice, state.fuelType);
+      const energyMonthly = state.energyOverride ? state.energyMonthly : fuelCost.monthly;
+      if (!state.energyOverride) {
+        selectors.energyMonthly.value = Math.round(fuelCost.monthly);
+      }
+      const energyAnnual = energyMonthly * 12;
+
+      const parkingMonthly = state.detailParking > 0 ? state.detailParking : state.basicParking;
+      const tollMonthly = state.detailToll > 0 ? state.detailToll : state.basicToll;
+
+      const annualCosts = state.insuranceAnnual + state.taxAnnual + state.maintenanceAnnual + state.repairAnnual + state.washAnnual + state.otherAnnual;
+      const monthlyCosts = parkingMonthly + tollMonthly + energyMonthly + state.otherMonthly;
+
+      const cashflowTotal = calcTCOCashflow({
+        downPayment: state.paymentType === 'loan' ? safeDownPayment : state.vehiclePrice - subsidy,
+        monthlyPayment: state.paymentType === 'loan' ? loanDetail.monthlyPayment : 0,
+        paidMonths: state.paymentType === 'loan' ? loanDetail.paidMonths : 0,
+        oneTime: oneTimeCost,
+        annualCosts,
+        monthlyCosts,
+        holdYears,
+        resale: residual
+      });
+
+      const costModelTotal = calcTCOCostModel({
+        depreciation: depreciation.total,
+        interestPaid: state.paymentType === 'loan' ? loanDetail.interestPaid : 0,
+        annualCosts,
+        monthlyCosts,
+        holdYears
+      });
+
+      const activeTotal = state.tcoMode === 'cashflow' ? cashflowTotal : costModelTotal;
+      const altTotal = state.tcoMode === 'cashflow' ? costModelTotal : cashflowTotal;
+      const monthlyAvg = activeTotal / (holdYears * 12);
+      const annualAvg = activeTotal / holdYears;
+      const monthlyAlt = altTotal / (holdYears * 12);
+      const annualAlt = altTotal / holdYears;
+
+      resultEls.loanPrincipal.textContent = formatCurrency(loanPrincipal);
+      resultEls.loanMonthly.textContent = formatCurrency(loanDetail.monthlyPayment);
+      resultEls.loanTotals.textContent = `${formatCurrency(loanDetail.totalInterest)} / ${formatCurrency(loanDetail.totalRepayment)}`;
+
+      if (state.paymentType === 'loan' && holdYears < state.loanYears) {
+        resultEls.loanNote.textContent = `持有期間內已付利息 ${formatCurrency(loanDetail.interestPaid)}，期末剩餘本金 ${formatCurrency(loanDetail.balance)}。出售車輛仍需清償剩餘本金。`;
+        resultEls.remainingBalance.textContent = formatCurrency(loanDetail.balance);
+        resultEls.remainingBalanceHint.textContent = '若賣車需清償此本金';
+      } else {
+        resultEls.loanNote.textContent = '持有年數涵蓋貸款期限，期末無剩餘本金。';
+        resultEls.remainingBalance.textContent = formatCurrency(0);
+        resultEls.remainingBalanceHint.textContent = '';
+      }
+
+      resultEls.monthlyTotal.textContent = formatCurrency(monthlyAvg);
+      resultEls.monthlyTotalAlt.textContent = `另一口徑：${formatCurrency(monthlyAlt)}`;
+      resultEls.annualTotal.textContent = formatCurrency(annualAvg);
+      resultEls.annualTotalAlt.textContent = `另一口徑：${formatCurrency(annualAlt)}`;
+      resultEls.totalTco.textContent = formatCurrency(activeTotal);
+      resultEls.totalTcoAlt.textContent = `另一口徑：${formatCurrency(altTotal)}`;
+
+      renderBreakdown({
+        depreciation: depreciation.total,
+        interest: state.paymentType === 'loan' ? loanDetail.interestPaid : 0,
+        energy: energyAnnual * holdYears,
+        insurance: state.insuranceAnnual * holdYears,
+        tax: state.taxAnnual * holdYears,
+        maintenance: state.maintenanceAnnual * holdYears,
+        repair: state.repairAnnual * holdYears,
+        wash: state.washAnnual * holdYears,
+        otherAnnual: state.otherAnnual * holdYears,
+        parking: parkingMonthly * holdYears * 12,
+        toll: tollMonthly * holdYears * 12,
+        otherMonthly: state.otherMonthly * holdYears * 12,
+        total: costModelTotal
+      });
+
+      renderDetailTable({
+        depreciation: depreciation.total,
+        annualCosts,
+        monthlyCosts,
+        oneTimeCost,
+        fuelAnnual: energyAnnual,
+        fuelMonthly: energyMonthly
+      });
+
+      renderComparison({
+        oneTimeCost,
+        subsidy,
+        annualCosts,
+        parkingMonthly,
+        tollMonthly,
+        otherMonthly: state.otherMonthly,
+        fuelType: state.fuelType
+      });
+
+      updateSummary({
+        activeTotal,
+        altTotal,
+        monthlyAvg,
+        annualAvg,
+        loanDetail,
+        loanPrincipal,
+        residual,
+        energyAnnual
+      });
+    };
+
+    const renderBreakdown = (items) => {
+      const breakdownItems = [
+        { label: '購車折舊', value: items.depreciation },
+        { label: '貸款利息', value: items.interest },
+        { label: '油/電費', value: items.energy },
+        { label: '保險', value: items.insurance },
+        { label: '稅金', value: items.tax },
+        { label: '保養', value: items.maintenance },
+        { label: '維修耗材', value: items.repair },
+        { label: '洗車美容', value: items.wash },
+        { label: '其他年成本', value: items.otherAnnual },
+        { label: '停車', value: items.parking },
+        { label: '過路費', value: items.toll },
+        { label: '其他月成本', value: items.otherMonthly }
+      ];
+      resultEls.costBreakdown.innerHTML = '';
+      breakdownItems.forEach((item) => {
+        if (item.value <= 0) return;
+        const percent = items.total > 0 ? (item.value / items.total) * 100 : 0;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'bar-item';
+        wrapper.innerHTML = `
+          <div class="bar-header">
+            <span>${item.label}</span>
+            <span>${formatCurrency(item.value)} (${percent.toFixed(1)}%)</span>
+          </div>
+          <div class="bar"><span style="width:${Math.min(percent, 100)}%"></span></div>
+        `;
+        resultEls.costBreakdown.appendChild(wrapper);
+      });
+    };
+
+    const renderDetailTable = ({ depreciation, annualCosts, monthlyCosts, oneTimeCost, fuelAnnual, fuelMonthly }) => {
+      const rows = [
+        ['年油/電費', formatCurrency(fuelAnnual)],
+        ['月油/電費', formatCurrency(fuelMonthly)],
+        ['年成本合計', formatCurrency(annualCosts)],
+        ['月成本合計', formatCurrency(monthlyCosts)],
+        ['一次性成本合計', formatCurrency(oneTimeCost)],
+        ['折舊總額', formatCurrency(depreciation)]
+      ];
+      resultEls.detailTable.innerHTML = rows.map(([label, value]) => `
+        <tr>
+          <td>${label}</td>
+          <td>${value}</td>
+        </tr>
+      `).join('');
+    };
+
+    const renderComparison = ({ oneTimeCost, subsidy, annualCosts, parkingMonthly, tollMonthly, otherMonthly }) => {
+      readPlanInputs();
+      const results = Object.entries(state.plans).map(([key, plan]) => {
+        const resale = plan.resale;
+        const depreciation = calcDepreciation(plan.price, oneTimeCost, subsidy, resale, plan.years).total;
+        const fuel = calcFuelCost(plan.mileage, plan.consumption, plan.energy, plan.fuelType);
+        const monthlyCosts = parkingMonthly + tollMonthly + fuel.monthly + otherMonthly;
+        const downPayment = plan.price * 0.3;
+        const loanPrincipal = Math.max(plan.price - downPayment, 0);
+        const loanDetail = calcLoanDetail(loanPrincipal, plan.rate, plan.loanYears, plan.years);
+        const cashflowTotal = calcTCOCashflow({
+          downPayment: plan.payment === 'loan' ? downPayment : plan.price,
+          monthlyPayment: plan.payment === 'loan' ? loanDetail.monthlyPayment : 0,
+          paidMonths: plan.payment === 'loan' ? loanDetail.paidMonths : 0,
+          oneTime: oneTimeCost,
+          annualCosts,
+          monthlyCosts,
+          holdYears: plan.years,
+          resale
+        });
+        const costTotal = calcTCOCostModel({
+          depreciation,
+          interestPaid: plan.payment === 'loan' ? loanDetail.interestPaid : 0,
+          annualCosts,
+          monthlyCosts,
+          holdYears: plan.years
+        });
+        return {
+          key,
+          monthlyAvg: cashflowTotal / (plan.years * 12),
+          cashflowTotal,
+          costTotal,
+          fuelAnnual: fuel.annual,
+          remaining: plan.payment === 'loan' && plan.years < plan.loanYears ? loanDetail.balance : 0
+        };
+      });
+
+      const minMonthly = Math.min(...results.map((r) => r.monthlyAvg));
+      const minTco = Math.min(...results.map((r) => r.cashflowTotal));
+
+      resultEls.comparisonTable.innerHTML = results.map((item) => {
+        const monthlyBadge = item.monthlyAvg === minMonthly ? '<span class="pill">最省月成本</span>' : '';
+        const tcoBadge = item.cashflowTotal === minTco ? '<span class="pill">最省 N 年 TCO</span>' : '';
+        return `
+          <tr>
+            <td>${item.key}</td>
+            <td>${formatCurrency(item.monthlyAvg)} ${monthlyBadge}</td>
+            <td>${formatCurrency(item.cashflowTotal)} ${tcoBadge}</td>
+            <td>${formatCurrency(item.costTotal)}</td>
+            <td>${formatCurrency(item.fuelAnnual)}</td>
+            <td>${formatCurrency(item.remaining)}</td>
+          </tr>
+        `;
+      }).join('');
+    };
+
+    const updateSummary = ({ activeTotal, altTotal, monthlyAvg, loanDetail, loanPrincipal, residual, energyAnnual }) => {
+      const summary = [
+        `車價：${formatCurrency(state.vehiclePrice)}`,
+        `持有年數：${state.holdYears} 年`,
+        `年里程：${state.annualMileage.toLocaleString('zh-Hant-TW')} km`,
+        `年油/電費：${formatCurrency(energyAnnual)}`,
+        `每月總成本（${state.tcoMode === 'cashflow' ? '口徑A' : '口徑B'}）：${formatCurrency(monthlyAvg)}`,
+        `N 年 TCO（口徑A）：${formatCurrency(state.tcoMode === 'cashflow' ? activeTotal : altTotal)}`,
+        `N 年 TCO（口徑B）：${formatCurrency(state.tcoMode === 'cost' ? activeTotal : altTotal)}`
+      ];
+
+      if (state.paymentType === 'loan') {
+        summary.push(`貸款本金：${formatCurrency(loanPrincipal)}`);
+        summary.push(`月付金：${formatCurrency(loanDetail.monthlyPayment)}`);
+        summary.push(`總利息：${formatCurrency(loanDetail.totalInterest)}`);
+        if (state.holdYears < state.loanYears) {
+          summary.push(`持有期末剩餘本金：${formatCurrency(loanDetail.balance)}`);
+        }
+      }
+      summary.push(`預估轉售價：${formatCurrency(residual)}`);
+      resultEls.summaryPreview.textContent = summary.join('\n');
+    };
+
+    const debounce = (fn, delay = 250) => {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+      };
+    };
+
+    const recalc = () => {
+      collectState();
+      renderResults();
+    };
+
+    const debouncedRecalc = debounce(recalc, 250);
+
+    document.querySelectorAll('input, select').forEach((input) => {
+      input.addEventListener('input', debouncedRecalc);
+      input.addEventListener('change', debouncedRecalc);
+    });
+
+    const syncInputPair = (source, target) => {
+      source.addEventListener('input', () => {
+        target.value = source.value;
+      });
+    };
+
+    syncInputPair(selectors.licenseFee, selectors.oneTimeLicense);
+    syncInputPair(selectors.oneTimeLicense, selectors.licenseFee);
+    syncInputPair(selectors.accessoryFee, selectors.oneTimeAccessory);
+    syncInputPair(selectors.oneTimeAccessory, selectors.accessoryFee);
+
+    document.querySelectorAll('[data-toggle]').forEach((toggle) => {
+      toggle.addEventListener('click', (event) => {
+        const btn = event.target.closest('button');
+        if (!btn) return;
+        const type = toggle.dataset.toggle;
+        state[type] = btn.dataset.value;
+        updateInputs();
+        debouncedRecalc();
+      });
+    });
+
+    document.querySelectorAll('.tab-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach((btn) => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach((panel) => panel.classList.remove('active'));
+        button.classList.add('active');
+        document.getElementById(`tab-${button.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    document.getElementById('downloadJson').addEventListener('click', () => {
+      collectState();
+      const payload = {
+        timestamp: new Date().toISOString(),
+        inputs: state,
+        results: {
+          monthlyTotal: resultEls.monthlyTotal.textContent,
+          annualTotal: resultEls.annualTotal.textContent,
+          totalTco: resultEls.totalTco.textContent
+        }
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'car-tco-result.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('copySummary').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(resultEls.summaryPreview.textContent);
+        copyStatus.textContent = '摘要已複製，可貼給家人。';
+      } catch (error) {
+        copyStatus.textContent = '瀏覽器不支援剪貼簿，請手動複製摘要。';
+      }
+    });
+
+    document.getElementById('fillSample').addEventListener('click', () => {
+      state = JSON.parse(JSON.stringify(defaultState));
+      updateInputs();
+      setupPlanInputs();
+      renderResults();
+    });
+
+    document.getElementById('resetAll').addEventListener('click', () => {
+      state = JSON.parse(JSON.stringify(defaultState));
+      state.vehiclePrice = 0;
+      state.residualValue = 0;
+      state.subsidy = 0;
+      state.annualMileage = 0;
+      state.consumptionValue = 0;
+      state.energyPrice = 0;
+      state.basicToll = 0;
+      state.basicParking = 0;
+      state.insuranceAnnual = 0;
+      state.taxAnnual = 0;
+      state.maintenanceAnnual = 0;
+      state.repairAnnual = 0;
+      state.washAnnual = 0;
+      state.otherAnnual = 0;
+      state.detailParking = 0;
+      state.detailToll = 0;
+      state.energyMonthly = 0;
+      state.energyOverride = false;
+      state.otherMonthly = 0;
+      state.oneTimeLicense = 0;
+      state.oneTimeAccessory = 0;
+      state.oneTimeDelivery = 0;
+      state.oneTimeOther = 0;
+      updateInputs();
+      setupPlanInputs();
+      renderResults();
+    });
+
+    updateInputs();
+    setupPlanInputs();
+    renderResults();
+  </script>
+</body>
+</html>

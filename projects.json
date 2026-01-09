@@ -109,5 +109,19 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Housing+Loan+%26+Tax",
     "date": "2025-07-02",
     "description": "依成交總價與核定課稅基礎雙軌試算，提供房貸、本息攤還、稅費/規費（精準與估算）、方案比較與匯出分享。"
+  },
+  {
+    "id": "09",
+    "name": "買車總成本試算（TCO）",
+    "path": "09-car-tco/index.html",
+    "folder": "09-car-tco/",
+    "tags": [
+      "Finance",
+      "TCO",
+      "Car"
+    ],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Car+TCO",
+    "date": "2025-07-12",
+    "description": "手機優先的買車總成本試算工具，支援折舊、貸款利息、油電費、成本拆解、多方案比較與 JSON 匯出。"
   }
 ]

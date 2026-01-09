@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>台灣買房房貸＋交易稅費試算工具</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --primary: #2f5aff;
+      --primary-dark: #1f3fd1;
+      --text: #1f2430;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --warning: #ffb020;
+      --danger: #e5484d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      background: #0f172a;
+      color: #fff;
+      padding: 28px 20px;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 0;
+      color: #c7d2fe;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: #e0e7ff;
+      color: #1e3a8a;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .tab-button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+
+    label {
+      font-size: 14px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 2px solid rgba(47, 90, 255, 0.2);
+      border-color: var(--primary);
+    }
+
+    .input-group {
+      margin-bottom: 14px;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .toggle-group button {
+      flex: 1;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      padding: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .toggle-group button.active {
+      border-color: var(--primary);
+      background: rgba(47, 90, 255, 0.12);
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #ecfeff;
+      color: #0369a1;
+      font-size: 12px;
+    }
+
+    .alert {
+      border-left: 4px solid var(--warning);
+      background: #fff7ed;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #92400e;
+    }
+
+    .alert strong {
+      color: #92400e;
+    }
+
+    .note {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .summary {
+      display: grid;
+      gap: 10px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .summary-item strong {
+      font-weight: 600;
+    }
+
+    .table-wrapper {
+      margin-top: 12px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #ede9fe;
+      color: #6d28d9;
+    }
+
+    .compare-card {
+      position: relative;
+      border: 2px solid transparent;
+    }
+
+    .compare-card.highlight {
+      border-color: var(--primary);
+      box-shadow: 0 10px 24px rgba(47, 90, 255, 0.15);
+    }
+
+    .badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #0f172a;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn.secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .highlight-text {
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>台灣買房房貸＋交易稅費高精準試算工具</h1>
+    <p>純前端、可部署 GitHub Pages｜雙軌試算：房貸 vs 稅費/規費（課稅基礎）</p>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab-button active" data-tab="mortgage">1) 房貸試算</button>
+      <button class="tab-button" data-tab="tax-precise">2) 稅費/規費（精準模式）</button>
+      <button class="tab-button" data-tab="tax-estimate">3) 稅費/規費（估算模式）</button>
+      <button class="tab-button" data-tab="compare">4) 方案比較</button>
+      <button class="tab-button" data-tab="export">5) 匯出/分享</button>
+    </div>
+
+    <section id="mortgage" class="tab-panel active">
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>房貸輸入</h3>
+          <div class="input-group">
+            <label for="mortgage-price">成交總價（NT$）</label>
+            <input id="mortgage-price" type="number" min="0" step="10000" value="15000000" />
+          </div>
+
+          <div class="input-group">
+            <label>貸款成數／頭期款</label>
+            <div class="toggle-group">
+              <button type="button" id="toggle-loan-ratio" class="active">貸款成數</button>
+              <button type="button" id="toggle-down-payment">頭期款</button>
+            </div>
+          </div>
+
+          <div class="input-group" id="loan-ratio-group">
+            <label for="loan-ratio">貸款成數（%）</label>
+            <input id="loan-ratio" type="number" min="0" max="100" step="1" value="70" />
+          </div>
+
+          <div class="input-group" id="down-payment-group" style="display: none;">
+            <label for="down-payment">頭期款（NT$）</label>
+            <input id="down-payment" type="number" min="0" step="10000" value="4500000" />
+          </div>
+
+          <div class="grid grid-2">
+            <div class="input-group">
+              <label for="loan-years">貸款年限（年）</label>
+              <input id="loan-years" type="number" min="1" max="40" step="1" value="30" />
+            </div>
+            <div class="input-group">
+              <label for="loan-rate">年利率（%）</label>
+              <input id="loan-rate" type="number" min="0" max="20" step="0.01" value="2.2" />
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="input-group">
+              <label for="grace-months">寬限期（月）</label>
+              <input id="grace-months" type="number" min="0" max="60" step="1" value="0" />
+            </div>
+            <div class="input-group">
+              <label for="payment-method">還款方式</label>
+              <select id="payment-method">
+                <option value="amortized">本息攤還</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="input-group">
+              <label for="monthly-fee">每月管理費（NT$）</label>
+              <input id="monthly-fee" type="number" min="0" step="100" value="0" />
+            </div>
+            <div class="input-group">
+              <label for="monthly-extra">每月其他固定支出（NT$）</label>
+              <input id="monthly-extra" type="number" min="0" step="100" value="0" />
+            </div>
+          </div>
+          <p class="note">本息攤還公式採標準 PMT；月付金取整數元。</p>
+        </div>
+
+        <div class="card">
+          <h3>房貸結果</h3>
+          <div class="summary" id="mortgage-summary"></div>
+          <div class="pill">每月總持有成本 = 月付金 + 管理費 + 其他固定支出</div>
+          <div class="input-group" style="margin-top: 16px;">
+            <button id="toggle-schedule" class="btn secondary" type="button">展開攤還表（前 12 期 + 後 12 期）</button>
+          </div>
+          <div id="schedule-wrapper" class="table-wrapper" style="display:none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>期數</th>
+                  <th>月付金</th>
+                  <th>利息</th>
+                  <th>本金</th>
+                  <th>剩餘本金</th>
+                </tr>
+              </thead>
+              <tbody id="schedule-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tax-precise" class="tab-panel">
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>精準模式輸入（核定/申報基礎）</h3>
+          <div class="input-group">
+            <label for="contract-price">契約金額（可用成交總價）</label>
+            <input id="contract-price" type="number" min="0" step="10000" value="15000000" />
+            <p class="note">印花稅通常以契約金額按 0.1% 計。</p>
+          </div>
+          <div class="input-group">
+            <label for="deed-tax-base">房屋核定契價/房屋現值（契稅課稅基礎）</label>
+            <input id="deed-tax-base" type="number" min="0" step="1000" value="1500000" />
+            <p class="note">契稅課徵基礎為房屋（不含土地）之核定契價/房屋現值，由地方稅捐機關核定。</p>
+          </div>
+          <div class="input-group">
+            <label for="land-declared">土地申報地價或權利價值</label>
+            <input id="land-declared" type="number" min="0" step="1000" value="2000000" />
+          </div>
+          <div class="input-group">
+            <label for="house-rights">房屋現值或權利價值</label>
+            <input id="house-rights" type="number" min="0" step="1000" value="1800000" />
+          </div>
+          <div class="input-group">
+            <label for="reg-base-option">登記費計費基礎</label>
+            <select id="reg-base-option">
+              <option value="land">土地申報地價（或權利價值）</option>
+              <option value="house">房屋現值（或權利價值）</option>
+              <option value="custom">自訂權利價值</option>
+            </select>
+          </div>
+          <div class="input-group" id="custom-reg-group" style="display:none;">
+            <label for="custom-reg-base">自訂權利價值</label>
+            <input id="custom-reg-base" type="number" min="0" step="1000" value="0" />
+          </div>
+          <div class="grid grid-2">
+            <div class="input-group">
+              <label for="doc-fee">書狀費（每張）</label>
+              <input id="doc-fee" type="number" min="0" step="10" value="80" />
+            </div>
+            <div class="input-group">
+              <label for="copy-fee">謄本/工本/閱覽等</label>
+              <input id="copy-fee" type="number" min="0" step="10" value="600" />
+            </div>
+          </div>
+          <div class="grid grid-2">
+            <div class="input-group">
+              <label for="scrivener-fee">代書費</label>
+              <input id="scrivener-fee" type="number" min="0" step="100" value="15000" />
+            </div>
+            <div class="input-group">
+              <label for="other-fee">其他一次性費用</label>
+              <input id="other-fee" type="number" min="0" step="100" value="0" />
+            </div>
+          </div>
+          <div class="input-group">
+            <label>仲介費</label>
+            <div class="toggle-group">
+              <button type="button" id="toggle-agent-rate" class="active">百分比</button>
+              <button type="button" id="toggle-agent-fixed">固定金額</button>
+            </div>
+          </div>
+          <div class="grid grid-2">
+            <div class="input-group" id="agent-rate-group">
+              <label for="agent-rate">仲介費率（%）</label>
+              <input id="agent-rate" type="number" min="0" max="10" step="0.1" value="2" />
+            </div>
+            <div class="input-group" id="agent-fixed-group" style="display:none;">
+              <label for="agent-fixed">仲介費固定金額</label>
+              <input id="agent-fixed" type="number" min="0" step="1000" value="0" />
+            </div>
+          </div>
+          <p class="note">登記費以權利變更登記常見計算：基礎 × 0.1%（千分之一）。</p>
+          <p class="note">逾期申請登記可能加倍罰鍰（僅提示）。</p>
+        </div>
+
+        <div class="card">
+          <h3>精準模式結果</h3>
+          <div class="summary" id="precise-summary"></div>
+          <div class="alert" style="margin-top:16px;">
+            <strong>提醒：</strong>契稅與登記費等均依核定/申報基礎計算，不等於成交總價。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tax-estimate" class="tab-panel">
+      <div class="alert" style="margin-bottom:16px;">
+        <strong>估算模式僅供概算</strong>，實際以稅捐/地政機關核定為準；若要最準請切到精準模式輸入核定數字。
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>估算輸入</h3>
+          <div class="input-group">
+            <label for="estimate-price">成交總價</label>
+            <input id="estimate-price" type="number" min="0" step="10000" value="15000000" />
+          </div>
+          <div class="grid grid-2">
+            <div class="input-group">
+              <label for="house-ratio">房屋占總價比例（%）</label>
+              <input id="house-ratio" type="number" min="0" max="100" step="1" value="20" />
+            </div>
+            <div class="input-group">
+              <label for="land-ratio">土地占總價比例（%）</label>
+              <input id="land-ratio" type="number" min="0" max="100" step="1" value="80" readonly />
+            </div>
+          </div>
+          <div class="grid grid-2">
+            <div class="input-group">
+              <label for="house-discount">房屋現值/核定契價折算率（%）</label>
+              <input id="house-discount" type="number" min="1" max="50" step="1" value="15" />
+            </div>
+            <div class="input-group">
+              <label for="land-discount">土地申報地價折算率（%）</label>
+              <input id="land-discount" type="number" min="1" max="50" step="1" value="20" />
+            </div>
+          </div>
+          <p class="note">土地比例 = 100% - 房屋比例（自動更新）。</p>
+        </div>
+
+        <div class="card">
+          <h3>估算結果</h3>
+          <div class="summary" id="estimate-summary"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="compare" class="tab-panel">
+      <div class="card" style="margin-bottom:16px;">
+        <h3>比較基準設定</h3>
+        <div class="grid grid-3">
+          <div class="input-group">
+            <label for="compare-price">成交總價</label>
+            <input id="compare-price" type="number" min="0" step="10000" value="15000000" />
+          </div>
+          <div class="input-group">
+            <label for="compare-closing-source">一次性費用來源</label>
+            <select id="compare-closing-source">
+              <option value="precise">精準模式結果</option>
+              <option value="estimate">估算模式結果</option>
+              <option value="manual">手動輸入</option>
+            </select>
+          </div>
+          <div class="input-group" id="compare-closing-manual-group" style="display:none;">
+            <label for="compare-closing-manual">一次性費用手動值</label>
+            <input id="compare-closing-manual" type="number" min="0" step="1000" value="0" />
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="input-group">
+            <label for="compare-monthly-fee">每月管理費</label>
+            <input id="compare-monthly-fee" type="number" min="0" step="100" value="0" />
+          </div>
+          <div class="input-group">
+            <label for="compare-monthly-extra">每月其他固定支出</label>
+            <input id="compare-monthly-extra" type="number" min="0" step="100" value="0" />
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-3" id="compare-cards"></div>
+    </section>
+
+    <section id="export" class="tab-panel">
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>下載 JSON</h3>
+          <p class="note">包含所有輸入、計算結果、模式與時間。</p>
+          <button class="btn" id="download-json">下載試算 JSON</button>
+        </div>
+        <div class="card">
+          <h3>一鍵複製摘要</h3>
+          <textarea id="share-summary" rows="8" readonly></textarea>
+          <div style="margin-top: 12px; display: flex; gap: 10px;">
+            <button class="btn" id="copy-summary">複製摘要</button>
+            <button class="btn secondary" id="refresh-summary">更新摘要</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const formatCurrency = (value) => {
+      const rounded = Math.round(value || 0);
+      return new Intl.NumberFormat('zh-TW').format(rounded);
+    };
+
+    const formatPercent = (value) => `${(value || 0).toFixed(2)}%`;
+
+    const readNumber = (id, options = {}) => {
+      const input = document.getElementById(id);
+      if (!input) return 0;
+      let value = Number.parseFloat(input.value);
+      if (Number.isNaN(value)) value = 0;
+      const min = options.min ?? 0;
+      const max = options.max ?? Number.POSITIVE_INFINITY;
+      const clamped = Math.min(Math.max(value, min), max);
+      if (clamped !== value) input.value = clamped;
+      return clamped;
+    };
+
+    const debounce = (fn, delay = 200) => {
+      let timer;
+      return (...args) => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => fn(...args), delay);
+      };
+    };
+
+    const calcMortgage = ({
+      price,
+      loanRatio,
+      downPayment,
+      useRatio,
+      years,
+      annualRate,
+      graceMonths,
+      monthlyFee,
+      monthlyExtra,
+    }) => {
+      const principal = useRatio ? price * (loanRatio / 100) : Math.max(price - downPayment, 0);
+      const monthlyRate = annualRate / 12 / 100;
+      const totalMonths = years * 12;
+      const grace = Math.min(graceMonths, totalMonths);
+      const amortMonths = Math.max(totalMonths - grace, 1);
+
+      let monthlyPayment = 0;
+      if (monthlyRate === 0) {
+        monthlyPayment = principal / amortMonths;
+      } else {
+        monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, amortMonths)) / (Math.pow(1 + monthlyRate, amortMonths) - 1);
+      }
+
+      const schedule = [];
+      let balance = principal;
+      let totalInterest = 0;
+      let totalPayment = 0;
+
+      for (let month = 1; month <= totalMonths; month += 1) {
+        let interest = balance * monthlyRate;
+        let principalPaid = 0;
+        let payment = 0;
+        if (month <= grace) {
+          payment = interest;
+          principalPaid = 0;
+        } else {
+          payment = monthlyPayment;
+          principalPaid = monthlyRate === 0 ? monthlyPayment : payment - interest;
+        }
+        balance = Math.max(balance - principalPaid, 0);
+        totalInterest += interest;
+        totalPayment += payment;
+        schedule.push({ month, payment, interest, principalPaid, balance });
+      }
+
+      const monthlyCost = monthlyPayment + monthlyFee + monthlyExtra;
+      const gracePayment = grace > 0 ? principal * monthlyRate : 0;
+
+      return {
+        principal,
+        monthlyRate,
+        totalMonths,
+        monthlyPayment,
+        totalInterest,
+        totalPayment,
+        monthlyCost,
+        gracePayment,
+        schedule,
+      };
+    };
+
+    const calcDeedTax = (base) => base * 0.06;
+    const calcStampTax = (base) => base * 0.001;
+    const calcRegFee = (base) => base * 0.001;
+
+    const calcClosingCost = (items) => Object.values(items).reduce((sum, value) => sum + value, 0);
+
+    const mortgageSummary = document.getElementById('mortgage-summary');
+    const preciseSummary = document.getElementById('precise-summary');
+    const estimateSummary = document.getElementById('estimate-summary');
+    const scheduleBody = document.getElementById('schedule-body');
+
+    const updateMortgage = () => {
+      const price = readNumber('mortgage-price', { min: 0 });
+      const loanRatio = readNumber('loan-ratio', { min: 0, max: 100 });
+      const downPayment = readNumber('down-payment', { min: 0 });
+      const years = readNumber('loan-years', { min: 1, max: 40 });
+      const annualRate = readNumber('loan-rate', { min: 0, max: 20 });
+      const graceMonths = readNumber('grace-months', { min: 0, max: years * 12 });
+      const monthlyFee = readNumber('monthly-fee', { min: 0 });
+      const monthlyExtra = readNumber('monthly-extra', { min: 0 });
+      const useRatio = document.getElementById('toggle-loan-ratio').classList.contains('active');
+
+      const result = calcMortgage({
+        price,
+        loanRatio,
+        downPayment,
+        useRatio,
+        years,
+        annualRate,
+        graceMonths,
+        monthlyFee,
+        monthlyExtra,
+      });
+
+      mortgageSummary.innerHTML = `
+        <div class="summary-item"><span>貸款本金</span><strong>NT$ ${formatCurrency(result.principal)}</strong></div>
+        <div class="summary-item"><span>月利率 / 期數</span><strong>${formatPercent(result.monthlyRate * 100)} / ${result.totalMonths} 期</strong></div>
+        <div class="summary-item"><span>月付金（本息攤還）</span><strong>NT$ ${formatCurrency(result.monthlyPayment)}</strong></div>
+        ${graceMonths > 0 ? `<div class="summary-item"><span>寬限期月付（僅利息）</span><strong>NT$ ${formatCurrency(result.gracePayment)}</strong></div>` : ''}
+        <div class="summary-item"><span>總利息</span><strong>NT$ ${formatCurrency(result.totalInterest)}</strong></div>
+        <div class="summary-item"><span>總還款</span><strong>NT$ ${formatCurrency(result.totalPayment)}</strong></div>
+        <div class="summary-item"><span>每月總持有成本</span><strong>NT$ ${formatCurrency(result.monthlyCost)}</strong></div>
+      `;
+
+      const schedulePreview = [...result.schedule.slice(0, 12), ...result.schedule.slice(-12)];
+      scheduleBody.innerHTML = schedulePreview.map((row) => `
+        <tr>
+          <td>${row.month}</td>
+          <td>NT$ ${formatCurrency(row.payment)}</td>
+          <td>NT$ ${formatCurrency(row.interest)}</td>
+          <td>NT$ ${formatCurrency(row.principalPaid)}</td>
+          <td>NT$ ${formatCurrency(row.balance)}</td>
+        </tr>
+      `).join('');
+
+      return result;
+    };
+
+    const updatePrecise = () => {
+      const contractPrice = readNumber('contract-price', { min: 0 });
+      const deedTaxBase = readNumber('deed-tax-base', { min: 0 });
+      const landDeclared = readNumber('land-declared', { min: 0 });
+      const houseRights = readNumber('house-rights', { min: 0 });
+      const docFee = readNumber('doc-fee', { min: 0 });
+      const copyFee = readNumber('copy-fee', { min: 0 });
+      const scrivenerFee = readNumber('scrivener-fee', { min: 0 });
+      const otherFee = readNumber('other-fee', { min: 0 });
+      const agentRate = readNumber('agent-rate', { min: 0, max: 10 });
+      const agentFixed = readNumber('agent-fixed', { min: 0 });
+      const regBaseOption = document.getElementById('reg-base-option').value;
+      const customRegBase = readNumber('custom-reg-base', { min: 0 });
+
+      const regBaseMap = {
+        land: landDeclared,
+        house: houseRights,
+        custom: customRegBase,
+      };
+      const regBase = regBaseMap[regBaseOption] || 0;
+
+      const deedTax = calcDeedTax(deedTaxBase);
+      const stampTax = calcStampTax(contractPrice);
+      const regFee = calcRegFee(regBase);
+      const agentFee = document.getElementById('toggle-agent-rate').classList.contains('active')
+        ? contractPrice * (agentRate / 100)
+        : agentFixed;
+
+      const closingCost = calcClosingCost({
+        deedTax,
+        stampTax,
+        regFee,
+        docFee,
+        copyFee,
+        scrivenerFee,
+        agentFee,
+        otherFee,
+      });
+
+      const mortgageResult = latestMortgage;
+      const downPayment = Math.max(contractPrice - mortgageResult.principal, 0);
+      const cashNeeded = downPayment + closingCost;
+
+      preciseSummary.innerHTML = `
+        <div class="summary-item"><span>契稅（6%）</span><strong>NT$ ${formatCurrency(deedTax)}</strong></div>
+        <div class="summary-item"><span>印花稅（0.1%）</span><strong>NT$ ${formatCurrency(stampTax)}</strong></div>
+        <div class="summary-item"><span>登記費（0.1%）</span><strong>NT$ ${formatCurrency(regFee)}</strong></div>
+        <div class="summary-item"><span>書狀費</span><strong>NT$ ${formatCurrency(docFee)}</strong></div>
+        <div class="summary-item"><span>其他規費</span><strong>NT$ ${formatCurrency(copyFee)}</strong></div>
+        <div class="summary-item"><span>代書費</span><strong>NT$ ${formatCurrency(scrivenerFee)}</strong></div>
+        <div class="summary-item"><span>仲介費</span><strong>NT$ ${formatCurrency(agentFee)}</strong></div>
+        <div class="summary-item"><span>其他一次性費用</span><strong>NT$ ${formatCurrency(otherFee)}</strong></div>
+        <div class="summary-item"><span>一次性費用合計</span><strong class="highlight-text">NT$ ${formatCurrency(closingCost)}</strong></div>
+        <div class="summary-item"><span>首期所需現金</span><strong class="highlight-text">NT$ ${formatCurrency(cashNeeded)}</strong></div>
+      `;
+
+      return {
+        contractPrice,
+        deedTaxBase,
+        landDeclared,
+        houseRights,
+        regBase,
+        docFee,
+        copyFee,
+        scrivenerFee,
+        agentFee,
+        otherFee,
+        deedTax,
+        stampTax,
+        regFee,
+        closingCost,
+        cashNeeded,
+      };
+    };
+
+    const updateEstimate = () => {
+      const price = readNumber('estimate-price', { min: 0 });
+      let houseRatio = readNumber('house-ratio', { min: 0, max: 100 });
+      const landRatio = Math.max(0, 100 - houseRatio);
+      document.getElementById('land-ratio').value = landRatio;
+      const houseDiscount = readNumber('house-discount', { min: 1, max: 50 });
+      const landDiscount = readNumber('land-discount', { min: 1, max: 50 });
+
+      const houseValue = price * (houseRatio / 100) * (houseDiscount / 100);
+      const landValue = price * (landRatio / 100) * (landDiscount / 100);
+
+      const deedTax = calcDeedTax(houseValue);
+      const stampTax = calcStampTax(price);
+      const regFee = calcRegFee(landValue);
+      const closingCost = calcClosingCost({ deedTax, stampTax, regFee });
+
+      estimateSummary.innerHTML = `
+        <div class="summary-item"><span>估算房屋核定契價</span><strong>NT$ ${formatCurrency(houseValue)}</strong></div>
+        <div class="summary-item"><span>估算土地申報地價</span><strong>NT$ ${formatCurrency(landValue)}</strong></div>
+        <div class="summary-item"><span>契稅（6%）</span><strong>NT$ ${formatCurrency(deedTax)}</strong></div>
+        <div class="summary-item"><span>印花稅（0.1%）</span><strong>NT$ ${formatCurrency(stampTax)}</strong></div>
+        <div class="summary-item"><span>登記費（0.1%）</span><strong>NT$ ${formatCurrency(regFee)}</strong></div>
+        <div class="summary-item"><span>一次性費用合計</span><strong class="highlight-text">NT$ ${formatCurrency(closingCost)}</strong></div>
+      `;
+
+      return {
+        price,
+        houseRatio,
+        landRatio,
+        houseDiscount,
+        landDiscount,
+        houseValue,
+        landValue,
+        deedTax,
+        stampTax,
+        regFee,
+        closingCost,
+      };
+    };
+
+    const buildCompareCard = (label) => `
+      <div class="card compare-card" id="compare-card-${label}">
+        <div class="badge">方案 ${label}</div>
+        <div class="input-group">
+          <label for="compare-ratio-${label}">貸款成數（%）</label>
+          <input id="compare-ratio-${label}" type="number" min="0" max="100" step="1" value="70" />
+        </div>
+        <div class="input-group">
+          <label for="compare-years-${label}">貸款年限（年）</label>
+          <input id="compare-years-${label}" type="number" min="1" max="40" step="1" value="30" />
+        </div>
+        <div class="input-group">
+          <label for="compare-rate-${label}">年利率（%）</label>
+          <input id="compare-rate-${label}" type="number" min="0" max="20" step="0.01" value="2.2" />
+        </div>
+        <div class="input-group">
+          <label for="compare-grace-${label}">寬限期（月）</label>
+          <input id="compare-grace-${label}" type="number" min="0" max="60" step="1" value="0" />
+        </div>
+        <div class="summary">
+          <div class="summary-item"><span>月付金</span><strong id="compare-monthly-${label}">NT$ 0</strong></div>
+          <div class="summary-item"><span>總利息</span><strong id="compare-interest-${label}">NT$ 0</strong></div>
+          <div class="summary-item"><span>首期現金需求</span><strong id="compare-cash-${label}">NT$ 0</strong></div>
+          <div class="summary-item"><span>每月總持有成本</span><strong id="compare-cost-${label}">NT$ 0</strong></div>
+        </div>
+        <div style="margin-top: 10px;" id="compare-tags-${label}"></div>
+      </div>
+    `;
+
+    const updateCompare = () => {
+      const comparePrice = readNumber('compare-price', { min: 0 });
+      const monthlyFee = readNumber('compare-monthly-fee', { min: 0 });
+      const monthlyExtra = readNumber('compare-monthly-extra', { min: 0 });
+      const source = document.getElementById('compare-closing-source').value;
+      const manualClosing = readNumber('compare-closing-manual', { min: 0 });
+
+      const closingCost = source === 'precise'
+        ? latestPrecise.closingCost
+        : source === 'estimate'
+          ? latestEstimate.closingCost
+          : manualClosing;
+
+      const labels = ['A', 'B', 'C'];
+      const results = labels.map((label) => {
+        const loanRatio = readNumber(`compare-ratio-${label}`, { min: 0, max: 100 });
+        const years = readNumber(`compare-years-${label}`, { min: 1, max: 40 });
+        const annualRate = readNumber(`compare-rate-${label}`, { min: 0, max: 20 });
+        const graceMonths = readNumber(`compare-grace-${label}`, { min: 0, max: years * 12 });
+        const result = calcMortgage({
+          price: comparePrice,
+          loanRatio,
+          downPayment: 0,
+          useRatio: true,
+          years,
+          annualRate,
+          graceMonths,
+          monthlyFee,
+          monthlyExtra,
+        });
+        const downPayment = comparePrice - result.principal;
+        return {
+          label,
+          ...result,
+          cashNeeded: downPayment + closingCost,
+        };
+      });
+
+      const minPayment = Math.min(...results.map((item) => item.monthlyPayment));
+      const minInterest = Math.min(...results.map((item) => item.totalInterest));
+      const minCash = Math.min(...results.map((item) => item.cashNeeded));
+
+      results.forEach((item) => {
+        const highlights = [];
+        if (item.monthlyPayment === minPayment) highlights.push('月付最低');
+        if (item.totalInterest === minInterest) highlights.push('總利息最低');
+        if (item.cashNeeded === minCash) highlights.push('首期現金最低');
+
+        const card = document.getElementById(`compare-card-${item.label}`);
+        card.classList.toggle('highlight', highlights.length > 0);
+        document.getElementById(`compare-monthly-${item.label}`).textContent = `NT$ ${formatCurrency(item.monthlyPayment)}`;
+        document.getElementById(`compare-interest-${item.label}`).textContent = `NT$ ${formatCurrency(item.totalInterest)}`;
+        document.getElementById(`compare-cash-${item.label}`).textContent = `NT$ ${formatCurrency(item.cashNeeded)}`;
+        document.getElementById(`compare-cost-${item.label}`).textContent = `NT$ ${formatCurrency(item.monthlyCost)}`;
+        document.getElementById(`compare-tags-${item.label}`).innerHTML = highlights.map((text) => `<span class="tag">${text}</span>`).join(' ');
+      });
+
+      return { comparePrice, closingCost, results };
+    };
+
+    const updateShareSummary = () => {
+      const mortgage = latestMortgage;
+      const precise = latestPrecise;
+      const summaryText = `成交價：NT$ ${formatCurrency(readNumber('mortgage-price'))}\n` +
+        `貸款本金：NT$ ${formatCurrency(mortgage.principal)}\n` +
+        `利率年限：${readNumber('loan-rate').toFixed(2)}% / ${readNumber('loan-years')} 年\n` +
+        `月付金：NT$ ${formatCurrency(mortgage.monthlyPayment)}\n` +
+        `首期現金：NT$ ${formatCurrency(precise.cashNeeded)}\n` +
+        `稅費合計（精準）：NT$ ${formatCurrency(precise.closingCost)}`;
+      document.getElementById('share-summary').value = summaryText;
+      return summaryText;
+    };
+
+    const setupTabs = () => {
+      const buttons = document.querySelectorAll('.tab-button');
+      const panels = document.querySelectorAll('.tab-panel');
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+          buttons.forEach((btn) => btn.classList.remove('active'));
+          panels.forEach((panel) => panel.classList.remove('active'));
+          button.classList.add('active');
+          const target = document.getElementById(button.dataset.tab);
+          target?.classList.add('active');
+        });
+      });
+    };
+
+    const scheduleToggle = document.getElementById('toggle-schedule');
+    scheduleToggle.addEventListener('click', () => {
+      const wrapper = document.getElementById('schedule-wrapper');
+      const visible = wrapper.style.display === 'block';
+      wrapper.style.display = visible ? 'none' : 'block';
+      scheduleToggle.textContent = visible ? '展開攤還表（前 12 期 + 後 12 期）' : '收合攤還表';
+    });
+
+    const toggleLoanRatio = document.getElementById('toggle-loan-ratio');
+    const toggleDownPayment = document.getElementById('toggle-down-payment');
+    const loanRatioGroup = document.getElementById('loan-ratio-group');
+    const downPaymentGroup = document.getElementById('down-payment-group');
+    toggleLoanRatio.addEventListener('click', () => {
+      toggleLoanRatio.classList.add('active');
+      toggleDownPayment.classList.remove('active');
+      loanRatioGroup.style.display = 'block';
+      downPaymentGroup.style.display = 'none';
+      debouncedUpdate();
+    });
+    toggleDownPayment.addEventListener('click', () => {
+      toggleDownPayment.classList.add('active');
+      toggleLoanRatio.classList.remove('active');
+      loanRatioGroup.style.display = 'none';
+      downPaymentGroup.style.display = 'block';
+      debouncedUpdate();
+    });
+
+    const toggleAgentRate = document.getElementById('toggle-agent-rate');
+    const toggleAgentFixed = document.getElementById('toggle-agent-fixed');
+    const agentRateGroup = document.getElementById('agent-rate-group');
+    const agentFixedGroup = document.getElementById('agent-fixed-group');
+
+    toggleAgentRate.addEventListener('click', () => {
+      toggleAgentRate.classList.add('active');
+      toggleAgentFixed.classList.remove('active');
+      agentRateGroup.style.display = 'block';
+      agentFixedGroup.style.display = 'none';
+      debouncedUpdate();
+    });
+    toggleAgentFixed.addEventListener('click', () => {
+      toggleAgentFixed.classList.add('active');
+      toggleAgentRate.classList.remove('active');
+      agentRateGroup.style.display = 'none';
+      agentFixedGroup.style.display = 'block';
+      debouncedUpdate();
+    });
+
+    document.getElementById('reg-base-option').addEventListener('change', (event) => {
+      const isCustom = event.target.value === 'custom';
+      document.getElementById('custom-reg-group').style.display = isCustom ? 'block' : 'none';
+      debouncedUpdate();
+    });
+
+    document.getElementById('compare-closing-source').addEventListener('change', (event) => {
+      document.getElementById('compare-closing-manual-group').style.display = event.target.value === 'manual' ? 'block' : 'none';
+      debouncedUpdate();
+    });
+
+    const debouncedUpdate = debounce(() => {
+      latestMortgage = updateMortgage();
+      latestPrecise = updatePrecise();
+      latestEstimate = updateEstimate();
+      latestCompare = updateCompare();
+      updateShareSummary();
+    }, 150);
+
+    document.getElementById('download-json').addEventListener('click', () => {
+      const payload = {
+        timestamp: new Date().toISOString(),
+        mortgage: latestMortgage,
+        precise: latestPrecise,
+        estimate: latestEstimate,
+        compare: latestCompare,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `housing-calc-${Date.now()}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('copy-summary').addEventListener('click', async () => {
+      const text = updateShareSummary();
+      await navigator.clipboard.writeText(text);
+      alert('摘要已複製');
+    });
+
+    document.getElementById('refresh-summary').addEventListener('click', () => {
+      updateShareSummary();
+    });
+
+    let latestMortgage = {};
+    let latestPrecise = {};
+    let latestEstimate = {};
+    let latestCompare = {};
+
+    const initCompareCards = () => {
+      const container = document.getElementById('compare-cards');
+      container.innerHTML = ['A', 'B', 'C'].map((label) => buildCompareCard(label)).join('');
+    };
+
+    setupTabs();
+    initCompareCards();
+    document.querySelectorAll('input, select').forEach((input) => {
+      input.addEventListener('input', debouncedUpdate);
+    });
+    debouncedUpdate();
+  </script>
+</body>
+</html>

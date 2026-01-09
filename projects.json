@@ -95,5 +95,19 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Keyboard+%26+Mouse+Tester",
     "date": "2025-06-06",
     "description": "純前端的鍵盤與滑鼠檢測工具，含虛擬元件、真實輸入同步、統計與 JSON 匯出，適用 GitHub Pages。"
+  },
+  {
+    "id": "08",
+    "name": "台灣買房房貸＋交易稅費試算工具",
+    "path": "08-house-loan-tax/index.html",
+    "folder": "08-house-loan-tax/",
+    "tags": [
+      "Finance",
+      "Mortgage",
+      "Tax"
+    ],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Housing+Loan+%26+Tax",
+    "date": "2025-07-02",
+    "description": "依成交總價與核定課稅基礎雙軌試算，提供房貸、本息攤還、稅費/規費（精準與估算）、方案比較與匯出分享。"
   }
 ]

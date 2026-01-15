@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snake+ 操控與反應測試工具</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1116;
+      --panel: #171b22;
+      --card: #1f2530;
+      --accent: #5be4ff;
+      --accent-2: #9b7bff;
+      --text: #f5f7ff;
+      --muted: #98a2b3;
+      --danger: #ff6b6b;
+      --success: #5ef2a0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(15, 17, 22, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .tabs {
+      display: flex;
+      gap: 12px;
+      padding: 16px 24px 10px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--muted);
+      padding: 8px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      color: #10131a;
+      border-color: transparent;
+    }
+    .status-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      padding: 0 24px 14px;
+    }
+    .status-item {
+      background: var(--panel);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .status-item span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    main {
+      padding: 24px;
+      display: grid;
+      gap: 24px;
+    }
+    .grid-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 420px) minmax(320px, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 1024px) {
+      .grid-layout { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .panel h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+    canvas {
+      width: 100%;
+      background: #0c0f16;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      touch-action: none;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .control-btn {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 18px;
+      color: var(--text);
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .control-btn:active { transform: scale(0.96); }
+    .control-btn.primary {
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      color: #0c0f16;
+      font-weight: 700;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .card h4 { margin: 0 0 8px; font-size: 14px; color: var(--muted); }
+    .card p { margin: 0; font-size: 18px; font-weight: 600; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      background: rgba(91, 228, 255, 0.15);
+      color: var(--accent);
+      border-radius: 999px;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
+    select, input[type="range"], input[type="text"], textarea {
+      width: 100%;
+      background: #0f131a;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    .inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.08);
+    }
+    .btn {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s ease;
+    }
+    .btn.primary { background: linear-gradient(120deg, var(--accent), var(--accent-2)); color: #0c0f16; }
+    .btn.danger { background: rgba(255, 107, 107, 0.2); border-color: rgba(255,107,107,0.5); color: var(--danger); }
+    .direction-queue {
+      display: flex;
+      gap: 6px;
+      font-size: 18px;
+    }
+    .direction-pill {
+      background: rgba(255,255,255,0.1);
+      padding: 4px 6px;
+      border-radius: 6px;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+    .dot-live { background: var(--success); }
+    .dot-pause { background: #facc15; }
+    .dot-over { background: var(--danger); }
+    .muted { color: var(--muted); }
+    .footer-note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .share-code { font-family: "JetBrains Mono", monospace; font-size: 12px; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="game">遊戲</button>
+      <button class="tab-btn" data-tab="dashboard">儀表板</button>
+      <button class="tab-btn" data-tab="daily">每日挑戰</button>
+      <button class="tab-btn" data-tab="settings">設定</button>
+      <button class="tab-btn" data-tab="share">匯出/分享</button>
+    </nav>
+    <section class="status-bar">
+      <div class="status-item"><span>分數</span><strong id="status-score">0</strong></div>
+      <div class="status-item"><span>速度檔位</span><strong id="status-speed">中 (110ms)</strong></div>
+      <div class="status-item"><span>模式</span><strong id="status-mode">經典</strong></div>
+      <div class="status-item"><span>狀態</span><strong id="status-state"><span class="status-dot dot-pause"></span> 暫停</strong></div>
+      <div class="status-item"><span>輸入來源</span><strong id="status-input">Keyboard</strong></div>
+      <div class="status-item"><span>方向佇列</span><div class="direction-queue" id="status-queue"></div></div>
+    </section>
+  </header>
+
+  <main>
+    <section id="tab-game" class="tab-panel active">
+      <div class="grid-layout">
+        <div class="panel">
+          <h3>Snake+ 操控測試</h3>
+          <canvas id="game-canvas" width="400" height="400"></canvas>
+          <div class="controls">
+            <div></div>
+            <button class="control-btn" data-dir="up">↑</button>
+            <div></div>
+            <button class="control-btn" data-dir="left">←</button>
+            <button class="control-btn" data-dir="down">↓</button>
+            <button class="control-btn" data-dir="right">→</button>
+          </div>
+          <div class="inline" style="margin-top:12px;">
+            <button id="btn-start" class="btn primary">開始 / 繼續</button>
+            <button id="btn-pause" class="btn">暫停</button>
+            <button id="btn-restart" class="btn">重新開始 (R)</button>
+          </div>
+          <p class="footer-note">桌機：方向鍵/WASD、Space 暫停、R 重新開始。手機：滑動改方向。</p>
+        </div>
+        <div class="panel">
+          <h3>即時指標</h3>
+          <div class="info-grid" id="live-metrics"></div>
+          <div class="info-grid" style="margin-top:12px;" id="live-metrics-secondary"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-dashboard" class="tab-panel">
+      <div class="panel">
+        <h3>操控品質儀表板</h3>
+        <div class="inline">
+          <span class="badge">本局</span>
+          <span class="badge">近 10 局平均</span>
+          <label class="inline" style="margin-left:auto;">
+            <input type="checkbox" id="toggle-storage" />
+            <span>localStorage 保存</span>
+          </label>
+          <button class="btn danger" id="btn-clear-storage">清除紀錄</button>
+        </div>
+        <div class="info-grid" style="margin-top:16px;" id="dashboard-cards"></div>
+        <div class="info-grid" style="margin-top:16px;" id="dashboard-cards-avg"></div>
+      </div>
+    </section>
+
+    <section id="tab-daily" class="tab-panel">
+      <div class="panel">
+        <h3>每日挑戰 (Daily Seed)</h3>
+        <div class="form-row">
+          <div>
+            <label>今日日期 (台北)</label>
+            <div class="inline"><strong id="daily-date"></strong><span class="tag" id="daily-tag">官方</span></div>
+          </div>
+          <div>
+            <label>今日 Seed</label>
+            <div class="inline">
+              <input type="text" id="daily-seed" readonly />
+              <button class="btn" id="btn-copy-seed">複製</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h4>官方規則</h4>
+          <p class="muted">地圖 20x20・經典模式・穿牆關閉・速度 110ms</p>
+        </div>
+        <div class="form-row" style="margin-top:16px;">
+          <div>
+            <label>自訂地圖</label>
+            <select id="daily-custom-size">
+              <option value="20">20 x 20</option>
+              <option value="16">16 x 16</option>
+              <option value="24">24 x 24</option>
+              <option value="28">28 x 28</option>
+            </select>
+          </div>
+          <div>
+            <label>自訂速度 (ms/tick)</label>
+            <input type="range" id="daily-custom-speed" min="50" max="200" step="10" value="110" />
+            <div class="muted" id="daily-speed-label">110 ms</div>
+          </div>
+        </div>
+        <div class="inline">
+          <label class="inline">
+            <input type="checkbox" id="daily-custom-wrap" />
+            <span>穿牆模式</span>
+          </label>
+          <select id="daily-custom-mode">
+            <option value="classic">經典</option>
+            <option value="endurance">耐力</option>
+            <option value="precision">精準</option>
+          </select>
+          <button class="btn primary" id="btn-start-daily">啟動每日挑戰</button>
+          <span class="muted" id="daily-custom-note">官方每日挑戰</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-settings" class="tab-panel">
+      <div class="panel">
+        <h3>設定</h3>
+        <div class="form-row">
+          <div>
+            <label>地圖大小</label>
+            <select id="setting-size">
+              <option value="16">16 x 16</option>
+              <option value="20" selected>20 x 20</option>
+              <option value="24">24 x 24</option>
+              <option value="28">28 x 28</option>
+            </select>
+          </div>
+          <div>
+            <label>格子大小 (px)</label>
+            <input type="range" id="setting-cell" min="14" max="28" step="2" value="20" />
+            <div class="muted" id="cell-size-label">20 px</div>
+          </div>
+          <div>
+            <label>模式</label>
+            <select id="setting-mode">
+              <option value="classic">經典</option>
+              <option value="endurance">耐力</option>
+              <option value="precision">精準</option>
+            </select>
+          </div>
+          <div>
+            <label>速度 (ms/tick)</label>
+            <input type="range" id="setting-speed" min="50" max="200" step="10" value="110" />
+            <div class="muted" id="speed-label">110 ms</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label>穿牆模式</label>
+            <label class="inline"><input type="checkbox" id="setting-wrap" /> <span>啟用</span></label>
+          </div>
+          <div>
+            <label>localStorage 保存</label>
+            <label class="inline"><input type="checkbox" id="setting-storage" checked /> <span>啟用</span></label>
+          </div>
+        </div>
+        <div class="inline">
+          <button class="btn" id="btn-reset-settings">重置全部</button>
+          <button class="btn danger" id="btn-clear-history">清除紀錄</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-share" class="tab-panel">
+      <div class="panel">
+        <h3>匯出 / 分享</h3>
+        <div class="form-row">
+          <div>
+            <label>分享成績碼</label>
+            <textarea id="share-code" rows="3" readonly class="share-code"></textarea>
+            <div class="inline" style="margin-top:8px;">
+              <button class="btn" id="btn-copy-code">複製分享碼</button>
+              <button class="btn" id="btn-copy-summary">複製摘要文字</button>
+            </div>
+          </div>
+          <div>
+            <label>驗證 / 還原成績碼</label>
+            <textarea id="share-decode" rows="3" placeholder="貼上分享碼" class="share-code"></textarea>
+            <div class="inline" style="margin-top:8px;">
+              <button class="btn" id="btn-parse-code">解析</button>
+              <span id="share-error" class="muted"></span>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="share-result" style="display:none;"></div>
+        <div class="form-row" style="margin-top:16px;">
+          <div>
+            <label>下載 JSON</label>
+            <button class="btn" id="btn-download-json">下載 JSON</button>
+          </div>
+          <div>
+            <label>下載 CSV</label>
+            <button class="btn" id="btn-download-csv">下載 CSV</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panels = document.querySelectorAll('.tab-panel');
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+
+    const statusScore = document.getElementById('status-score');
+    const statusSpeed = document.getElementById('status-speed');
+    const statusMode = document.getElementById('status-mode');
+    const statusState = document.getElementById('status-state');
+    const statusInput = document.getElementById('status-input');
+    const statusQueue = document.getElementById('status-queue');
+
+    const liveMetrics = document.getElementById('live-metrics');
+    const liveMetricsSecondary = document.getElementById('live-metrics-secondary');
+    const dashboardCards = document.getElementById('dashboard-cards');
+    const dashboardCardsAvg = document.getElementById('dashboard-cards-avg');
+
+    const shareCode = document.getElementById('share-code');
+    const shareDecode = document.getElementById('share-decode');
+    const shareResult = document.getElementById('share-result');
+    const shareError = document.getElementById('share-error');
+
+    const settings = {
+      gridSize: 20,
+      cellSize: 20,
+      speedMs: 110,
+      wrap: false,
+      mode: 'classic',
+      precision: false,
+      storageEnabled: true,
+    };
+
+    const game = {
+      snake: [],
+      direction: 'right',
+      nextQueue: [],
+      score: 0,
+      running: false,
+      gameOver: false,
+      tickId: 0,
+      lastAppliedTick: -1,
+      timer: null,
+      startTime: null,
+      endTime: null,
+      inputSource: 'Keyboard',
+      food: null,
+      foodSpawnTime: null,
+      eatenTimes: [],
+      inputDelays: [],
+      inputEvents: [],
+      invalidInputs: { reverse: 0, locked: 0, queue: 0 },
+      totalInputs: 0,
+      jitterCount: 0,
+      lastInputDir: null,
+      lastInputTime: null,
+      deaths: { wall: 0, self: 0 },
+      enduranceLevel: 0,
+      dailyMode: false,
+      dailySeed: null,
+      seedLabel: null,
+      prng: null,
+      version: 'v1',
+      precisionWindow: 0.2,
+    };
+
+    const history = {
+      games: [],
+    };
+
+    const formatMs = (value) => `${Math.round(value)} ms`;
+    const formatPercent = (value) => `${(value * 100).toFixed(1)}%`;
+    const formatSeconds = (value) => `${value.toFixed(2)} 秒`;
+
+    const directions = {
+      up: { x: 0, y: -1 },
+      down: { x: 0, y: 1 },
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 },
+    };
+    const opposites = { up: 'down', down: 'up', left: 'right', right: 'left' };
+
+    const hashString = (str) => {
+      let hash = 2166136261;
+      for (let i = 0; i < str.length; i += 1) {
+        hash ^= str.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0;
+    };
+
+    const prng = (seed) => {
+      let t = seed >>> 0;
+      return () => {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    };
+
+    const getTaipeiDate = () => {
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Taipei',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      return formatter.format(new Date());
+    };
+
+    const buildSeed = (label, config) => {
+      return `${label}|${config.gridSize}|${config.mode}|${config.speedMs}|${config.wrap}`;
+    };
+
+    const resetGame = () => {
+      const startX = Math.floor(settings.gridSize / 2);
+      const startY = Math.floor(settings.gridSize / 2);
+      game.snake = [
+        { x: startX, y: startY },
+        { x: startX - 1, y: startY },
+        { x: startX - 2, y: startY },
+      ];
+      game.direction = 'right';
+      game.nextQueue = [];
+      game.score = 0;
+      game.running = false;
+      game.gameOver = false;
+      game.tickId = 0;
+      game.lastAppliedTick = -1;
+      game.startTime = null;
+      game.endTime = null;
+      game.inputSource = 'Keyboard';
+      game.food = null;
+      game.foodSpawnTime = null;
+      game.eatenTimes = [];
+      game.inputDelays = [];
+      game.inputEvents = [];
+      game.invalidInputs = { reverse: 0, locked: 0, queue: 0 };
+      game.totalInputs = 0;
+      game.jitterCount = 0;
+      game.lastInputDir = null;
+      game.lastInputTime = null;
+      game.enduranceLevel = 0;
+      game.prng = game.dailyMode ? prng(hashString(game.seedLabel)) : Math.random;
+      spawnFood();
+      render();
+      updateStatus();
+      updateLiveMetrics();
+    };
+
+    const setRunning = (value) => {
+      game.running = value;
+      if (value) {
+        if (!game.startTime) game.startTime = performance.now();
+      }
+      updateStatus();
+    };
+
+    const getSpeedLabel = (ms) => {
+      if (ms <= 70) return `地獄 (${ms}ms)`;
+      if (ms <= 90) return `快 (${ms}ms)`;
+      if (ms <= 130) return `中 (${ms}ms)`;
+      return `慢 (${ms}ms)`;
+    };
+
+    const render = () => {
+      const size = settings.gridSize * settings.cellSize;
+      canvas.width = size;
+      canvas.height = size;
+      ctx.clearRect(0, 0, size, size);
+      ctx.fillStyle = '#0b0f16';
+      ctx.fillRect(0, 0, size, size);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      for (let i = 0; i <= settings.gridSize; i += 1) {
+        ctx.beginPath();
+        ctx.moveTo(i * settings.cellSize, 0);
+        ctx.lineTo(i * settings.cellSize, size);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * settings.cellSize);
+        ctx.lineTo(size, i * settings.cellSize);
+        ctx.stroke();
+      }
+
+      if (game.food) {
+        ctx.fillStyle = '#ffb703';
+        ctx.fillRect(game.food.x * settings.cellSize, game.food.y * settings.cellSize, settings.cellSize, settings.cellSize);
+      }
+
+      game.snake.forEach((segment, index) => {
+        ctx.fillStyle = index === 0 ? '#5be4ff' : '#2ed5a3';
+        ctx.fillRect(segment.x * settings.cellSize, segment.y * settings.cellSize, settings.cellSize, settings.cellSize);
+      });
+    };
+
+    const spawnFood = () => {
+      let position;
+      const rng = typeof game.prng === 'function' ? game.prng : Math.random;
+      do {
+        position = {
+          x: Math.floor(rng() * settings.gridSize),
+          y: Math.floor(rng() * settings.gridSize),
+        };
+      } while (game.snake.some((seg) => seg.x === position.x && seg.y === position.y));
+      game.food = position;
+      game.foodSpawnTime = performance.now();
+    };
+
+    const applyDirection = () => {
+      if (!game.nextQueue.length) return;
+      const next = game.nextQueue.shift();
+      game.direction = next.dir;
+      game.lastAppliedTick = game.tickId;
+      const delay = performance.now() - next.time;
+      game.inputDelays.push(delay);
+    };
+
+    const moveSnake = () => {
+      const dir = directions[game.direction];
+      const head = { ...game.snake[0] };
+      head.x += dir.x;
+      head.y += dir.y;
+
+      if (settings.wrap) {
+        head.x = (head.x + settings.gridSize) % settings.gridSize;
+        head.y = (head.y + settings.gridSize) % settings.gridSize;
+      }
+
+      if (!settings.wrap) {
+        if (head.x < 0 || head.x >= settings.gridSize || head.y < 0 || head.y >= settings.gridSize) {
+          endGame('wall');
+          return;
+        }
+      }
+
+      if (game.snake.some((seg) => seg.x === head.x && seg.y === head.y)) {
+        endGame('self');
+        return;
+      }
+
+      game.snake.unshift(head);
+      if (game.food && head.x === game.food.x && head.y === game.food.y) {
+        game.score += 1;
+        const eatTime = (performance.now() - game.foodSpawnTime) / 1000;
+        game.eatenTimes.push(eatTime);
+        if (settings.mode === 'endurance' && game.score % 3 === 0) {
+          settings.speedMs = Math.max(50, settings.speedMs - 10);
+          restartTimer();
+        }
+        spawnFood();
+      } else {
+        game.snake.pop();
+      }
+    };
+
+    const tick = () => {
+      if (!game.running || game.gameOver) return;
+      game.tickId += 1;
+      applyDirection();
+      moveSnake();
+      render();
+      throttleUIUpdate();
+    };
+
+    let lastUiUpdate = 0;
+    const throttleUIUpdate = () => {
+      const now = performance.now();
+      if (now - lastUiUpdate < 120) return;
+      lastUiUpdate = now;
+      updateStatus();
+      updateLiveMetrics();
+      updateQueueDisplay();
+    };
+
+    const updateStatus = () => {
+      statusScore.textContent = game.score;
+      statusSpeed.textContent = getSpeedLabel(settings.speedMs);
+      statusMode.textContent = settings.mode === 'classic' ? '經典' : settings.mode === 'endurance' ? '耐力' : '精準';
+      const stateLabel = game.gameOver ? '結束' : game.running ? '進行' : '暫停';
+      const dotClass = game.gameOver ? 'dot-over' : game.running ? 'dot-live' : 'dot-pause';
+      statusState.innerHTML = `<span class="status-dot ${dotClass}"></span> ${stateLabel}`;
+      statusInput.textContent = game.inputSource;
+    };
+
+    const updateQueueDisplay = () => {
+      statusQueue.innerHTML = '';
+      const arrows = { up: '↑', down: '↓', left: '←', right: '→' };
+      game.nextQueue.slice(0, 3).forEach((item) => {
+        const span = document.createElement('span');
+        span.className = 'direction-pill';
+        span.textContent = arrows[item.dir];
+        statusQueue.appendChild(span);
+      });
+    };
+
+    const getAverage = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+    const getMin = (arr) => arr.length ? Math.min(...arr) : 0;
+    const getMax = (arr) => arr.length ? Math.max(...arr) : 0;
+
+    const computeMetrics = (data) => {
+      const inputDelayAvg = getAverage(data.inputDelays);
+      const inputDelayMin = getMin(data.inputDelays);
+      const inputDelayMax = getMax(data.inputDelays);
+      const durationMin = data.startTime && data.endTime ? (data.endTime - data.startTime) / 60000 : 0;
+      const inputsPerMinute = durationMin > 0 ? data.totalInputs / durationMin : 0;
+      const invalidTotal = data.invalidInputs.reverse + data.invalidInputs.locked + data.invalidInputs.queue;
+      const invalidRate = data.totalInputs > 0 ? invalidTotal / data.totalInputs : 0;
+      const chaseAvg = getAverage(data.eatenTimes);
+      const chaseMin = getMin(data.eatenTimes);
+      const chaseMax = getMax(data.eatenTimes);
+      return {
+        inputDelayAvg,
+        inputDelayMin,
+        inputDelayMax,
+        inputsPerMinute,
+        invalidRate,
+        invalidBreakdown: data.totalInputs ? {
+          reverse: data.invalidInputs.reverse / data.totalInputs,
+          locked: data.invalidInputs.locked / data.totalInputs,
+          queue: data.invalidInputs.queue / data.totalInputs,
+        } : { reverse: 0, locked: 0, queue: 0 },
+        chaseAvg,
+        chaseMin,
+        chaseMax,
+        jitterCount: data.jitterCount,
+      };
+    };
+
+    const updateLiveMetrics = () => {
+      const metrics = computeMetrics(game);
+      const mapSizeLabel = `${settings.gridSize}x${settings.gridSize}`;
+      liveMetrics.innerHTML = `
+        <div class="card"><h4>平均輸入延遲</h4><p>${formatMs(metrics.inputDelayAvg)}</p></div>
+        <div class="card"><h4>輸入頻率</h4><p>${metrics.inputsPerMinute.toFixed(1)} / 分</p></div>
+        <div class="card"><h4>無效輸入率</h4><p>${formatPercent(metrics.invalidRate)}</p></div>
+        <div class="card"><h4>追食平均耗時</h4><p>${formatSeconds(metrics.chaseAvg)}</p></div>
+      `;
+      liveMetricsSecondary.innerHTML = `
+        <div class="card"><h4>地圖 / 速度</h4><p>${mapSizeLabel} ・ ${settings.speedMs}ms</p></div>
+        <div class="card"><h4>延遲範圍</h4><p>${formatMs(metrics.inputDelayMin)} ~ ${formatMs(metrics.inputDelayMax)}</p></div>
+        <div class="card"><h4>死亡統計</h4><p>牆 ${game.deaths.wall} / 自撞 ${game.deaths.self}</p></div>
+        <div class="card"><h4>抖動次數</h4><p>${metrics.jitterCount}</p></div>
+      `;
+    };
+
+    const updateDashboard = () => {
+      const current = computeMetrics(game);
+      const historyMetrics = history.games.map((g) => computeMetrics(g));
+      const avg = historyMetrics.length ? {
+        inputDelayAvg: getAverage(historyMetrics.map((m) => m.inputDelayAvg)),
+        invalidRate: getAverage(historyMetrics.map((m) => m.invalidRate)),
+        inputsPerMinute: getAverage(historyMetrics.map((m) => m.inputsPerMinute)),
+        chaseAvg: getAverage(historyMetrics.map((m) => m.chaseAvg)),
+        jitterCount: getAverage(historyMetrics.map((m) => m.jitterCount)),
+      } : {
+        inputDelayAvg: 0,
+        invalidRate: 0,
+        inputsPerMinute: 0,
+        chaseAvg: 0,
+        jitterCount: 0,
+      };
+
+      dashboardCards.innerHTML = `
+        <div class="card"><h4>平均輸入延遲</h4><p>${formatMs(current.inputDelayAvg)}</p></div>
+        <div class="card"><h4>最小 / 最大延遲</h4><p>${formatMs(current.inputDelayMin)} / ${formatMs(current.inputDelayMax)}</p></div>
+        <div class="card"><h4>輸入頻率</h4><p>${current.inputsPerMinute.toFixed(1)} / 分</p></div>
+        <div class="card"><h4>無效輸入率</h4><p>${formatPercent(current.invalidRate)}</p></div>
+        <div class="card"><h4>反向禁止</h4><p>${formatPercent(current.invalidBreakdown.reverse)}</p></div>
+        <div class="card"><h4>同 Tick 鎖</h4><p>${formatPercent(current.invalidBreakdown.locked)}</p></div>
+        <div class="card"><h4>佇列已滿</h4><p>${formatPercent(current.invalidBreakdown.queue)}</p></div>
+        <div class="card"><h4>追食效率</h4><p>${formatSeconds(current.chaseAvg)}</p></div>
+        <div class="card"><h4>最快 / 最慢追食</h4><p>${formatSeconds(current.chaseMin)} / ${formatSeconds(current.chaseMax)}</p></div>
+        <div class="card"><h4>死亡原因</h4><p>牆 ${game.deaths.wall} / 自撞 ${game.deaths.self}</p></div>
+        <div class="card"><h4>抖動次數</h4><p>${current.jitterCount}</p></div>
+      `;
+
+      dashboardCardsAvg.innerHTML = `
+        <div class="card"><h4>平均輸入延遲</h4><p>${formatMs(avg.inputDelayAvg)}</p></div>
+        <div class="card"><h4>無效輸入率</h4><p>${formatPercent(avg.invalidRate)}</p></div>
+        <div class="card"><h4>輸入頻率</h4><p>${avg.inputsPerMinute.toFixed(1)} / 分</p></div>
+        <div class="card"><h4>追食效率</h4><p>${formatSeconds(avg.chaseAvg)}</p></div>
+        <div class="card"><h4>抖動次數</h4><p>${avg.jitterCount}</p></div>
+      `;
+    };
+
+    const enqueueDirection = (dir, source) => {
+      if (game.gameOver) return;
+      game.inputSource = source;
+      game.totalInputs += 1;
+
+      if (game.lastAppliedTick === game.tickId) {
+        game.invalidInputs.locked += 1;
+        return;
+      }
+      if (game.nextQueue.length >= 3) {
+        game.invalidInputs.queue += 1;
+        return;
+      }
+      const lastDir = game.nextQueue.length ? game.nextQueue[game.nextQueue.length - 1].dir : game.direction;
+      if (dir === opposites[lastDir]) {
+        game.invalidInputs.reverse += 1;
+        return;
+      }
+      if (settings.mode === 'precision') {
+        const head = game.snake[0];
+        const centerX = head.x + 0.5;
+        const centerY = head.y + 0.5;
+        const dirVec = directions[game.direction];
+        const nearCenter = Math.abs((dirVec.x ? centerY : centerX) - Math.round(dirVec.x ? centerY : centerX)) < game.precisionWindow;
+        if (!nearCenter) {
+          game.invalidInputs.locked += 1;
+          return;
+        }
+      }
+
+      const now = performance.now();
+      if (game.lastInputDir && opposites[game.lastInputDir] === dir) {
+        if (game.lastInputTime && now - game.lastInputTime < 400) {
+          game.jitterCount += 1;
+        }
+      }
+      game.lastInputDir = dir;
+      game.lastInputTime = now;
+
+      game.nextQueue.push({ dir, time: now, source });
+      updateQueueDisplay();
+    };
+
+    const endGame = (reason) => {
+      game.running = false;
+      game.gameOver = true;
+      game.endTime = performance.now();
+      if (reason === 'wall') game.deaths.wall += 1;
+      if (reason === 'self') game.deaths.self += 1;
+      clearInterval(game.timer);
+      updateStatus();
+      updateLiveMetrics();
+      finalizeGame();
+    };
+
+    const restartTimer = () => {
+      clearInterval(game.timer);
+      game.timer = setInterval(tick, settings.speedMs);
+    };
+
+    const initGame = () => {
+      resetGame();
+      restartTimer();
+    };
+
+    const finalizeGame = () => {
+      const entry = {
+        score: game.score,
+        mode: settings.mode,
+        gridSize: settings.gridSize,
+        speedMs: settings.speedMs,
+        wrap: settings.wrap,
+        inputDelays: [...game.inputDelays],
+        invalidInputs: { ...game.invalidInputs },
+        totalInputs: game.totalInputs,
+        eatenTimes: [...game.eatenTimes],
+        jitterCount: game.jitterCount,
+        deaths: { ...game.deaths },
+        startTime: game.startTime,
+        endTime: game.endTime,
+        dailyMode: game.dailyMode,
+        dailySeed: game.seedLabel,
+        version: game.version,
+      };
+      if (settings.storageEnabled) {
+        history.games.unshift(entry);
+        history.games = history.games.slice(0, 10);
+        persistStorage();
+      }
+      updateDashboard();
+      updateShareCode(entry);
+    };
+
+    const updateShareCode = (entry) => {
+      const metrics = computeMetrics(game);
+      const payload = {
+        v: entry.version,
+        date: entry.dailyMode ? entry.dailySeed : null,
+        mode: entry.mode,
+        size: entry.gridSize,
+        speed: entry.speedMs,
+        wrap: entry.wrap,
+        score: entry.score,
+        delay: Math.round(metrics.inputDelayAvg),
+        invalid: Number(metrics.invalidRate.toFixed(3)),
+        chase: Number(metrics.chaseAvg.toFixed(2)),
+      };
+      shareCode.value = encodeShareCode(payload);
+    };
+
+    const encodeShareCode = (data) => {
+      const json = JSON.stringify(data);
+      const base64 = btoa(unescape(encodeURIComponent(json)));
+      return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    };
+
+    const decodeShareCode = (code) => {
+      const padded = code.replace(/-/g, '+').replace(/_/g, '/');
+      const normalized = padded + '==='.slice((padded.length + 3) % 4);
+      const json = decodeURIComponent(escape(atob(normalized)));
+      return JSON.parse(json);
+    };
+
+    const updateShareResult = (data) => {
+      const today = getTaipeiDate();
+      const isDaily = data.date;
+      const dailyLabel = isDaily ? (data.date === today ? '今日挑戰成績' : '非今日') : '一般模式';
+      shareResult.style.display = 'block';
+      shareResult.innerHTML = `
+        <h4>解析結果 <span class="tag">${dailyLabel}</span></h4>
+        <p>分數：${data.score}</p>
+        <p>模式：${data.mode} / 地圖：${data.size} / 速度：${data.speed}ms / 穿牆：${data.wrap ? '是' : '否'}</p>
+        <p>平均延遲：${data.delay}ms ・ 無效率：${formatPercent(data.invalid)} ・ 追食效率：${formatSeconds(data.chase)}</p>
+      `;
+    };
+
+    const persistStorage = () => {
+      if (!settings.storageEnabled) return;
+      localStorage.setItem('snakeplus-history', JSON.stringify(history.games));
+      localStorage.setItem('snakeplus-settings', JSON.stringify(settings));
+    };
+
+    const loadStorage = () => {
+      const savedHistory = localStorage.getItem('snakeplus-history');
+      const savedSettings = localStorage.getItem('snakeplus-settings');
+      if (savedHistory) history.games = JSON.parse(savedHistory);
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        Object.assign(settings, parsed);
+      }
+    };
+
+    const exportJson = () => {
+      const payload = {
+        settings,
+        games: history.games,
+        timestamp: new Date().toISOString(),
+        dailySeed: game.dailyMode ? game.seedLabel : null,
+      };
+      downloadBlob(JSON.stringify(payload, null, 2), 'snakeplus-export.json', 'application/json');
+    };
+
+    const exportCsv = () => {
+      const headers = ['score', 'mode', 'gridSize', 'speedMs', 'wrap', 'avgDelay', 'invalidRate', 'chaseAvg', 'deathWall', 'deathSelf'];
+      const rows = history.games.map((g) => {
+        const metrics = computeMetrics(g);
+        return [
+          g.score,
+          g.mode,
+          g.gridSize,
+          g.speedMs,
+          g.wrap,
+          metrics.inputDelayAvg.toFixed(0),
+          metrics.invalidRate.toFixed(3),
+          metrics.chaseAvg.toFixed(2),
+          g.deaths.wall,
+          g.deaths.self,
+        ].join(',');
+      });
+      const csv = [headers.join(','), ...rows].join('\n');
+      downloadBlob(csv, 'snakeplus-export.csv', 'text/csv');
+    };
+
+    const downloadBlob = (content, filename, type) => {
+      const blob = new Blob([content], { type });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    const updateDailyInfo = () => {
+      const today = getTaipeiDate();
+      document.getElementById('daily-date').textContent = today;
+      const officialSeed = buildSeed(today, { gridSize: 20, mode: 'classic', speedMs: 110, wrap: false });
+      document.getElementById('daily-seed').value = officialSeed;
+      game.seedLabel = officialSeed;
+    };
+
+    const startDaily = (custom) => {
+      const today = getTaipeiDate();
+      const config = custom ? {
+        gridSize: Number(document.getElementById('daily-custom-size').value),
+        mode: document.getElementById('daily-custom-mode').value,
+        speedMs: Number(document.getElementById('daily-custom-speed').value),
+        wrap: document.getElementById('daily-custom-wrap').checked,
+      } : {
+        gridSize: 20,
+        mode: 'classic',
+        speedMs: 110,
+        wrap: false,
+      };
+      settings.gridSize = config.gridSize;
+      settings.mode = config.mode;
+      settings.speedMs = config.speedMs;
+      settings.wrap = config.wrap;
+      game.dailyMode = true;
+      game.seedLabel = buildSeed(today, config);
+      game.prng = prng(hashString(game.seedLabel));
+      applySettingsToUI();
+      document.getElementById('daily-tag').textContent = custom ? '非官方' : '官方';
+      document.getElementById('daily-custom-note').textContent = custom ? '非官方每日挑戰' : '官方每日挑戰';
+      initGame();
+      setRunning(true);
+    };
+
+    const handleInput = (dir, source) => {
+      enqueueDirection(dir, source);
+      updateStatus();
+    };
+
+    const bindInputs = () => {
+      document.addEventListener('keydown', (event) => {
+        const key = event.key.toLowerCase();
+        if (key === 'arrowup' || key === 'w') handleInput('up', 'Keyboard');
+        if (key === 'arrowdown' || key === 's') handleInput('down', 'Keyboard');
+        if (key === 'arrowleft' || key === 'a') handleInput('left', 'Keyboard');
+        if (key === 'arrowright' || key === 'd') handleInput('right', 'Keyboard');
+        if (key === ' ') {
+          event.preventDefault();
+          game.running ? setRunning(false) : setRunning(true);
+        }
+        if (key === 'r') initGame();
+      });
+
+      document.querySelectorAll('.control-btn[data-dir]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          handleInput(btn.dataset.dir, 'On-screen');
+        });
+      });
+
+      let touchStart = null;
+      canvas.addEventListener('touchstart', (event) => {
+        event.preventDefault();
+        const touch = event.touches[0];
+        touchStart = { x: touch.clientX, y: touch.clientY };
+      }, { passive: false });
+      canvas.addEventListener('touchend', (event) => {
+        event.preventDefault();
+        if (!touchStart) return;
+        const touch = event.changedTouches[0];
+        const dx = touch.clientX - touchStart.x;
+        const dy = touch.clientY - touchStart.y;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          handleInput(dx > 0 ? 'right' : 'left', 'Touch');
+        } else {
+          handleInput(dy > 0 ? 'down' : 'up', 'Touch');
+        }
+        touchStart = null;
+      }, { passive: false });
+    };
+
+    const bindUI = () => {
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          tabs.forEach((t) => t.classList.remove('active'));
+          tab.classList.add('active');
+          panels.forEach((panel) => panel.classList.remove('active'));
+          document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+          updateDashboard();
+        });
+      });
+
+      document.getElementById('btn-start').addEventListener('click', () => setRunning(true));
+      document.getElementById('btn-pause').addEventListener('click', () => setRunning(false));
+      document.getElementById('btn-restart').addEventListener('click', () => initGame());
+
+      document.getElementById('setting-size').addEventListener('change', (event) => {
+        settings.gridSize = Number(event.target.value);
+        initGame();
+      });
+      document.getElementById('setting-cell').addEventListener('input', (event) => {
+        settings.cellSize = Number(event.target.value);
+        document.getElementById('cell-size-label').textContent = `${settings.cellSize} px`;
+        render();
+      });
+      document.getElementById('setting-mode').addEventListener('change', (event) => {
+        settings.mode = event.target.value;
+      });
+      document.getElementById('setting-speed').addEventListener('input', (event) => {
+        settings.speedMs = Number(event.target.value);
+        document.getElementById('speed-label').textContent = `${settings.speedMs} ms`;
+        restartTimer();
+      });
+      document.getElementById('setting-wrap').addEventListener('change', (event) => {
+        settings.wrap = event.target.checked;
+      });
+      document.getElementById('setting-storage').addEventListener('change', (event) => {
+        settings.storageEnabled = event.target.checked;
+        persistStorage();
+      });
+
+      document.getElementById('btn-reset-settings').addEventListener('click', () => {
+        Object.assign(settings, {
+          gridSize: 20,
+          cellSize: 20,
+          speedMs: 110,
+          wrap: false,
+          mode: 'classic',
+          storageEnabled: true,
+        });
+        applySettingsToUI();
+        initGame();
+      });
+
+      document.getElementById('btn-clear-history').addEventListener('click', () => {
+        history.games = [];
+        persistStorage();
+        updateDashboard();
+      });
+
+      document.getElementById('toggle-storage').addEventListener('change', (event) => {
+        settings.storageEnabled = event.target.checked;
+        document.getElementById('setting-storage').checked = settings.storageEnabled;
+        persistStorage();
+      });
+
+      document.getElementById('btn-clear-storage').addEventListener('click', () => {
+        history.games = [];
+        persistStorage();
+        updateDashboard();
+      });
+
+      document.getElementById('btn-copy-code').addEventListener('click', () => {
+        shareCode.select();
+        document.execCommand('copy');
+      });
+      document.getElementById('btn-copy-summary').addEventListener('click', () => {
+        const metrics = computeMetrics(game);
+        const summary = `Snake+ 成績：分數 ${game.score}，平均延遲 ${Math.round(metrics.inputDelayAvg)}ms，無效率 ${(metrics.invalidRate * 100).toFixed(1)}%，追食效率 ${metrics.chaseAvg.toFixed(2)}秒。`;
+        navigator.clipboard?.writeText(summary);
+      });
+
+      document.getElementById('btn-parse-code').addEventListener('click', () => {
+        shareError.textContent = '';
+        try {
+          const parsed = decodeShareCode(shareDecode.value.trim());
+          updateShareResult(parsed);
+        } catch (error) {
+          shareResult.style.display = 'none';
+          shareError.textContent = '分享碼無法解析，請確認格式。';
+        }
+      });
+
+      document.getElementById('btn-download-json').addEventListener('click', exportJson);
+      document.getElementById('btn-download-csv').addEventListener('click', exportCsv);
+
+      document.getElementById('btn-copy-seed').addEventListener('click', () => {
+        document.getElementById('daily-seed').select();
+        document.execCommand('copy');
+      });
+
+      document.getElementById('daily-custom-speed').addEventListener('input', (event) => {
+        document.getElementById('daily-speed-label').textContent = `${event.target.value} ms`;
+      });
+
+      document.getElementById('btn-start-daily').addEventListener('click', () => {
+        const custom = document.getElementById('daily-custom-size').value !== '20'
+          || document.getElementById('daily-custom-mode').value !== 'classic'
+          || document.getElementById('daily-custom-speed').value !== '110'
+          || document.getElementById('daily-custom-wrap').checked;
+        startDaily(custom);
+      });
+    };
+
+    const applySettingsToUI = () => {
+      document.getElementById('setting-size').value = settings.gridSize;
+      document.getElementById('setting-cell').value = settings.cellSize;
+      document.getElementById('cell-size-label').textContent = `${settings.cellSize} px`;
+      document.getElementById('setting-mode').value = settings.mode;
+      document.getElementById('setting-speed').value = settings.speedMs;
+      document.getElementById('speed-label').textContent = `${settings.speedMs} ms`;
+      document.getElementById('setting-wrap').checked = settings.wrap;
+      document.getElementById('setting-storage').checked = settings.storageEnabled;
+      document.getElementById('toggle-storage').checked = settings.storageEnabled;
+    };
+
+    const init = () => {
+      loadStorage();
+      applySettingsToUI();
+      updateDailyInfo();
+      initGame();
+      bindInputs();
+      bindUI();
+      updateDashboard();
+    };
+
+    init();
+  </script>
+</body>
+</html>

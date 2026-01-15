@@ -123,5 +123,19 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Car+TCO",
     "date": "2025-07-12",
     "description": "手機優先的買車總成本試算工具，支援折舊、貸款利息、油電費、成本拆解、多方案比較與 JSON 匯出。"
+  },
+  {
+    "id": "10",
+    "name": "加值版貪食蛇（Snake+）",
+    "path": "10-snake-plus/index.html",
+    "folder": "10-snake-plus/",
+    "tags": [
+      "Game",
+      "Dashboard",
+      "Performance"
+    ],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Snake%2B",
+    "date": "2025-08-16",
+    "description": "操控與反應測試導向的 Snake+，內建儀表板、每日挑戰、分享碼與匯出功能。"
   }
 ]

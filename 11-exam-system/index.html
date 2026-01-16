@@ -48,11 +48,18 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+    }
   </style>
 </head>
 <body class="bg-background text-slate-900 font-display">
   <div class="min-h-screen flex flex-col">
-    <header class="bg-white/80 backdrop-blur border-b border-slate-200 sticky top-0 z-40">
+    <header class="hidden bg-white/80 backdrop-blur border-b border-slate-200 sticky top-0 z-40">
       <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-2">
         <div class="flex items-center justify-between">
           <div>
@@ -210,6 +217,19 @@
         results.push(...rows);
       }
       return results;
+    };
+
+    const parseApiToRows = async (apiUrl) => {
+      const endpoint = normalize(apiUrl);
+      if (!endpoint) return [];
+      const response = await fetch(endpoint, { headers: { Accept: "application/json" } });
+      if (!response.ok) {
+        throw new Error(`無法取得 API 資料：${endpoint}`);
+      }
+      const payload = await response.json();
+      if (Array.isArray(payload)) return payload;
+      if (Array.isArray(payload?.data)) return payload.data;
+      throw new Error("API 回傳格式錯誤，需為陣列或 { data: [] }");
     };
 
     const validateQuestions = (rows) => {
@@ -415,50 +435,10 @@
       if (store.ui.activeTab === "settings") renderSettingsTab();
     };
 
+    
     const renderImportTab = () => {
       const container = document.getElementById("tab-import");
       container.innerHTML = "";
-      const wrapper = document.createElement("div");
-      wrapper.className = "max-w-6xl mx-auto px-4 py-8 space-y-6";
-
-      const header = document.createElement("div");
-      header.className = "flex flex-col gap-4";
-      header.innerHTML = `
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-bold">題庫匯入</h2>
-            <p class="text-sm text-muted">上傳 CSV 後立即驗證並預覽</p>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button id="download-sample" class="px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold">下載範例 CSV</button>
-            <button id="reset-import" class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm font-semibold">重置</button>
-          </div>
-        </div>
-        <div class="bg-white border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-muted space-y-4">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <p class="font-semibold text-slate-700">CSV 欄位</p>
-              <p class="text-xs">${REQUIRED_HEADERS.join(", ")}</p>
-            </div>
-            <label class="inline-flex items-center gap-2 cursor-pointer">
-              <input id="csv-input" type="file" accept=".csv,text/csv" class="hidden" />
-              <span class="px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-semibold">上傳 CSV</span>
-            </label>
-          </div>
-          <div class="space-y-2">
-            <p class="text-xs text-slate-500">Google Sheets 匯入（可貼多個連結，換行分隔）</p>
-            <div class="flex flex-col md:flex-row gap-2">
-              <textarea id="sheet-urls" rows="2" class="flex-1 text-sm rounded-xl border-slate-200" placeholder="https://docs.google.com/spreadsheets/d/.../edit#gid=0"></textarea>
-              <button id="import-sheet" class="px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold">從連結匯入</button>
-            </div>
-            <p class="text-[11px] text-slate-400">系統會自動轉換為 CSV 下載連結；如遇權限問題，請將試算表設為「知道連結即可檢視」。</p>
-          </div>
-        </div>
-      `;
-
-      const statusCard = document.createElement("div");
-      statusCard.className = "bg-white rounded-2xl border border-slate-100 p-6 shadow-card";
-
       const stats = {
         total: store.questions.length,
         subjects: getUniqueValues("subject"),
@@ -466,103 +446,176 @@
         chapters: getUniqueValues("chapter"),
         types: getUniqueValues("type")
       };
-
-      const distribution = (label, values) => `
-        <div>
-          <p class="text-xs text-muted">${label}</p>
-          <p class="font-semibold">${values.length ? values.join("、") : "-"}</p>
-        </div>
-      `;
-
-      statusCard.innerHTML = `
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <p class="text-sm text-muted">已匯入題數</p>
-            <p class="text-3xl font-bold">${formatCount(stats.total)}</p>
-          </div>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            ${distribution("科目", stats.subjects)}
-            ${distribution("年級", stats.grades)}
-            ${distribution("章節", stats.chapters)}
-            ${distribution("題型", stats.types)}
-          </div>
-        </div>
-      `;
-
-      const validationCard = document.createElement("div");
-      validationCard.className = "bg-white rounded-2xl border border-slate-100 p-6 shadow-card";
-      const errorList = store.validation.errors.length
-        ? store.validation.errors.map((msg) => `<li class="text-danger text-sm">${msg}</li>`).join("")
-        : "<li class=\"text-sm text-success\">未偵測到錯誤</li>";
-      const warningList = store.validation.warnings.length
-        ? store.validation.warnings.map((msg) => `<li class="text-warning text-sm">${msg}</li>`).join("")
-        : "<li class=\"text-sm text-muted\">無警告</li>";
-
-      validationCard.innerHTML = `
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div class="flex-1">
-            <p class="font-semibold mb-2">資料品質檢查</p>
-            <ul class="space-y-1">${errorList}</ul>
-          </div>
-          <div class="flex-1">
-            <p class="font-semibold mb-2">警告</p>
-            <ul class="space-y-1">${warningList}</ul>
-          </div>
-        </div>
-      `;
-
-      const previewCard = document.createElement("div");
-      previewCard.className = "bg-white rounded-2xl border border-slate-100 p-6 shadow-card";
-      const pageSize = 8;
-      const totalPages = Math.max(1, Math.ceil(store.questions.length / pageSize));
-      store.ui.previewPage = Math.min(store.ui.previewPage, totalPages);
+      const pageSize = 5;
       const query = normalize(store.ui.previewQuery).toLowerCase();
       const previewFiltered = store.questions.filter((q) => {
         if (!query) return true;
         return q.id.toLowerCase().includes(query) || q.stem.toLowerCase().includes(query);
       });
-      const filteredPages = Math.max(1, Math.ceil(previewFiltered.length / pageSize));
-      const page = Math.min(store.ui.previewPage, filteredPages);
+      const totalPages = Math.max(1, Math.ceil(previewFiltered.length / pageSize));
+      store.ui.previewPage = Math.min(store.ui.previewPage, totalPages);
+      const page = store.ui.previewPage;
       const previewItems = previewFiltered.slice((page - 1) * pageSize, page * pageSize);
 
-      previewCard.innerHTML = `
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-          <div>
-            <p class="font-semibold">題庫預覽</p>
-            <p class="text-xs text-muted">可搜尋 id 或題幹關鍵字</p>
+      container.innerHTML = `
+        <main class="flex-1 overflow-y-auto no-scrollbar relative bg-[linear-gradient(180deg,_#e0f2fe_0%,_#f0f9ff_100%)]">
+          <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+            <div class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-[#38bdf8]/10 rounded-full blur-[80px]"></div>
+            <div class="absolute bottom-20 -left-10 w-60 h-60 bg-[#facc15]/10 rounded-full blur-[80px]"></div>
           </div>
-          <div class="flex gap-2">
-            <input id="preview-search" class="text-sm rounded-full border-slate-200" placeholder="搜尋..." value="${store.ui.previewQuery}" />
-            <button id="preview-reset" class="text-sm px-3 py-1 rounded-full bg-slate-100">重置</button>
-          </div>
-        </div>
-        <div class="space-y-3 max-h-80 overflow-y-auto no-scrollbar">
-          ${previewItems.map((q) => `
-            <div class="border border-slate-100 rounded-xl p-3">
-              <div class="flex flex-wrap gap-2 text-xs text-muted">
-                <span>#${q.id}</span>
-                <span>${q.subject || "未分類"}</span>
-                <span>${q.grade || ""}</span>
-                <span>${q.chapter || ""}</span>
-                <span>${q.type}</span>
+          <div class="pb-32 relative z-10 p-6 max-w-lg mx-auto">
+            <div class="flex items-center justify-between mb-8 pt-4">
+              <div>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">測驗中心</h1>
+                <p class="text-sm text-[#64748b] mt-1">選擇一個類別開始練習</p>
               </div>
-              <p class="text-sm font-semibold mt-2">${q.stem || "-"}</p>
+              <button id="open-import" class="bg-white p-2 rounded-full shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-slate-400">notifications</span>
+              </button>
             </div>
-          `).join("") || "<p class=\"text-sm text-muted\">沒有符合的題目</p>"}
-        </div>
-        <div class="flex items-center justify-between mt-4 text-sm">
-          <span>第 ${page} / ${filteredPages} 頁（共 ${previewFiltered.length} 題）</span>
-          <div class="flex gap-2">
-            <button id="preview-prev" class="px-3 py-1 rounded-full bg-slate-100">上一頁</button>
-            <button id="preview-next" class="px-3 py-1 rounded-full bg-slate-100">下一頁</button>
+            <div class="mb-8">
+              <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">推薦練習</h2>
+              <div class="bg-[#38bdf8] text-white rounded-2xl p-5 shadow-lg shadow-blue-200 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-[#0284c7]/20 rounded-full -ml-8 -mb-8 blur-lg"></div>
+                <div class="relative z-10 flex items-start justify-between">
+                  <div>
+                    <div class="bg-white/20 backdrop-blur-sm w-fit px-2 py-1 rounded-lg text-xs font-medium mb-3 border border-white/10">🔥 熱門</div>
+                    <h3 class="text-xl font-bold mb-1">題庫匯入</h3>
+                    <p class="text-blue-50 text-sm opacity-90">支援 Google Sheets / CSV / API</p>
+                  </div>
+                  <div class="bg-white/20 p-2.5 rounded-xl backdrop-blur-sm shadow-inner">
+                    <span class="material-symbols-outlined text-2xl">cloud_upload</span>
+                  </div>
+                </div>
+                <div class="mt-4 flex items-center gap-2 text-xs font-medium">
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 即時解析</span>
+                  <span class="w-1 h-1 bg-white/40 rounded-full"></span>
+                  <span>${stats.total} 題已匯入</span>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">所有類別</h2>
+              ${[{
+                icon: "translate",
+                title: "英文單字練習",
+                desc: "必考 7000 單字核心與片語",
+                bg: "#ecfdf5",
+                text: "#059669",
+                value: stats.subjects.join("、") || "尚未匯入"
+              }, {
+                icon: "science",
+                title: "自然科學",
+                desc: "物理、化學與生物實驗題",
+                bg: "#fffbeb",
+                text: "#d97706",
+                value: stats.grades.join("、") || "尚未匯入"
+              }, {
+                icon: "public",
+                title: "社會人文",
+                desc: "歷史事件與地理環境分析",
+                bg: "#fff1f2",
+                text: "#f43f5e",
+                value: stats.chapters.join("、") || "尚未匯入"
+              }, {
+                icon: "edit_note",
+                title: "國語文綜合",
+                desc: "成語、閱讀測驗與古文",
+                bg: "#f5f3ff",
+                text: "#7c3aed",
+                value: stats.types.join("、") || "尚未匯入"
+              }].map((card) => `
+                <div class="bg-[linear-gradient(145deg,_rgba(255,_255,_255,_0.95)_0%,_rgba(255,_255,_255,_0.8)_100%)] border border-white/60 rounded-2xl p-4 shadow-[0_4px_20px_rgba(148,_163,_184,_0.05)] hover:shadow-[0_10px_25px_rgba(148,_163,_184,_0.15)] active:scale-[0.98] transition-all duration-300 flex items-center gap-4">
+                  <div class="size-12 rounded-xl flex items-center justify-center transition-transform duration-300" style="background-color: ${card.bg}; color: ${card.text};">
+                    <span class="material-symbols-outlined text-[26px]">${card.icon}</span>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="font-bold text-slate-800">${card.title}</h3>
+                    <p class="text-xs text-[#64748b] mt-0.5">${card.desc}</p>
+                  </div>
+                  <div class="text-xs text-slate-500">${card.value}</div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </main>
+        <nav class="fixed bottom-6 left-4 right-4 z-50">
+          <div class="bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl shadow-[0_10px_25px_rgba(148,_163,_184,_0.15)] px-6 py-4 flex justify-center items-center max-w-sm mx-auto">
+            <button id="open-import-bottom" class="flex items-center gap-2 text-[#0284c7] bg-blue-50/80 px-6 py-2 rounded-full transition-colors group">
+              <span class="material-symbols-outlined text-[24px] icon-filled" style="font-variation-settings: 'FILL' 1;">quiz</span>
+              <span class="text-sm font-bold">測驗模式</span>
+            </button>
+          </div>
+        </nav>
+        <div id="import-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
+          <div class="bg-white rounded-2xl w-full max-w-lg p-5 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-slate-800">題庫匯入</h3>
+              <button id="close-import" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+              <div class="space-y-4 text-sm text-slate-600">
+              <div class="space-y-2">
+                <p class="text-xs font-bold text-slate-400 uppercase">Google Sheets</p>
+                <textarea id="sheet-urls" rows="2" class="w-full rounded-xl border-slate-200" placeholder="貼上 Sheets 連結（換行分隔）"></textarea>
+                <button id="import-sheet" class="w-full px-4 py-2 rounded-xl bg-[#38bdf8] text-white font-semibold">從連結匯入</button>
+              </div>
+              <div class="space-y-2">
+                <p class="text-xs font-bold text-slate-400 uppercase">CSV 檔案</p>
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                  <input id="csv-input" type="file" accept=".csv,text/csv" class="hidden" />
+                  <span class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-semibold">上傳 CSV</span>
+                </label>
+              </div>
+              <div class="space-y-2">
+                <p class="text-xs font-bold text-slate-400 uppercase">Apps Script / API</p>
+                <input id="api-url" class="w-full rounded-xl border-slate-200" placeholder="https://script.google.com/macros/s/xxxxx/exec" />
+                <button id="import-api" class="w-full px-4 py-2 rounded-xl bg-slate-900 text-white font-semibold">從 API 匯入</button>
+              </div>
+              <button id="download-sample" class="w-full px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold">下載範例 CSV</button>
+              <button id="reset-import" class="w-full px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold">重置</button>
+              <button id="go-build" class="w-full px-4 py-2 rounded-xl bg-[#38bdf8] text-white font-semibold">前往建立測驗</button>
+              <div class="text-xs text-slate-400">目前已匯入 ${stats.total} 題</div>
+              <div class="text-xs text-slate-400">${store.validation.errors.length ? `錯誤：${store.validation.errors[0]}` : "未偵測到錯誤"}</div>
+              <div class="border-t border-slate-200 pt-3 space-y-2">
+                <div class="flex items-center justify-between">
+                  <p class="text-xs font-bold text-slate-400 uppercase">題庫預覽</p>
+                  <span class="text-[11px] text-slate-400">第 ${page} / ${totalPages} 頁</span>
+                </div>
+                <input id="preview-search" class="w-full rounded-xl border-slate-200 text-sm" placeholder="搜尋題目..." value="${store.ui.previewQuery}" />
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                  ${previewItems.map((q) => `
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <div class="text-xs text-slate-400">#${q.id} · ${q.subject || "未分類"} · ${q.type}</div>
+                      <div class="text-sm font-semibold text-slate-700 mt-1">${q.stem || "-"}</div>
+                    </div>
+                  `).join("") || `<p class="text-sm text-slate-400">沒有符合的題目</p>`}
+                </div>
+                <div class="flex gap-2">
+                  <button id="preview-prev" class="flex-1 px-3 py-2 rounded-xl bg-slate-100 text-slate-600 font-semibold">上一頁</button>
+                  <button id="preview-next" class="flex-1 px-3 py-2 rounded-xl bg-slate-100 text-slate-600 font-semibold">下一頁</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       `;
 
-      wrapper.append(header, statusCard, validationCard, previewCard);
-      container.appendChild(wrapper);
+      const modal = container.querySelector("#import-modal");
+      const openButtons = [container.querySelector("#open-import"), container.querySelector("#open-import-bottom")];
+      openButtons.forEach((btn) => {
+        if (!btn) return;
+        btn.addEventListener("click", () => {
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+        });
+      });
+      container.querySelector("#close-import").addEventListener("click", () => {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      });
 
-      document.getElementById("csv-input").addEventListener("change", async (event) => {
+      container.querySelector("#csv-input").addEventListener("change", async (event) => {
         const file = event.target.files[0];
         if (!file) return;
         try {
@@ -570,7 +623,6 @@
           const validated = validateQuestions(rows);
           store.questions = validated.questions;
           store.validation = { errors: validated.errors, warnings: validated.warnings };
-          store.ui.previewPage = 1;
           renderTab();
         } catch (error) {
           store.validation = { errors: [error.message], warnings: [] };
@@ -579,8 +631,9 @@
         }
       });
 
-      document.getElementById("import-sheet").addEventListener("click", async () => {
-        const rawUrls = document.getElementById("sheet-urls").value.split("\n");
+      container.querySelector("#import-sheet").addEventListener("click", async () => {
+        const rawUrls = container.querySelector("#sheet-urls").value.split("
+");
         if (!rawUrls.length || !rawUrls.some((url) => normalize(url))) {
           alert("請貼上 Google Sheets 連結");
           return;
@@ -590,7 +643,6 @@
           const validated = validateQuestions(rows);
           store.questions = validated.questions;
           store.validation = { errors: validated.errors, warnings: validated.warnings };
-          store.ui.previewPage = 1;
           renderTab();
         } catch (error) {
           store.validation = { errors: [error.message], warnings: [] };
@@ -599,7 +651,26 @@
         }
       });
 
-      document.getElementById("download-sample").addEventListener("click", () => {
+      container.querySelector("#import-api").addEventListener("click", async () => {
+        const apiUrl = container.querySelector("#api-url").value;
+        if (!normalize(apiUrl)) {
+          alert("請填入 API 連結");
+          return;
+        }
+        try {
+          const rows = await parseApiToRows(apiUrl);
+          const validated = validateQuestions(rows);
+          store.questions = validated.questions;
+          store.validation = { errors: validated.errors, warnings: validated.warnings };
+          renderTab();
+        } catch (error) {
+          store.validation = { errors: [error.message], warnings: [] };
+          store.questions = [];
+          renderTab();
+        }
+      });
+
+      container.querySelector("#download-sample").addEventListener("click", () => {
         const sampleCsv = generateSampleCsv();
         const blob = new Blob([sampleCsv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
@@ -610,33 +681,35 @@
         URL.revokeObjectURL(url);
       });
 
-      document.getElementById("reset-import").addEventListener("click", () => {
+      container.querySelector("#reset-import").addEventListener("click", () => {
         store.questions = [];
         store.validation = { errors: [], warnings: [] };
-        store.ui.previewQuery = "";
-        store.ui.previewPage = 1;
         renderTab();
       });
 
-      document.getElementById("preview-search").addEventListener("input", (event) => {
+      container.querySelector("#go-build").addEventListener("click", () => {
+        store.ui.activeTab = "build";
+        renderTab();
+      });
+
+      container.querySelector("#preview-search").addEventListener("input", (event) => {
         store.ui.previewQuery = event.target.value;
         store.ui.previewPage = 1;
         renderTab();
       });
 
-      document.getElementById("preview-reset").addEventListener("click", () => {
-        store.ui.previewQuery = "";
-        store.ui.previewPage = 1;
-        renderTab();
-      });
-
-      document.getElementById("preview-prev").addEventListener("click", () => {
+      container.querySelector("#preview-prev").addEventListener("click", () => {
         store.ui.previewPage = Math.max(1, store.ui.previewPage - 1);
         renderTab();
       });
 
-      document.getElementById("preview-next").addEventListener("click", () => {
-        const maxPage = Math.max(1, Math.ceil(previewFiltered.length / pageSize));
+      container.querySelector("#preview-next").addEventListener("click", () => {
+        const filtered = store.questions.filter((q) => {
+          if (!store.ui.previewQuery) return true;
+          const term = store.ui.previewQuery.toLowerCase();
+          return q.id.toLowerCase().includes(term) || q.stem.toLowerCase().includes(term);
+        });
+        const maxPage = Math.max(1, Math.ceil(filtered.length / 5));
         store.ui.previewPage = Math.min(maxPage, store.ui.previewPage + 1);
         renderTab();
       });
@@ -764,19 +837,16 @@
       });
     };
 
+    
     const renderAnswerTab = () => {
       const container = document.getElementById("tab-answer");
       container.innerHTML = "";
-      const wrapper = document.createElement("div");
-      wrapper.className = "max-w-6xl mx-auto px-4 py-8 space-y-6";
-
       if (!store.session) {
-        wrapper.innerHTML = `
-          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card">
-            <p class="text-sm text-muted">尚未建立測驗，請先完成題庫匯入與建立測驗。</p>
+        container.innerHTML = `
+          <div class="max-w-lg mx-auto p-6">
+            <p class="text-sm text-slate-500">尚未建立測驗，請先完成題庫匯入與建立測驗。</p>
           </div>
         `;
-        container.appendChild(wrapper);
         return;
       }
 
@@ -784,70 +854,86 @@
       const current = session.questions[session.currentIndex];
       const options = session.optionMap[current.id] || [];
       const selected = session.answersById[current.id] || [];
-      const answeredCount = Object.keys(session.answersById).length;
-      const markedCount = session.markSet.size;
-      const unansweredCount = session.questions.length - answeredCount;
-
       const remainingTime = session.endTime ? Math.max(0, session.endTime - Date.now()) : null;
       const remainingText = remainingTime !== null ? formatDuration(Math.floor(remainingTime / 1000)) : "--";
 
-      const passageBlock = current.group_id && current.passage
-        ? renderPassage(current)
-        : "";
+      const optionNodes = options.map((option) => {
+        const isChecked = selected.includes(option.key);
+        const inputType = current.type === "multi" ? "checkbox" : "radio";
+        return `
+          <label class="group relative flex items-center gap-4 p-4 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200 cursor-pointer active:scale-[0.99]">
+            <input class="peer sr-only" name="quiz_answer" type="${inputType}" value="${option.key}" data-option-key="${option.key}" ${isChecked ? "checked" : ""}/>
+            <div class="flex items-center justify-center size-10 rounded-xl bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors peer-checked:bg-[#4F46E5] peer-checked:text-white shadow-inner">${option.key}</div>
+            <div class="flex-1">
+              <p class="text-slate-700 text-lg font-bold group-hover:text-indigo-900 transition-colors">${option.value}</p>
+            </div>
+            <div class="size-6 rounded-full border-2 border-slate-200 peer-checked:bg-[#4F46E5] peer-checked:border-[#4F46E5] flex items-center justify-center transition-colors bg-slate-50">
+              <span class="material-symbols-outlined text-white text-[16px] opacity-0 peer-checked:opacity-100 font-bold transform scale-75">check</span>
+            </div>
+            <div class="absolute inset-0 rounded-2xl border-2 border-[#4F46E5] bg-indigo-50/30 opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></div>
+          </label>
+        `;
+      }).join("");
 
-      wrapper.innerHTML = `
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-bold">作答中</h2>
-            <p class="text-sm text-muted">題號 ${session.currentIndex + 1} / ${session.questions.length}</p>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <div class="px-3 py-2 rounded-full bg-white border border-slate-100 text-sm">已作答 ${answeredCount}</div>
-            <div class="px-3 py-2 rounded-full bg-white border border-slate-100 text-sm">未作答 ${unansweredCount}</div>
-            <div class="px-3 py-2 rounded-full bg-white border border-slate-100 text-sm">已標記 ${markedCount}</div>
-            ${session.endTime ? `<div class="px-3 py-2 rounded-full bg-info/10 text-info text-sm font-semibold">剩餘 ${remainingText}</div>` : ""}
-            <button id="reset-answer" class="px-3 py-2 rounded-full bg-slate-100 text-sm">重置</button>
-          </div>
-        </div>
-        <div class="grid gap-6 lg:grid-cols-[3fr,1fr]">
-          <div class="space-y-4">
-            <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
-              ${passageBlock}
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold uppercase text-muted">${current.subject || "未分類"} · ${current.chapter || ""}</span>
-                <button id="mark-question" class="text-sm px-3 py-1 rounded-full ${session.markSet.has(current.id) ? "bg-accent text-white" : "bg-slate-100"}">
-                  ${session.markSet.has(current.id) ? "已標記" : "標記此題"}
-                </button>
-              </div>
-              <h3 class="text-lg font-semibold whitespace-pre-wrap">${current.stem || ""}</h3>
-              <div class="space-y-3">
-                ${options.map((option) => renderOption(current, option, selected)).join("")}
+      container.innerHTML = `
+        <div class="relative flex min-h-screen w-full flex-col overflow-hidden max-w-md mx-auto bg-slate-50 shadow-2xl">
+          <div class="absolute top-[-10%] left-[-10%] w-[60%] h-[50%] bg-blue-200/40 rounded-full blur-[80px] pointer-events-none"></div>
+          <div class="absolute bottom-[-10%] right-[-20%] w-[70%] h-[60%] bg-indigo-200/30 rounded-full blur-[100px] pointer-events-none"></div>
+          <div class="absolute top-[40%] left-[20%] w-[40%] h-[30%] bg-amber-100/40 rounded-full blur-[90px] pointer-events-none"></div>
+          <header class="relative z-20 flex items-center justify-between p-6 pb-2">
+            <button id="prev-question" aria-label="返回" class="flex items-center justify-center size-10 rounded-full bg-white shadow-sm hover:bg-slate-100 text-slate-500 hover:text-[#4F46E5] transition-colors border border-slate-100">
+              <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <div class="flex flex-col items-center">
+              <span class="text-xs font-bold tracking-wider text-slate-500 uppercase mb-2">${current.subject || "代數"}</span>
+              <div class="flex items-center gap-1.5">
+                ${session.questions.map((_, idx) => `
+                  <div class="h-2 w-8 rounded-full ${idx <= session.currentIndex ? "bg-[#4F46E5] shadow-[0_0_15px_rgba(79,70,229,0.3)]" : "bg-slate-200"}"></div>
+                `).join("")}
               </div>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <button id="prev-question" class="px-4 py-2 rounded-full bg-slate-100">上一題</button>
-              <button id="next-question" class="px-4 py-2 rounded-full bg-primary text-white">下一題</button>
-              <button id="submit-session" class="px-4 py-2 rounded-full bg-slate-900 text-white">交卷</button>
+            <button id="submit-session" aria-label="退出" class="flex items-center justify-center size-10 rounded-full bg-white shadow-sm hover:bg-slate-100 text-slate-500 hover:text-red-500 transition-colors border border-slate-100">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </header>
+          <main class="relative z-10 flex-1 flex flex-col px-6 pt-4 pb-8 gap-6">
+            <div class="flex justify-center">
+              <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-orange-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] animate-[float_6s_ease-in-out_infinite]" style="animation-duration: 4s;">
+                <span class="text-[#F59E0B] material-symbols-outlined text-[22px]">local_fire_department</span>
+                <span class="text-sm font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent italic tracking-wide">作答進行中</span>
+              </div>
             </div>
-          </div>
-          <div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-card">
-            <p class="font-semibold mb-3">題號快速跳題</p>
-            <div class="grid grid-cols-5 gap-2 text-xs">
-              ${session.questions.map((question, index) => {
-                const isAnswered = session.answersById[question.id]?.length;
-                const isMarked = session.markSet.has(question.id);
-                const isActive = index === session.currentIndex;
-                const canJump = session.config.allowBack || index >= session.currentIndex;
-                return `<button class="question-chip ${isActive ? "bg-primary text-white" : "bg-slate-100"} ${!canJump ? "opacity-40" : ""}" data-index="${index}" ${!canJump ? "disabled" : ""}>
-                  ${index + 1}${isMarked ? "★" : ""}${isAnswered ? "✓" : ""}
-                </button>`;
-              }).join("")}
+            <div class="relative mt-4">
+              <div class="glass-panel rounded-3xl p-6 pt-10 pb-8 relative overflow-hidden group border border-white/60" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px);">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 via-[#4F46E5] to-purple-400"></div>
+                <div class="flex flex-col gap-4">
+                  <div class="flex justify-between items-start">
+                    <span class="text-[#4F46E5] text-xs font-bold tracking-widest uppercase bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">第 ${session.currentIndex + 1} 題</span>
+                    <div class="flex items-center gap-1.5 text-slate-500 text-xs font-bold bg-slate-100 px-2 py-1 rounded-full">
+                      <span class="material-symbols-outlined text-[16px] text-slate-600">timer</span>
+                      <span>${remainingText}</span>
+                    </div>
+                  </div>
+                  <h2 class="text-2xl md:text-3xl font-bold leading-tight text-slate-800 mt-2 whitespace-pre-wrap">${current.stem}</h2>
+                  <p class="text-slate-500 text-sm font-medium leading-relaxed mt-1">${current.explain ? current.explain : "請選擇正確答案。"}</p>
+                </div>
+              </div>
             </div>
-          </div>
+            <div class="flex flex-col gap-3 mt-auto">
+              ${optionNodes}
+            </div>
+          </main>
+          <footer class="p-6 pt-0 z-20">
+            <button id="next-question" class="w-full relative group overflow-hidden rounded-2xl bg-[#4F46E5] p-4 transition-all shadow-lg hover:shadow-indigo-500/30 active:scale-[0.98]">
+              <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+              <div class="relative flex items-center justify-center gap-2">
+                <span class="text-white text-lg font-bold tracking-wide">確認答案</span>
+                <span class="material-symbols-outlined text-white font-bold">arrow_forward</span>
+              </div>
+            </button>
+          </footer>
         </div>
       `;
-
-      container.appendChild(wrapper);
 
       const updateTimer = () => {
         if (!store.session || !store.session.endTime) return;
@@ -856,10 +942,8 @@
           submitSession();
           return;
         }
-        const info = container.querySelector(".bg-info\/10");
-        if (info) {
-          info.textContent = `剩餘 ${formatDuration(Math.floor(remaining / 1000))}`;
-        }
+        const timer = container.querySelector("span[data-timer]");
+        if (timer) timer.textContent = formatDuration(Math.floor(remaining / 1000));
       };
 
       if (session.endTime) {
@@ -867,7 +951,7 @@
         window.__timerInterval = setInterval(updateTimer, 1000);
       }
 
-      container.querySelectorAll("input[name='option']").forEach((input) => {
+      container.querySelectorAll("input[name='quiz_answer']").forEach((input) => {
         input.addEventListener("change", (event) => {
           const { optionKey } = event.target.dataset;
           if (current.type === "single") {
@@ -885,28 +969,23 @@
         });
       });
 
-      document.getElementById("mark-question").addEventListener("click", () => {
-        if (session.markSet.has(current.id)) {
-          session.markSet.delete(current.id);
-        } else {
-          session.markSet.add(current.id);
+      container.querySelector("#next-question").addEventListener("click", () => {
+        if (session.currentIndex >= session.questions.length - 1) {
+          submitSession();
+          return;
         }
-        renderAnswerTab();
-      });
-
-      document.getElementById("prev-question").addEventListener("click", () => {
-        if (!session.config.allowBack && session.currentIndex <= store.ui.maxReachedIndex) return;
-        session.currentIndex = Math.max(0, session.currentIndex - 1);
-        renderAnswerTab();
-      });
-
-      document.getElementById("next-question").addEventListener("click", () => {
         session.currentIndex = Math.min(session.questions.length - 1, session.currentIndex + 1);
         store.ui.maxReachedIndex = Math.max(store.ui.maxReachedIndex, session.currentIndex);
         renderAnswerTab();
       });
 
-      document.getElementById("submit-session").addEventListener("click", () => {
+      container.querySelector("#prev-question").addEventListener("click", () => {
+        if (!session.config.allowBack && session.currentIndex <= store.ui.maxReachedIndex) return;
+        session.currentIndex = Math.max(0, session.currentIndex - 1);
+        renderAnswerTab();
+      });
+
+      container.querySelector("#submit-session").addEventListener("click", () => {
         const unanswered = session.questions.filter((q) => !session.answersById[q.id]).length;
         if (unanswered > 0) {
           const confirmSubmit = confirm(`尚有 ${unanswered} 題未作答，確定交卷？`);
@@ -916,163 +995,137 @@
         }
         submitSession();
       });
-
-      document.getElementById("reset-answer").addEventListener("click", () => {
-        session.answersById = {};
-        session.markSet = new Set();
-        session.currentIndex = 0;
-        renderAnswerTab();
-      });
-
-      container.querySelectorAll(".question-chip").forEach((button) => {
-        button.addEventListener("click", () => {
-          session.currentIndex = Number(button.dataset.index);
-          store.ui.maxReachedIndex = Math.max(store.ui.maxReachedIndex, session.currentIndex);
-          renderAnswerTab();
-        });
-      });
     };
 
+    
     const renderResultTab = () => {
       const container = document.getElementById("tab-result");
       container.innerHTML = "";
-      const wrapper = document.createElement("div");
-      wrapper.className = "max-w-6xl mx-auto px-4 py-8 space-y-6";
-
       if (!store.session || store.session.status !== "submitted") {
-        wrapper.innerHTML = `
-          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card">
-            <p class="text-sm text-muted">尚未交卷，請完成作答後再查看成績。</p>
+        container.innerHTML = `
+          <div class="max-w-lg mx-auto p-6">
+            <p class="text-sm text-slate-500">尚未交卷，請完成作答後再查看成績。</p>
           </div>
         `;
-        container.appendChild(wrapper);
         return;
       }
 
       const session = store.session;
       const report = session.report;
+      const accuracy = Math.round((report.correct / report.total) * 100);
 
-      wrapper.innerHTML = `
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-bold">成績/錯題</h2>
-            <p class="text-sm text-muted">完成時間 ${new Date(session.endTime || Date.now()).toLocaleString("zh-TW")}</p>
-          </div>
-          <div class="flex gap-2">
-            <button id="reset-result" class="px-4 py-2 rounded-full bg-slate-100 text-sm">重置</button>
-            <button id="retry-wrong" class="px-4 py-2 rounded-full bg-primary text-white text-sm">錯題重練</button>
-          </div>
-        </div>
-        <div class="grid md:grid-cols-3 gap-4">
-          <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-card">
-            <p class="text-sm text-muted">總分</p>
-            <p class="text-3xl font-bold text-primary">${report.score}</p>
-          </div>
-          <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-card">
-            <p class="text-sm text-muted">正確題數</p>
-            <p class="text-3xl font-bold">${report.correct} / ${report.total}</p>
-          </div>
-          <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-card">
-            <p class="text-sm text-muted">耗時</p>
-            <p class="text-3xl font-bold">${formatDuration(report.timeSpentSec)}</p>
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
-          <div class="flex flex-wrap gap-2 items-center">
-            <label class="text-sm">檢視：</label>
-            <select id="result-filter" class="text-sm rounded-lg border-slate-200">
-              <option value="all">全部</option>
-              <option value="wrong">只看錯題</option>
-              <option value="marked">只看標記題</option>
-            </select>
-            <select id="result-subject" class="text-sm rounded-lg border-slate-200">
-              <option value="">科目</option>
-              ${getUniqueValues("subject").map((value) => `<option value="${value}">${value}</option>`).join("")}
-            </select>
-            <select id="result-chapter" class="text-sm rounded-lg border-slate-200">
-              <option value="">章節</option>
-              ${getUniqueValues("chapter").map((value) => `<option value="${value}">${value}</option>`).join("")}
-            </select>
-          </div>
-          <div class="space-y-4 max-h-[480px] overflow-y-auto no-scrollbar" id="result-list"></div>
-        </div>
-      `;
-
-      container.appendChild(wrapper);
-
-      store.ui.resultFilter = store.ui.resultFilter || "all";
-
-      const list = container.querySelector("#result-list");
-      const filters = {
-        filter: store.ui.resultFilter,
-        subject: store.ui.resultSubject,
-        chapter: store.ui.resultChapter
-      };
-
-      const filtered = report.detail.filter((item) => {
-        if (filters.filter === "wrong" && item.isCorrect) return false;
-        if (filters.filter === "marked" && !session.markSet.has(item.question.id)) return false;
-        if (filters.subject && item.question.subject !== filters.subject) return false;
-        if (filters.chapter && item.question.chapter !== filters.chapter) return false;
-        return true;
-      });
-
-      list.innerHTML = filtered.map((item, index) => {
-        const tagColor = item.isCorrect ? "bg-success/10 text-success" : "bg-danger/10 text-danger";
+      const detailCards = report.detail.map((item, index) => {
+        const statusClass = item.isCorrect ? "border-l-[#10B981]" : "border-l-[#EF4444]";
+        const badgeClass = item.isCorrect ? "text-[#10B981] bg-green-50" : "text-[#EF4444] bg-red-50";
         return `
-          <div class="border border-slate-100 rounded-xl p-4">
-            <div class="flex items-center justify-between text-xs text-muted mb-2">
-              <span>Q${index + 1} · ${item.question.subject || ""} ${item.question.chapter || ""}</span>
-              <span class="px-2 py-1 rounded-full ${tagColor}">${item.isCorrect ? "正確" : "錯誤"}</span>
+          <div class="bg-white rounded-2xl p-5 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] ${statusClass} border-l-4 relative">
+            <div class="flex justify-between items-start mb-3">
+              <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 tracking-wide">Q${index + 1} • ${item.question.subject || ""}</span>
+              <span class="${badgeClass} font-bold text-sm flex items-center gap-1 px-2 py-0.5 rounded-full">
+                <span class="material-symbols-outlined text-base">${item.isCorrect ? "check" : "close"}</span>
+                ${item.isCorrect ? "正確" : "錯誤"}
+              </span>
             </div>
-            <p class="font-semibold whitespace-pre-wrap">${item.question.stem}</p>
-            <div class="mt-3 grid md:grid-cols-2 gap-3 text-sm">
-              <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                <p class="text-xs text-muted">你的答案</p>
-                <p class="font-semibold">${item.selected.join(", ") || "未作答"}</p>
+            <p class="text-slate-800 font-bold mb-4 text-sm leading-relaxed">${item.question.stem}</p>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="bg-red-50 p-3 rounded-xl border border-red-100">
+                <p class="text-[10px] text-red-400 mb-1 uppercase font-bold tracking-wider">您的答案</p>
+                <p class="${item.isCorrect ? "text-[#10B981]" : "text-[#EF4444]"} font-bold">${item.selected.join(", ") || "未作答"}</p>
               </div>
-              <div class="bg-emerald-50 rounded-lg p-3 border border-emerald-100">
-                <p class="text-xs text-muted">正確答案</p>
-                <p class="font-semibold">${item.correct.join(", ")}</p>
+              <div class="bg-green-50 p-3 rounded-xl border border-green-100">
+                <p class="text-[10px] text-green-600 mb-1 uppercase font-bold tracking-wider">正確答案</p>
+                <p class="text-[#10B981] font-bold">${item.correct.join(", ")}</p>
               </div>
             </div>
             ${item.question.explain ? `
-              <div class="mt-3 bg-white border border-slate-100 rounded-lg p-3">
-                <p class="text-xs text-muted mb-1">解析</p>
-                <p class="text-sm whitespace-pre-wrap">${item.question.explain}</p>
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <p class="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm text-yellow-500" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+                  解析
+                </p>
+                <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">${item.question.explain}</p>
               </div>
             ` : ""}
           </div>
         `;
-      }).join("") || `<p class="text-sm text-muted">沒有符合條件的題目。</p>`;
+      }).join("");
 
-      container.querySelector("#result-filter").value = store.ui.resultFilter;
-      container.querySelector("#result-subject").value = store.ui.resultSubject;
-      container.querySelector("#result-chapter").value = store.ui.resultChapter;
+      container.innerHTML = `
+        <div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden bg-[#F8FAFC]">
+          <header class="sticky top-0 z-40 flex items-center justify-between p-4 bg-white/80 backdrop-blur-md border-b border-slate-100">
+            <button class="flex size-10 items-center justify-center rounded-full bg-slate-50 hover:bg-slate-100 transition text-slate-600" id="result-back">
+              <span class="material-symbols-outlined text-xl">arrow_back</span>
+            </button>
+            <h2 class="text-base font-bold tracking-wide text-slate-800">答題成效分析</h2>
+            <div class="size-10"></div>
+          </header>
+          <div class="w-full max-w-md mx-auto">
+            <section class="flex flex-col items-center px-4 pt-6 pb-2">
+              <div class="relative w-full aspect-[2/1] rounded-2xl overflow-hidden shadow-xl shadow-[#00C896]/10 mb-6 group">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-10"></div>
+                <div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDyat2SemDEINAHT8X9wXzNn314BpyUWHg0ufdsr0SK8lxQf1vdSWgNcxpFz4LOxRMw_n1GkS6Ym6UXxhKXH7tqX3Dh-HpMc1uOYVrK2mm7sY9ZMa_wAHuz9JQJ-QOreFdbql6obM9dWqHrU5j1E5hFRVv8AWwojT4dlsgcChO7Gtc-yDr72x0_QhujfA8d8kNcNFNpgMhjeC4_VcEIXu-ueAsv1aqvR-gqyoG905a9HiZMjD5v88oWjND1vEacLQ6r77_emqDT');"></div>
+                <div class="absolute bottom-0 left-0 right-0 p-5 z-20 flex flex-col items-center">
+                  <h1 class="text-3xl font-bold text-white mb-2 drop-shadow-md tracking-tight">挑戰完成！</h1>
+                  <div class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 shadow-lg">
+                    <span class="material-symbols-outlined text-yellow-300 text-lg" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                    <span class="text-sm font-bold text-white tracking-wide">獲得 ${report.score * 10} XP</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="px-4 mb-6">
+              <div class="grid grid-cols-3 gap-3">
+                <div class="flex flex-col items-center justify-center p-3 py-4 rounded-2xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
+                  <span class="material-symbols-outlined text-amber-500 mb-1.5 text-3xl">stars</span>
+                  <span class="text-2xl font-bold text-slate-800">${report.score}</span>
+                  <span class="text-[11px] font-medium text-slate-400 mt-1">總分</span>
+                </div>
+                <div class="flex flex-col items-center justify-center p-3 py-4 rounded-2xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
+                  <span class="material-symbols-outlined text-[#00C896] mb-1.5 text-3xl">target</span>
+                  <span class="text-2xl font-bold text-slate-800">${accuracy}%</span>
+                  <span class="text-[11px] font-medium text-slate-400 mt-1">正確率</span>
+                </div>
+                <div class="flex flex-col items-center justify-center p-3 py-4 rounded-2xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
+                  <span class="material-symbols-outlined text-blue-500 mb-1.5 text-3xl">timer</span>
+                  <span class="text-2xl font-bold text-slate-800">${formatDuration(report.timeSpentSec)}</span>
+                  <span class="text-[11px] font-medium text-slate-400 mt-1">作答時間</span>
+                </div>
+              </div>
+            </section>
+            <section class="px-4 mb-4">
+              <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 px-1">
+                <span class="material-symbols-outlined text-[#00C896]">list_alt</span>
+                答題詳情
+              </h3>
+              <div class="space-y-4">${detailCards}</div>
+            </section>
+          </div>
+          <div class="fixed bottom-0 left-0 right-0 p-4 pt-8 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/95 to-transparent z-50">
+            <div class="flex gap-3 max-w-md mx-auto">
+              <button id="retry-wrong" class="flex-1 py-4 px-6 rounded-2xl border border-slate-200 font-bold text-slate-600 bg-white hover:bg-slate-50 active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-[#FF6B6B]">history</span>
+                錯題複習
+              </button>
+              <button id="reset-result" class="flex-[1.5] py-4 px-6 rounded-2xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20 hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center gap-2">
+                下一關
+                <span class="material-symbols-outlined">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
 
-      container.querySelector("#result-filter").addEventListener("change", (event) => {
-        store.ui.resultFilter = event.target.value;
-        renderResultTab();
+      container.querySelector("#result-back").addEventListener("click", () => {
+        store.ui.activeTab = "import";
+        renderTab();
       });
 
-      container.querySelector("#result-subject").addEventListener("change", (event) => {
-        store.ui.resultSubject = event.target.value;
-        renderResultTab();
+      container.querySelector("#reset-result").addEventListener("click", () => {
+        store.ui.activeTab = "import";
+        renderTab();
       });
 
-      container.querySelector("#result-chapter").addEventListener("change", (event) => {
-        store.ui.resultChapter = event.target.value;
-        renderResultTab();
-      });
-
-      document.getElementById("reset-result").addEventListener("click", () => {
-        store.ui.resultFilter = "all";
-        store.ui.resultSubject = "";
-        store.ui.resultChapter = "";
-        renderResultTab();
-      });
-
-      document.getElementById("retry-wrong").addEventListener("click", () => {
+      container.querySelector("#retry-wrong").addEventListener("click", () => {
         const wrongIds = report.detail.filter((item) => !item.isCorrect).map((item) => item.question.id);
         if (!wrongIds.length) {
           alert("恭喜全對！沒有錯題可重練。");

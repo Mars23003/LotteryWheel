@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>台灣高中題庫線上作答系統</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#4F46E5",
+            primaryDark: "#3730A3",
+            accent: "#F59E0B",
+            surface: "#ffffff",
+            muted: "#64748B",
+            background: "#F8FAFC",
+            danger: "#EF4444",
+            success: "#10B981",
+            info: "#0EA5E9"
+          },
+          fontFamily: {
+            display: ["Noto Sans TC", "Spline Sans", "sans-serif"],
+            sans: ["Noto Sans TC", "Spline Sans", "sans-serif"]
+          },
+          boxShadow: {
+            soft: "0 8px 30px rgba(15, 23, 42, 0.08)",
+            card: "0 6px 18px rgba(15, 23, 42, 0.06)"
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body {
+      min-height: max(720px, 100dvh);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-background text-slate-900 font-display">
+  <div class="min-h-screen flex flex-col">
+    <header class="bg-white/80 backdrop-blur border-b border-slate-200 sticky top-0 z-40">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-xl font-bold">台灣高中題庫線上作答系統</h1>
+            <p class="text-sm text-muted">單頁純前端 · CSV 匯入 · GitHub Pages 友善</p>
+          </div>
+          <button id="reset-all" class="text-sm font-semibold px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700">
+            重置全部
+          </button>
+        </div>
+        <nav class="flex flex-wrap gap-2 text-sm" id="tabs">
+          <button class="tab-btn" data-tab="import">1) 題庫匯入</button>
+          <button class="tab-btn" data-tab="build">2) 建立測驗</button>
+          <button class="tab-btn" data-tab="answer">3) 作答</button>
+          <button class="tab-btn" data-tab="result">4) 成績/錯題</button>
+          <button class="tab-btn" data-tab="settings">5) 設定/匯出</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <section id="tab-import" class="tab-section"></section>
+      <section id="tab-build" class="tab-section hidden"></section>
+      <section id="tab-answer" class="tab-section hidden"></section>
+      <section id="tab-result" class="tab-section hidden"></section>
+      <section id="tab-settings" class="tab-section hidden"></section>
+    </main>
+  </div>
+
+  <template id="base-card">
+    <div class="bg-white rounded-2xl shadow-card border border-slate-100 p-6"></div>
+  </template>
+
+  <script>
+    const REQUIRED_HEADERS = [
+      "id",
+      "subject",
+      "grade",
+      "chapter",
+      "type",
+      "stem",
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "answer",
+      "explain",
+      "difficulty",
+      "tags",
+      "group_id",
+      "passage"
+    ];
+
+    const store = {
+      questions: [],
+      validation: { errors: [], warnings: [] },
+      session: null,
+      history: [],
+      ui: {
+        activeTab: "import",
+        previewPage: 1,
+        previewQuery: "",
+        resultFilter: "all",
+        resultSubject: "",
+        resultChapter: "",
+        showPassage: {},
+        canGoBack: true,
+        maxReachedIndex: 0
+      }
+    };
+
+    const storageKey = "exam_history_v1";
+
+    const formatCount = (value) => `${value.toLocaleString("zh-TW")}`;
+    const normalize = (value) => String(value || "").trim();
+    const normalizeType = (value) => normalize(value).toLowerCase();
+    const splitMulti = (value) => normalize(value)
+      .split(",")
+      .map((item) => item.trim().toUpperCase())
+      .filter(Boolean);
+
+    const shuffle = (items) => {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    };
+
+    const ensureArrayUniqueSorted = (arr) => Array.from(new Set(arr)).sort();
+
+    const parseCsvToQuestions = async (file) => {
+      if (!file) return [];
+      return new Promise((resolve, reject) => {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: false,
+          encoding: "UTF-8",
+          complete: (results) => {
+            if (results.errors?.length) {
+              reject(new Error(`CSV 解析錯誤：${results.errors[0].message}`));
+              return;
+            }
+            resolve(results.data || []);
+          },
+          error: (error) => reject(error)
+        });
+      });
+    };
+
+    const parseCsvTextToRows = async (text) => {
+      if (!text) return [];
+      return new Promise((resolve, reject) => {
+        Papa.parse(text, {
+          header: true,
+          skipEmptyLines: false,
+          complete: (results) => {
+            if (results.errors?.length) {
+              reject(new Error(`CSV 解析錯誤：${results.errors[0].message}`));
+              return;
+            }
+            resolve(results.data || []);
+          },
+          error: (error) => reject(error)
+        });
+      });
+    };
+
+    const normalizeSheetUrl = (value) => {
+      const input = normalize(value);
+      if (!input) return "";
+      if (input.includes("output=csv")) return input;
+      const match = input.match(/https?:\/\/docs\.google\.com\/spreadsheets\/d\/([^/]+)\/?/i);
+      if (!match) return input;
+      const sheetId = match[1];
+      const gidMatch = input.match(/gid=(\d+)/i);
+      const gid = gidMatch ? gidMatch[1] : "0";
+      return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+    };
+
+    const parseSheetsFromUrls = async (urls) => {
+      const list = urls.map(normalize).filter(Boolean);
+      if (!list.length) return [];
+      const results = [];
+      for (const rawUrl of list) {
+        const csvUrl = normalizeSheetUrl(rawUrl);
+        const response = await fetch(csvUrl);
+        if (!response.ok) {
+          throw new Error(`無法下載 Google Sheet CSV：${rawUrl}`);
+        }
+        const text = await response.text();
+        const rows = await parseCsvTextToRows(text);
+        results.push(...rows);
+      }
+      return results;
+    };
+
+    const validateQuestions = (rows) => {
+      const errors = [];
+      const warnings = [];
+      const questions = [];
+      const headerSet = new Set(Object.keys(rows[0] || {}));
+      const missingHeaders = REQUIRED_HEADERS.filter((key) => !headerSet.has(key));
+      if (missingHeaders.length) {
+        errors.push(`缺少欄位：${missingHeaders.join(", ")}`);
+      }
+
+      const idSet = new Set();
+
+      rows.forEach((row, index) => {
+        const rowId = normalize(row.id);
+        const rowType = normalizeType(row.type);
+        const rowIndex = index + 2;
+
+        if (!rowId) {
+          errors.push(`第 ${rowIndex} 列缺少 id`);
+          return;
+        }
+        if (idSet.has(rowId)) {
+          errors.push(`第 ${rowIndex} 列 id 重複：${rowId}`);
+        }
+        idSet.add(rowId);
+
+        if (!["single", "multi"].includes(rowType)) {
+          errors.push(`第 ${rowIndex} 列 type 不合法：${row.type}`);
+        }
+
+        const options = ["A", "B", "C", "D", "E"].reduce((acc, key) => {
+          const value = normalize(row[key]);
+          if (value) acc[key] = value;
+          return acc;
+        }, {});
+
+        if (Object.keys(options).length < 2) {
+          errors.push(`第 ${rowIndex} 列選項不足（至少 2 個）`);
+        }
+
+        const rawAnswer = normalize(row.answer);
+        if (!rawAnswer) {
+          errors.push(`第 ${rowIndex} 列 answer 缺失`);
+        }
+
+        let normalizedAnswer = [];
+        if (rowType === "single") {
+          normalizedAnswer = [rawAnswer.toUpperCase().trim()];
+          if (!/^[A-E]$/.test(normalizedAnswer[0])) {
+            errors.push(`第 ${rowIndex} 列單選 answer 格式錯誤：${rawAnswer}`);
+          }
+        } else if (rowType === "multi") {
+          normalizedAnswer = ensureArrayUniqueSorted(splitMulti(rawAnswer));
+          if (!normalizedAnswer.length || normalizedAnswer.some((item) => !/^[A-E]$/.test(item))) {
+            errors.push(`第 ${rowIndex} 列多選 answer 格式錯誤：${rawAnswer}`);
+          }
+        }
+
+        normalizedAnswer.forEach((ans) => {
+          if (!options[ans]) {
+            errors.push(`第 ${rowIndex} 列 answer 參照不存在的選項：${ans}`);
+          }
+        });
+
+        questions.push({
+          id: rowId,
+          subject: normalize(row.subject),
+          grade: normalize(row.grade),
+          chapter: normalize(row.chapter),
+          type: rowType || "",
+          stem: normalize(row.stem),
+          options,
+          answer: normalizedAnswer,
+          explain: normalize(row.explain),
+          difficulty: normalize(row.difficulty),
+          tags: normalize(row.tags),
+          group_id: normalize(row.group_id),
+          passage: normalize(row.passage)
+        });
+      });
+
+      if (!rows.length) {
+        warnings.push("CSV 內沒有資料列");
+      }
+
+      return { errors, warnings, questions };
+    };
+
+    const buildExamSession = (config) => {
+      const filtered = store.questions.filter((question) => {
+        const subjectMatch = !config.subjects.length || config.subjects.includes(question.subject);
+        const gradeMatch = !config.grades.length || config.grades.includes(question.grade);
+        const chapterMatch = !config.chapters.length || config.chapters.includes(question.chapter);
+        const typeMatch = !config.types.length || config.types.includes(question.type);
+        return subjectMatch && gradeMatch && chapterMatch && typeMatch;
+      });
+
+      const totalAvailable = filtered.length;
+      const count = Math.min(config.count, totalAvailable);
+      const selected = config.mode === "random" ? shuffle(filtered).slice(0, count) : filtered.slice(0, count);
+
+      const optionMap = {};
+      const questions = selected.map((question) => {
+        const optionsArray = Object.entries(question.options).map(([key, value]) => ({
+          key,
+          value
+        }));
+        const mapped = config.shuffleOptions ? shuffle(optionsArray) : optionsArray;
+        optionMap[question.id] = mapped;
+        return question;
+      });
+
+      const startTime = Date.now();
+      const endTime = config.timerEnabled ? startTime + config.timerMinutes * 60 * 1000 : null;
+
+      return {
+        config,
+        questions,
+        optionMap,
+        answersById: {},
+        markSet: new Set(),
+        status: "in_progress",
+        startTime,
+        endTime,
+        currentIndex: 0
+      };
+    };
+
+    const gradeSession = (session) => {
+      if (!session) return null;
+      const total = session.questions.length || 1;
+      let correct = 0;
+      const detail = session.questions.map((question) => {
+        const selected = session.answersById[question.id] || [];
+        const normalizedSelected = ensureArrayUniqueSorted(selected.map((item) => item.toUpperCase()));
+        const normalizedAnswer = ensureArrayUniqueSorted(question.answer);
+        const isCorrect = JSON.stringify(normalizedSelected) === JSON.stringify(normalizedAnswer);
+        if (isCorrect) correct += 1;
+        return {
+          question,
+          selected: normalizedSelected,
+          correct: normalizedAnswer,
+          isCorrect
+        };
+      });
+
+      const score = Math.round((correct / total) * 100);
+      const timeSpentSec = Math.floor((Date.now() - session.startTime) / 1000);
+      return { score, correct, total, detail, timeSpentSec };
+    };
+
+    const saveHistory = () => {
+      const trimmed = store.history.slice(0, 50);
+      localStorage.setItem(storageKey, JSON.stringify(trimmed));
+    };
+
+    const loadHistory = () => {
+      const stored = localStorage.getItem(storageKey);
+      if (!stored) return [];
+      try {
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.warn("Failed to parse history", error);
+        return [];
+      }
+    };
+
+    const exportJson = (data, filename) => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+
+    const importJson = async (file) => {
+      const text = await file.text();
+      return JSON.parse(text);
+    };
+
+    const getUniqueValues = (key) => {
+      const values = store.questions.map((q) => q[key]).filter(Boolean);
+      return Array.from(new Set(values));
+    };
+
+    const renderTab = () => {
+      document.querySelectorAll(".tab-section").forEach((section) => section.classList.add("hidden"));
+      document.getElementById(`tab-${store.ui.activeTab}`).classList.remove("hidden");
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.classList.toggle("bg-primary", btn.dataset.tab === store.ui.activeTab);
+        btn.classList.toggle("text-white", btn.dataset.tab === store.ui.activeTab);
+      });
+
+      if (store.ui.activeTab === "import") renderImportTab();
+      if (store.ui.activeTab === "build") renderBuildTab();
+      if (store.ui.activeTab === "answer") renderAnswerTab();
+      if (store.ui.activeTab === "result") renderResultTab();
+      if (store.ui.activeTab === "settings") renderSettingsTab();
+    };
+
+    const renderImportTab = () => {
+      const container = document.getElementById("tab-import");
+      container.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.className = "max-w-6xl mx-auto px-4 py-8 space-y-6";
+
+      const header = document.createElement("div");
+      header.className = "flex flex-col gap-4";
+      header.innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold">題庫匯入</h2>
+            <p class="text-sm text-muted">上傳 CSV 後立即驗證並預覽</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="download-sample" class="px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold">下載範例 CSV</button>
+            <button id="reset-import" class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm font-semibold">重置</button>
+          </div>
+        </div>
+        <div class="bg-white border border-dashed border-slate-200 rounded-2xl p-6 text-sm text-muted space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p class="font-semibold text-slate-700">CSV 欄位</p>
+              <p class="text-xs">${REQUIRED_HEADERS.join(", ")}</p>
+            </div>
+            <label class="inline-flex items-center gap-2 cursor-pointer">
+              <input id="csv-input" type="file" accept=".csv,text/csv" class="hidden" />
+              <span class="px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-semibold">上傳 CSV</span>
+            </label>
+          </div>
+          <div class="space-y-2">
+            <p class="text-xs text-slate-500">Google Sheets 匯入（可貼多個連結，換行分隔）</p>
+            <div class="flex flex-col md:flex-row gap-2">
+              <textarea id="sheet-urls" rows="2" class="flex-1 text-sm rounded-xl border-slate-200" placeholder="https://docs.google.com/spreadsheets/d/.../edit#gid=0"></textarea>
+              <button id="import-sheet" class="px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold">從連結匯入</button>
+            </div>
+            <p class="text-[11px] text-slate-400">系統會自動轉換為 CSV 下載連結；如遇權限問題，請將試算表設為「知道連結即可檢視」。</p>
+          </div>
+        </div>
+      `;
+
+      const statusCard = document.createElement("div");
+      statusCard.className = "bg-white rounded-2xl border border-slate-100 p-6 shadow-card";
+
+      const stats = {
+        total: store.questions.length,
+        subjects: getUniqueValues("subject"),
+        grades: getUniqueValues("grade"),
+        chapters: getUniqueValues("chapter"),
+        types: getUniqueValues("type")
+      };
+
+      const distribution = (label, values) => `
+        <div>
+          <p class="text-xs text-muted">${label}</p>
+          <p class="font-semibold">${values.length ? values.join("、") : "-"}</p>
+        </div>
+      `;
+
+      statusCard.innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <p class="text-sm text-muted">已匯入題數</p>
+            <p class="text-3xl font-bold">${formatCount(stats.total)}</p>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            ${distribution("科目", stats.subjects)}
+            ${distribution("年級", stats.grades)}
+            ${distribution("章節", stats.chapters)}
+            ${distribution("題型", stats.types)}
+          </div>
+        </div>
+      `;
+
+      const validationCard = document.createElement("div");
+      validationCard.className = "bg-white rounded-2xl border border-slate-100 p-6 shadow-card";
+      const errorList = store.validation.errors.length
+        ? store.validation.errors.map((msg) => `<li class="text-danger text-sm">${msg}</li>`).join("")
+        : "<li class=\"text-sm text-success\">未偵測到錯誤</li>";
+      const warningList = store.validation.warnings.length
+        ? store.validation.warnings.map((msg) => `<li class="text-warning text-sm">${msg}</li>`).join("")
+        : "<li class=\"text-sm text-muted\">無警告</li>";
+
+      validationCard.innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div class="flex-1">
+            <p class="font-semibold mb-2">資料品質檢查</p>
+            <ul class="space-y-1">${errorList}</ul>
+          </div>
+          <div class="flex-1">
+            <p class="font-semibold mb-2">警告</p>
+            <ul class="space-y-1">${warningList}</ul>
+          </div>
+        </div>
+      `;
+
+      const previewCard = document.createElement("div");
+      previewCard.className = "bg-white rounded-2xl border border-slate-100 p-6 shadow-card";
+      const pageSize = 8;
+      const totalPages = Math.max(1, Math.ceil(store.questions.length / pageSize));
+      store.ui.previewPage = Math.min(store.ui.previewPage, totalPages);
+      const query = normalize(store.ui.previewQuery).toLowerCase();
+      const previewFiltered = store.questions.filter((q) => {
+        if (!query) return true;
+        return q.id.toLowerCase().includes(query) || q.stem.toLowerCase().includes(query);
+      });
+      const filteredPages = Math.max(1, Math.ceil(previewFiltered.length / pageSize));
+      const page = Math.min(store.ui.previewPage, filteredPages);
+      const previewItems = previewFiltered.slice((page - 1) * pageSize, page * pageSize);
+
+      previewCard.innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <div>
+            <p class="font-semibold">題庫預覽</p>
+            <p class="text-xs text-muted">可搜尋 id 或題幹關鍵字</p>
+          </div>
+          <div class="flex gap-2">
+            <input id="preview-search" class="text-sm rounded-full border-slate-200" placeholder="搜尋..." value="${store.ui.previewQuery}" />
+            <button id="preview-reset" class="text-sm px-3 py-1 rounded-full bg-slate-100">重置</button>
+          </div>
+        </div>
+        <div class="space-y-3 max-h-80 overflow-y-auto no-scrollbar">
+          ${previewItems.map((q) => `
+            <div class="border border-slate-100 rounded-xl p-3">
+              <div class="flex flex-wrap gap-2 text-xs text-muted">
+                <span>#${q.id}</span>
+                <span>${q.subject || "未分類"}</span>
+                <span>${q.grade || ""}</span>
+                <span>${q.chapter || ""}</span>
+                <span>${q.type}</span>
+              </div>
+              <p class="text-sm font-semibold mt-2">${q.stem || "-"}</p>
+            </div>
+          `).join("") || "<p class=\"text-sm text-muted\">沒有符合的題目</p>"}
+        </div>
+        <div class="flex items-center justify-between mt-4 text-sm">
+          <span>第 ${page} / ${filteredPages} 頁（共 ${previewFiltered.length} 題）</span>
+          <div class="flex gap-2">
+            <button id="preview-prev" class="px-3 py-1 rounded-full bg-slate-100">上一頁</button>
+            <button id="preview-next" class="px-3 py-1 rounded-full bg-slate-100">下一頁</button>
+          </div>
+        </div>
+      `;
+
+      wrapper.append(header, statusCard, validationCard, previewCard);
+      container.appendChild(wrapper);
+
+      document.getElementById("csv-input").addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          const rows = await parseCsvToQuestions(file);
+          const validated = validateQuestions(rows);
+          store.questions = validated.questions;
+          store.validation = { errors: validated.errors, warnings: validated.warnings };
+          store.ui.previewPage = 1;
+          renderTab();
+        } catch (error) {
+          store.validation = { errors: [error.message], warnings: [] };
+          store.questions = [];
+          renderTab();
+        }
+      });
+
+      document.getElementById("import-sheet").addEventListener("click", async () => {
+        const rawUrls = document.getElementById("sheet-urls").value.split("\n");
+        if (!rawUrls.length || !rawUrls.some((url) => normalize(url))) {
+          alert("請貼上 Google Sheets 連結");
+          return;
+        }
+        try {
+          const rows = await parseSheetsFromUrls(rawUrls);
+          const validated = validateQuestions(rows);
+          store.questions = validated.questions;
+          store.validation = { errors: validated.errors, warnings: validated.warnings };
+          store.ui.previewPage = 1;
+          renderTab();
+        } catch (error) {
+          store.validation = { errors: [error.message], warnings: [] };
+          store.questions = [];
+          renderTab();
+        }
+      });
+
+      document.getElementById("download-sample").addEventListener("click", () => {
+        const sampleCsv = generateSampleCsv();
+        const blob = new Blob([sampleCsv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "sample_questions.csv";
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+
+      document.getElementById("reset-import").addEventListener("click", () => {
+        store.questions = [];
+        store.validation = { errors: [], warnings: [] };
+        store.ui.previewQuery = "";
+        store.ui.previewPage = 1;
+        renderTab();
+      });
+
+      document.getElementById("preview-search").addEventListener("input", (event) => {
+        store.ui.previewQuery = event.target.value;
+        store.ui.previewPage = 1;
+        renderTab();
+      });
+
+      document.getElementById("preview-reset").addEventListener("click", () => {
+        store.ui.previewQuery = "";
+        store.ui.previewPage = 1;
+        renderTab();
+      });
+
+      document.getElementById("preview-prev").addEventListener("click", () => {
+        store.ui.previewPage = Math.max(1, store.ui.previewPage - 1);
+        renderTab();
+      });
+
+      document.getElementById("preview-next").addEventListener("click", () => {
+        const maxPage = Math.max(1, Math.ceil(previewFiltered.length / pageSize));
+        store.ui.previewPage = Math.min(maxPage, store.ui.previewPage + 1);
+        renderTab();
+      });
+    };
+
+    const renderBuildTab = () => {
+      const container = document.getElementById("tab-build");
+      container.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.className = "max-w-6xl mx-auto px-4 py-8 space-y-6";
+
+      const subjects = getUniqueValues("subject");
+      const grades = getUniqueValues("grade");
+      const chapters = getUniqueValues("chapter");
+
+      wrapper.innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold">建立測驗</h2>
+            <p class="text-sm text-muted">設定出題條件與測驗規則</p>
+          </div>
+          <button id="reset-build" class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm font-semibold">重置</button>
+        </div>
+        <div class="grid gap-6 md:grid-cols-2">
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
+            <div>
+              <p class="font-semibold mb-2">篩選條件</p>
+              ${renderMultiSelect("subject", "科目", subjects)}
+              ${renderMultiSelect("grade", "年級", grades)}
+              ${renderMultiSelect("chapter", "章節", chapters)}
+            </div>
+            <div>
+              <p class="font-semibold mb-2">題型</p>
+              <div class="flex gap-3 text-sm">
+                <label class="inline-flex items-center gap-2"><input type="checkbox" value="single" class="type-checkbox" checked /> 單選</label>
+                <label class="inline-flex items-center gap-2"><input type="checkbox" value="multi" class="type-checkbox" checked /> 多選</label>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
+            <div>
+              <p class="font-semibold mb-2">題數</p>
+              <div class="flex flex-wrap gap-2">
+                ${[10, 20, 30, 50].map((count) => `
+                  <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="count" value="${count}" class="count-radio" ${count === 10 ? "checked" : ""}/> ${count} 題</label>
+                `).join("")}
+                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="count" value="custom" class="count-radio" /> 自訂</label>
+                <input id="custom-count" type="number" min="1" class="w-24 text-sm rounded-lg border-slate-200" placeholder="題數" />
+              </div>
+            </div>
+            <div>
+              <p class="font-semibold mb-2">出題方式</p>
+              <div class="flex gap-3 text-sm">
+                <label class="inline-flex items-center gap-2"><input type="radio" name="mode" value="random" checked /> 隨機</label>
+                <label class="inline-flex items-center gap-2"><input type="radio" name="mode" value="ordered" /> 依序</label>
+              </div>
+            </div>
+            <div class="grid gap-3 text-sm">
+              <label class="inline-flex items-center gap-2"><input id="shuffle-options" type="checkbox" checked /> 打亂選項順序</label>
+              <label class="inline-flex items-center gap-2"><input id="timer-enabled" type="checkbox" /> 啟用測驗時間</label>
+              <div class="flex items-center gap-2">
+                <input id="timer-minutes" type="number" min="1" max="240" value="30" class="w-20 text-sm rounded-lg border-slate-200" />
+                <span class="text-sm text-muted">分鐘</span>
+              </div>
+              <label class="inline-flex items-center gap-2"><input id="allow-back" type="checkbox" checked /> 允許回頭改答案</label>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <p class="font-semibold">準備開始</p>
+            <p class="text-sm text-muted">符合條件題庫：${store.questions.length} 題</p>
+          </div>
+          <button id="build-session" class="px-6 py-3 rounded-full bg-primary text-white font-semibold">建立測驗</button>
+        </div>
+      `;
+
+      container.appendChild(wrapper);
+
+      document.getElementById("reset-build").addEventListener("click", () => {
+        renderTab();
+      });
+
+      document.getElementById("build-session").addEventListener("click", () => {
+        if (!store.questions.length) {
+          alert("請先匯入題庫");
+          return;
+        }
+
+        const selectedSubjects = collectMultiSelect("subject");
+        const selectedGrades = collectMultiSelect("grade");
+        const selectedChapters = collectMultiSelect("chapter");
+        const selectedTypes = Array.from(document.querySelectorAll(".type-checkbox:checked")).map((item) => item.value);
+        const countRadio = document.querySelector("input[name='count']:checked").value;
+        const customCount = Number(document.getElementById("custom-count").value || 0);
+        const count = countRadio === "custom" ? customCount : Number(countRadio);
+        if (!count || count < 1) {
+          alert("請設定題數");
+          return;
+        }
+
+        const config = {
+          subjects: selectedSubjects,
+          grades: selectedGrades,
+          chapters: selectedChapters,
+          types: selectedTypes,
+          count,
+          mode: document.querySelector("input[name='mode']:checked").value,
+          shuffleOptions: document.getElementById("shuffle-options").checked,
+          timerEnabled: document.getElementById("timer-enabled").checked,
+          timerMinutes: Number(document.getElementById("timer-minutes").value || 0),
+          allowBack: document.getElementById("allow-back").checked
+        };
+
+        const session = buildExamSession(config);
+        if (!session.questions.length) {
+          alert("找不到符合條件的題目");
+          return;
+        }
+
+        store.session = session;
+        store.ui.activeTab = "answer";
+        store.ui.maxReachedIndex = 0;
+        renderTab();
+      });
+    };
+
+    const renderAnswerTab = () => {
+      const container = document.getElementById("tab-answer");
+      container.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.className = "max-w-6xl mx-auto px-4 py-8 space-y-6";
+
+      if (!store.session) {
+        wrapper.innerHTML = `
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card">
+            <p class="text-sm text-muted">尚未建立測驗，請先完成題庫匯入與建立測驗。</p>
+          </div>
+        `;
+        container.appendChild(wrapper);
+        return;
+      }
+
+      const session = store.session;
+      const current = session.questions[session.currentIndex];
+      const options = session.optionMap[current.id] || [];
+      const selected = session.answersById[current.id] || [];
+      const answeredCount = Object.keys(session.answersById).length;
+      const markedCount = session.markSet.size;
+      const unansweredCount = session.questions.length - answeredCount;
+
+      const remainingTime = session.endTime ? Math.max(0, session.endTime - Date.now()) : null;
+      const remainingText = remainingTime !== null ? formatDuration(Math.floor(remainingTime / 1000)) : "--";
+
+      const passageBlock = current.group_id && current.passage
+        ? renderPassage(current)
+        : "";
+
+      wrapper.innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold">作答中</h2>
+            <p class="text-sm text-muted">題號 ${session.currentIndex + 1} / ${session.questions.length}</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <div class="px-3 py-2 rounded-full bg-white border border-slate-100 text-sm">已作答 ${answeredCount}</div>
+            <div class="px-3 py-2 rounded-full bg-white border border-slate-100 text-sm">未作答 ${unansweredCount}</div>
+            <div class="px-3 py-2 rounded-full bg-white border border-slate-100 text-sm">已標記 ${markedCount}</div>
+            ${session.endTime ? `<div class="px-3 py-2 rounded-full bg-info/10 text-info text-sm font-semibold">剩餘 ${remainingText}</div>` : ""}
+            <button id="reset-answer" class="px-3 py-2 rounded-full bg-slate-100 text-sm">重置</button>
+          </div>
+        </div>
+        <div class="grid gap-6 lg:grid-cols-[3fr,1fr]">
+          <div class="space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
+              ${passageBlock}
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase text-muted">${current.subject || "未分類"} · ${current.chapter || ""}</span>
+                <button id="mark-question" class="text-sm px-3 py-1 rounded-full ${session.markSet.has(current.id) ? "bg-accent text-white" : "bg-slate-100"}">
+                  ${session.markSet.has(current.id) ? "已標記" : "標記此題"}
+                </button>
+              </div>
+              <h3 class="text-lg font-semibold whitespace-pre-wrap">${current.stem || ""}</h3>
+              <div class="space-y-3">
+                ${options.map((option) => renderOption(current, option, selected)).join("")}
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button id="prev-question" class="px-4 py-2 rounded-full bg-slate-100">上一題</button>
+              <button id="next-question" class="px-4 py-2 rounded-full bg-primary text-white">下一題</button>
+              <button id="submit-session" class="px-4 py-2 rounded-full bg-slate-900 text-white">交卷</button>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-card">
+            <p class="font-semibold mb-3">題號快速跳題</p>
+            <div class="grid grid-cols-5 gap-2 text-xs">
+              ${session.questions.map((question, index) => {
+                const isAnswered = session.answersById[question.id]?.length;
+                const isMarked = session.markSet.has(question.id);
+                const isActive = index === session.currentIndex;
+                const canJump = session.config.allowBack || index >= session.currentIndex;
+                return `<button class="question-chip ${isActive ? "bg-primary text-white" : "bg-slate-100"} ${!canJump ? "opacity-40" : ""}" data-index="${index}" ${!canJump ? "disabled" : ""}>
+                  ${index + 1}${isMarked ? "★" : ""}${isAnswered ? "✓" : ""}
+                </button>`;
+              }).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(wrapper);
+
+      const updateTimer = () => {
+        if (!store.session || !store.session.endTime) return;
+        const remaining = store.session.endTime - Date.now();
+        if (remaining <= 0) {
+          submitSession();
+          return;
+        }
+        const info = container.querySelector(".bg-info\/10");
+        if (info) {
+          info.textContent = `剩餘 ${formatDuration(Math.floor(remaining / 1000))}`;
+        }
+      };
+
+      if (session.endTime) {
+        clearInterval(window.__timerInterval);
+        window.__timerInterval = setInterval(updateTimer, 1000);
+      }
+
+      container.querySelectorAll("input[name='option']").forEach((input) => {
+        input.addEventListener("change", (event) => {
+          const { optionKey } = event.target.dataset;
+          if (current.type === "single") {
+            session.answersById[current.id] = [optionKey];
+          } else {
+            const prev = new Set(session.answersById[current.id] || []);
+            if (event.target.checked) {
+              prev.add(optionKey);
+            } else {
+              prev.delete(optionKey);
+            }
+            session.answersById[current.id] = Array.from(prev);
+          }
+          renderAnswerTab();
+        });
+      });
+
+      document.getElementById("mark-question").addEventListener("click", () => {
+        if (session.markSet.has(current.id)) {
+          session.markSet.delete(current.id);
+        } else {
+          session.markSet.add(current.id);
+        }
+        renderAnswerTab();
+      });
+
+      document.getElementById("prev-question").addEventListener("click", () => {
+        if (!session.config.allowBack && session.currentIndex <= store.ui.maxReachedIndex) return;
+        session.currentIndex = Math.max(0, session.currentIndex - 1);
+        renderAnswerTab();
+      });
+
+      document.getElementById("next-question").addEventListener("click", () => {
+        session.currentIndex = Math.min(session.questions.length - 1, session.currentIndex + 1);
+        store.ui.maxReachedIndex = Math.max(store.ui.maxReachedIndex, session.currentIndex);
+        renderAnswerTab();
+      });
+
+      document.getElementById("submit-session").addEventListener("click", () => {
+        const unanswered = session.questions.filter((q) => !session.answersById[q.id]).length;
+        if (unanswered > 0) {
+          const confirmSubmit = confirm(`尚有 ${unanswered} 題未作答，確定交卷？`);
+          if (!confirmSubmit) return;
+        } else if (!confirm("確定交卷？")) {
+          return;
+        }
+        submitSession();
+      });
+
+      document.getElementById("reset-answer").addEventListener("click", () => {
+        session.answersById = {};
+        session.markSet = new Set();
+        session.currentIndex = 0;
+        renderAnswerTab();
+      });
+
+      container.querySelectorAll(".question-chip").forEach((button) => {
+        button.addEventListener("click", () => {
+          session.currentIndex = Number(button.dataset.index);
+          store.ui.maxReachedIndex = Math.max(store.ui.maxReachedIndex, session.currentIndex);
+          renderAnswerTab();
+        });
+      });
+    };
+
+    const renderResultTab = () => {
+      const container = document.getElementById("tab-result");
+      container.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.className = "max-w-6xl mx-auto px-4 py-8 space-y-6";
+
+      if (!store.session || store.session.status !== "submitted") {
+        wrapper.innerHTML = `
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card">
+            <p class="text-sm text-muted">尚未交卷，請完成作答後再查看成績。</p>
+          </div>
+        `;
+        container.appendChild(wrapper);
+        return;
+      }
+
+      const session = store.session;
+      const report = session.report;
+
+      wrapper.innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold">成績/錯題</h2>
+            <p class="text-sm text-muted">完成時間 ${new Date(session.endTime || Date.now()).toLocaleString("zh-TW")}</p>
+          </div>
+          <div class="flex gap-2">
+            <button id="reset-result" class="px-4 py-2 rounded-full bg-slate-100 text-sm">重置</button>
+            <button id="retry-wrong" class="px-4 py-2 rounded-full bg-primary text-white text-sm">錯題重練</button>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-card">
+            <p class="text-sm text-muted">總分</p>
+            <p class="text-3xl font-bold text-primary">${report.score}</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-card">
+            <p class="text-sm text-muted">正確題數</p>
+            <p class="text-3xl font-bold">${report.correct} / ${report.total}</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-card">
+            <p class="text-sm text-muted">耗時</p>
+            <p class="text-3xl font-bold">${formatDuration(report.timeSpentSec)}</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
+          <div class="flex flex-wrap gap-2 items-center">
+            <label class="text-sm">檢視：</label>
+            <select id="result-filter" class="text-sm rounded-lg border-slate-200">
+              <option value="all">全部</option>
+              <option value="wrong">只看錯題</option>
+              <option value="marked">只看標記題</option>
+            </select>
+            <select id="result-subject" class="text-sm rounded-lg border-slate-200">
+              <option value="">科目</option>
+              ${getUniqueValues("subject").map((value) => `<option value="${value}">${value}</option>`).join("")}
+            </select>
+            <select id="result-chapter" class="text-sm rounded-lg border-slate-200">
+              <option value="">章節</option>
+              ${getUniqueValues("chapter").map((value) => `<option value="${value}">${value}</option>`).join("")}
+            </select>
+          </div>
+          <div class="space-y-4 max-h-[480px] overflow-y-auto no-scrollbar" id="result-list"></div>
+        </div>
+      `;
+
+      container.appendChild(wrapper);
+
+      store.ui.resultFilter = store.ui.resultFilter || "all";
+
+      const list = container.querySelector("#result-list");
+      const filters = {
+        filter: store.ui.resultFilter,
+        subject: store.ui.resultSubject,
+        chapter: store.ui.resultChapter
+      };
+
+      const filtered = report.detail.filter((item) => {
+        if (filters.filter === "wrong" && item.isCorrect) return false;
+        if (filters.filter === "marked" && !session.markSet.has(item.question.id)) return false;
+        if (filters.subject && item.question.subject !== filters.subject) return false;
+        if (filters.chapter && item.question.chapter !== filters.chapter) return false;
+        return true;
+      });
+
+      list.innerHTML = filtered.map((item, index) => {
+        const tagColor = item.isCorrect ? "bg-success/10 text-success" : "bg-danger/10 text-danger";
+        return `
+          <div class="border border-slate-100 rounded-xl p-4">
+            <div class="flex items-center justify-between text-xs text-muted mb-2">
+              <span>Q${index + 1} · ${item.question.subject || ""} ${item.question.chapter || ""}</span>
+              <span class="px-2 py-1 rounded-full ${tagColor}">${item.isCorrect ? "正確" : "錯誤"}</span>
+            </div>
+            <p class="font-semibold whitespace-pre-wrap">${item.question.stem}</p>
+            <div class="mt-3 grid md:grid-cols-2 gap-3 text-sm">
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                <p class="text-xs text-muted">你的答案</p>
+                <p class="font-semibold">${item.selected.join(", ") || "未作答"}</p>
+              </div>
+              <div class="bg-emerald-50 rounded-lg p-3 border border-emerald-100">
+                <p class="text-xs text-muted">正確答案</p>
+                <p class="font-semibold">${item.correct.join(", ")}</p>
+              </div>
+            </div>
+            ${item.question.explain ? `
+              <div class="mt-3 bg-white border border-slate-100 rounded-lg p-3">
+                <p class="text-xs text-muted mb-1">解析</p>
+                <p class="text-sm whitespace-pre-wrap">${item.question.explain}</p>
+              </div>
+            ` : ""}
+          </div>
+        `;
+      }).join("") || `<p class="text-sm text-muted">沒有符合條件的題目。</p>`;
+
+      container.querySelector("#result-filter").value = store.ui.resultFilter;
+      container.querySelector("#result-subject").value = store.ui.resultSubject;
+      container.querySelector("#result-chapter").value = store.ui.resultChapter;
+
+      container.querySelector("#result-filter").addEventListener("change", (event) => {
+        store.ui.resultFilter = event.target.value;
+        renderResultTab();
+      });
+
+      container.querySelector("#result-subject").addEventListener("change", (event) => {
+        store.ui.resultSubject = event.target.value;
+        renderResultTab();
+      });
+
+      container.querySelector("#result-chapter").addEventListener("change", (event) => {
+        store.ui.resultChapter = event.target.value;
+        renderResultTab();
+      });
+
+      document.getElementById("reset-result").addEventListener("click", () => {
+        store.ui.resultFilter = "all";
+        store.ui.resultSubject = "";
+        store.ui.resultChapter = "";
+        renderResultTab();
+      });
+
+      document.getElementById("retry-wrong").addEventListener("click", () => {
+        const wrongIds = report.detail.filter((item) => !item.isCorrect).map((item) => item.question.id);
+        if (!wrongIds.length) {
+          alert("恭喜全對！沒有錯題可重練。");
+          return;
+        }
+        const shuffleOptions = confirm("是否重新打亂選項？");
+        const questions = store.questions.filter((q) => wrongIds.includes(q.id));
+        store.session = buildExamSession({
+          subjects: [],
+          grades: [],
+          chapters: [],
+          types: ["single", "multi"],
+          count: questions.length,
+          mode: "ordered",
+          shuffleOptions,
+          timerEnabled: false,
+          timerMinutes: 0,
+          allowBack: true
+        });
+        store.session.questions = questions;
+        store.ui.activeTab = "answer";
+        renderTab();
+      });
+    };
+
+    const renderSettingsTab = () => {
+      const container = document.getElementById("tab-settings");
+      container.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.className = "max-w-6xl mx-auto px-4 py-8 space-y-6";
+
+      wrapper.innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold">設定 / 匯出</h2>
+            <p class="text-sm text-muted">題庫與成績匯入/匯出</p>
+          </div>
+          <button id="reset-settings" class="px-4 py-2 rounded-full bg-slate-100 text-sm">重置</button>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
+            <div>
+              <p class="font-semibold mb-2">題庫匯出</p>
+              <p class="text-sm text-muted">下載目前題庫 JSON</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button id="export-questions" class="px-4 py-2 rounded-full bg-primary text-white text-sm">下載題庫 JSON</button>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
+            <div>
+              <p class="font-semibold mb-2">成績匯入/匯出</p>
+              <p class="text-sm text-muted">可合併去重歷史紀錄</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button id="export-history" class="px-4 py-2 rounded-full bg-slate-900 text-white text-sm">匯出成績 JSON</button>
+              <label class="inline-flex items-center gap-2 cursor-pointer">
+                <input id="import-history" type="file" accept="application/json" class="hidden" />
+                <span class="px-4 py-2 rounded-full bg-slate-100 text-sm">匯入成績 JSON</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card">
+          <p class="font-semibold mb-3">最近 50 次成績紀錄</p>
+          <div class="space-y-3 max-h-[360px] overflow-y-auto no-scrollbar">
+            ${store.history.length ? store.history.map((item) => `
+              <div class="border border-slate-100 rounded-xl p-4 text-sm">
+                <div class="flex items-center justify-between">
+                  <span>${new Date(item.date).toLocaleString("zh-TW")}</span>
+                  <span class="font-semibold text-primary">${item.score} 分</span>
+                </div>
+                <p class="text-xs text-muted mt-2">${item.questionCount} 題 · 正確率 ${Math.round(item.accuracy * 100)}%</p>
+                <p class="text-xs text-muted">錯題 ${item.wrongIds.length} 題</p>
+              </div>
+            `).join("") : `<p class="text-sm text-muted">尚無成績紀錄</p>`}
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card">
+          <p class="font-semibold mb-3">錯題統計</p>
+          <div class="space-y-2">
+            ${renderWrongStats()}
+          </div>
+        </div>
+      `;
+
+      container.appendChild(wrapper);
+
+      document.getElementById("export-questions").addEventListener("click", () => {
+        if (!store.questions.length) {
+          alert("尚無題庫可匯出");
+          return;
+        }
+        exportJson(store.questions, "question_bank.json");
+      });
+
+      document.getElementById("export-history").addEventListener("click", () => {
+        exportJson(store.history, "exam_history.json");
+      });
+
+      document.getElementById("import-history").addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          const incoming = await importJson(file);
+          if (!Array.isArray(incoming)) {
+            alert("成績 JSON 格式錯誤");
+            return;
+          }
+          const merged = [...store.history, ...incoming];
+          const unique = [];
+          const seen = new Set();
+          merged.forEach((item) => {
+            const signature = `${item.date}-${item.score}-${item.questionCount}`;
+            if (!seen.has(signature)) {
+              seen.add(signature);
+              unique.push(item);
+            }
+          });
+          store.history = unique.slice(0, 50);
+          saveHistory();
+          renderSettingsTab();
+        } catch (error) {
+          alert("匯入失敗，請確認 JSON 格式");
+        }
+      });
+
+      document.getElementById("reset-settings").addEventListener("click", () => {
+        renderSettingsTab();
+      });
+    };
+
+    const renderMultiSelect = (key, label, values) => {
+      if (!values.length) {
+        return `<p class="text-xs text-muted">${label}：尚無資料</p>`;
+      }
+      return `
+        <div class="mb-3">
+          <p class="text-sm font-semibold mb-1">${label}</p>
+          <div class="flex flex-wrap gap-2">
+            ${values.map((value) => `
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" class="filter-${key}" value="${value}" />
+                ${value}
+              </label>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    };
+
+    const collectMultiSelect = (key) => {
+      return Array.from(document.querySelectorAll(`.filter-${key}:checked`)).map((item) => item.value);
+    };
+
+    const renderOption = (question, option, selected) => {
+      const isChecked = selected.includes(option.key);
+      const inputType = question.type === "multi" ? "checkbox" : "radio";
+      return `
+        <label class="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-primary/40 bg-white transition">
+          <input type="${inputType}" name="option" class="rounded-full" ${isChecked ? "checked" : ""} data-option-key="${option.key}" data-option-value="${option.value}" />
+          <div class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold">${option.key}</div>
+          <div class="flex-1 text-sm font-semibold">${option.value}</div>
+        </label>
+      `;
+    };
+
+    const renderPassage = (question) => {
+      const show = store.ui.showPassage[question.group_id] ?? true;
+      return `
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-semibold">題組閱讀</p>
+            <button class="toggle-passage text-xs text-primary" data-group="${question.group_id}">${show ? "收合" : "展開"}</button>
+          </div>
+          ${show ? `<p class="text-sm whitespace-pre-wrap mt-2">${question.passage}</p>` : ""}
+        </div>
+      `;
+    };
+
+    const renderWrongStats = () => {
+      if (!store.history.length) {
+        return `<p class="text-sm text-muted">尚無資料</p>`;
+      }
+      const wrongStats = {};
+      store.history.forEach((record) => {
+        record.wrongIds.forEach((id) => {
+          wrongStats[id] = (wrongStats[id] || 0) + 1;
+        });
+      });
+      const sorted = Object.entries(wrongStats).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      if (!sorted.length) {
+        return `<p class="text-sm text-muted">目前沒有錯題</p>`;
+      }
+      return sorted.map(([id, count]) => `
+        <div class="flex items-center justify-between text-sm">
+          <span>${id}</span>
+          <span class="font-semibold">${count} 次</span>
+        </div>
+      `).join("");
+    };
+
+    const submitSession = () => {
+      const report = gradeSession(store.session);
+      store.session.status = "submitted";
+      store.session.report = report;
+
+      const historyEntry = {
+        date: new Date().toISOString(),
+        filters: store.session.config,
+        questionCount: report.total,
+        score: report.score,
+        accuracy: report.correct / report.total,
+        timeSpentSec: report.timeSpentSec,
+        wrongIds: report.detail.filter((item) => !item.isCorrect).map((item) => item.question.id),
+        modeMeta: {
+          shuffleOptions: store.session.config.shuffleOptions,
+          timerEnabled: store.session.config.timerEnabled
+        }
+      };
+
+      store.history.unshift(historyEntry);
+      store.history = store.history.slice(0, 50);
+      saveHistory();
+
+      store.ui.activeTab = "result";
+      renderTab();
+    };
+
+    const formatDuration = (seconds) => {
+      const mins = Math.floor(seconds / 60).toString().padStart(2, "0");
+      const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+      return `${mins}:${secs}`;
+    };
+
+    const generateSampleCsv = () => {
+      const rows = [
+        REQUIRED_HEADERS.join(","),
+        "Q001,數學,高一,一元一次方程式,single,求解 x: 2x+5=15,A,5,B,10,C,7.5,D,2,E,,A,因為 2x=10,x=5,簡單,代數,,",
+        "Q002,數學,高一,幾何,single,直角三角形 3,4,?,A,5,B,6,C,7,D,8,E,,A,畢氏定理,簡單,幾何,,",
+        "Q003,英文,高一,單字,multi,下列哪些是同義詞,A,Happy,B,Joyful,C,Sad,D,Glad,E,Angry,A,B,D,Happy/Glad/ Joyful 同義,中等,詞彙,,",
+        "Q004,社會,高二,歷史,single,台灣第一條鐵路在哪位巡撫任內完成?,A,沈葆楨,B,劉銘傳,C,吳鳳,D,林爽文,E,,B,劉銘傳推動縱貫鐵路,中等,台灣史,,",
+        "Q005,數學,高二,函數,single,函數 y = x^2 在 x=3 時的值?,A,6,B,9,C,12,D,3,E,,B,平方函數帶入,簡單,函數,,",
+        "Q006,物理,高一,運動,multi,下列哪些是向量量?,A,速度,B,位移,C,時間,D,加速度,E,質量,A,B,D,向量有方向,簡單,物理,,",
+        "Q007,國文,高一,成語,single,形容事情非常容易的成語?,A,易如反掌,B,畫蛇添足,C,刻舟求劍,D,望梅止渴,E,,A,易如反掌,簡單,成語,,",
+        "Q008,英文,高二,文法,single,He ___ to school every day.,A,go,B,goes,C,going,D,went,E,,B,第三人稱單數,簡單,文法,,",
+        "Q009,生物,高一,細胞,single,細胞的能量工廠是?,A,細胞核,B,粒線體,C,葉綠體,D,高基氏體,E,,B,粒線體產生能量,簡單,生物,,",
+        "Q010,地理,高二,地形,single,台灣最高峰是?,A,玉山,B,雪山,C,阿里山,D,合歡山,E,,A,玉山,簡單,地理,,"
+      ];
+      return rows.join("\n");
+    };
+
+    const setupTabs = () => {
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.className = "tab-btn px-4 py-2 rounded-full bg-slate-100 text-slate-700 font-semibold text-sm";
+        btn.addEventListener("click", () => {
+          store.ui.activeTab = btn.dataset.tab;
+          renderTab();
+        });
+      });
+    };
+
+    const resetAll = () => {
+      store.questions = [];
+      store.validation = { errors: [], warnings: [] };
+      store.session = null;
+      store.ui.previewPage = 1;
+      store.ui.previewQuery = "";
+      store.ui.activeTab = "import";
+      renderTab();
+    };
+
+    document.getElementById("reset-all").addEventListener("click", resetAll);
+
+    store.history = loadHistory();
+
+    setupTabs();
+    renderTab();
+
+    document.body.addEventListener("click", (event) => {
+      if (event.target.classList.contains("toggle-passage")) {
+        const group = event.target.dataset.group;
+        store.ui.showPassage[group] = !(store.ui.showPassage[group] ?? true);
+        renderAnswerTab();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -632,8 +632,7 @@
       });
 
       container.querySelector("#import-sheet").addEventListener("click", async () => {
-        const rawUrls = container.querySelector("#sheet-urls").value.split("
-");
+        const rawUrls = container.querySelector("#sheet-urls").value.split("\n");
         if (!rawUrls.length || !rawUrls.some((url) => normalize(url))) {
           alert("請貼上 Google Sheets 連結");
           return;

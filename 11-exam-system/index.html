@@ -1,53 +1,88 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>台灣高中題庫線上作答系統</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600&display=swap" rel="stylesheet" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>測驗中心</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;family=Noto+Sans+TC:wght@400;500;700&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script id="tailwind-config">
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: "#4F46E5",
-            primaryDark: "#3730A3",
-            accent: "#F59E0B",
-            surface: "#ffffff",
-            muted: "#64748B",
-            background: "#F8FAFC",
-            danger: "#EF4444",
-            success: "#10B981",
-            info: "#0EA5E9"
+            "primary": "#38bdf8", // Sky Blue
+            "primary-dark": "#0284c7",
+            "accent-coral": "#fb7185", // Rose
+            "accent-yellow": "#facc15",
+            "background-light": "#f8fafc", // Slate 50
+            "surface-light": "#ffffff",
+            "text-main": "#334155", // Slate 700
+            "text-sub": "#64748b", // Slate 500
+            "quiz-primary": "#4F46E5",
+            "quiz-accent": "#F59E0B",
+            "correct": "#10B981",    // Emerald 500
+            "incorrect": "#EF4444"   // Red 500
           },
           fontFamily: {
-            display: ["Noto Sans TC", "Spline Sans", "sans-serif"],
-            sans: ["Noto Sans TC", "Spline Sans", "sans-serif"]
+            "display": ["'Noto Sans TC'", "Spline Sans", "sans-serif"],
+            "sans": ["'Noto Sans TC'", "Spline Sans", "sans-serif"],
+            "body": ["'Noto Sans TC'", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "2xl": "2rem",
+            "full": "9999px"
+          },
+          backgroundImage: {
+            'cloud-gradient': 'linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%)',
+            'card-glass': 'linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
           },
           boxShadow: {
-            soft: "0 8px 30px rgba(15, 23, 42, 0.08)",
-            card: "0 6px 18px rgba(15, 23, 42, 0.06)"
+            'soft': '0 4px 20px rgba(148, 163, 184, 0.05)',
+            'soft-hover': '0 10px 25px rgba(148, 163, 184, 0.15)',
+            'glow-blue': '0 0 15px rgba(56, 189, 248, 0.4)',
+            'glow': '0 0 15px rgba(79, 70, 229, 0.3)',
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 6s ease-in-out infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            }
           }
-        }
-      }
-    };
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <style>
-    body {
-      min-height: max(720px, 100dvh);
+        },
+      },
     }
+  </script>
+  <style>
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
+
     .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+
+    body {
+      min-height: max(600px, 100dvh);
+    }
+
     .glass-panel {
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(16px);
@@ -55,93 +90,54 @@
       border: 1px solid rgba(255, 255, 255, 0.8);
       box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
     }
+
+    .radar-grid {
+      stroke: #e2e8f0;
+      stroke-width: 1;
+      fill: none;
+    }
+
+    .radar-area {
+      fill: rgba(0, 200, 150, 0.2);
+      stroke: #00C896;
+      stroke-width: 2;
+      filter: drop-shadow(0 0 2px #00C896);
+    }
   </style>
 </head>
-<body class="bg-background text-slate-900 font-display">
-  <div class="min-h-screen flex flex-col">
-    <header class="hidden bg-white/80 backdrop-blur border-b border-slate-200 sticky top-0 z-40">
-      <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-2">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-xl font-bold">台灣高中題庫線上作答系統</h1>
-            <p class="text-sm text-muted">單頁純前端 · CSV 匯入 · GitHub Pages 友善</p>
-          </div>
-          <button id="reset-all" class="text-sm font-semibold px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700">
-            重置全部
-          </button>
-        </div>
-        <nav class="flex flex-wrap gap-2 text-sm" id="tabs">
-          <button class="tab-btn" data-tab="import">1) 題庫匯入</button>
-          <button class="tab-btn" data-tab="build">2) 建立測驗</button>
-          <button class="tab-btn" data-tab="answer">3) 作答</button>
-          <button class="tab-btn" data-tab="result">4) 成績/錯題</button>
-          <button class="tab-btn" data-tab="settings">5) 設定/匯出</button>
-        </nav>
-      </div>
-    </header>
 
-    <main class="flex-1">
-      <section id="tab-import" class="tab-section"></section>
-      <section id="tab-build" class="tab-section hidden"></section>
-      <section id="tab-answer" class="tab-section hidden"></section>
-      <section id="tab-result" class="tab-section hidden"></section>
-      <section id="tab-settings" class="tab-section hidden"></section>
-    </main>
+<body class="bg-background-light text-text-main font-display antialiased h-screen overflow-hidden flex flex-col">
+
+  <!-- App Root -->
+  <div id="app" class="flex-1 flex flex-col overflow-hidden relative">
+    <main id="main-container" class="flex-1 overflow-y-auto no-scrollbar relative"></main>
   </div>
 
-  <template id="base-card">
-    <div class="bg-white rounded-2xl shadow-card border border-slate-100 p-6"></div>
-  </template>
-
+  <!-- Logic -->
   <script>
-    const REQUIRED_HEADERS = [
-      "id",
-      "subject",
-      "grade",
-      "chapter",
-      "type",
-      "stem",
-      "A",
-      "B",
-      "C",
-      "D",
-      "E",
-      "answer",
-      "explain",
-      "difficulty",
-      "tags",
-      "group_id",
-      "passage"
-    ];
-
+    // --- Core Logic & State ---
+    const REQUIRED_HEADERS = ["id", "subject", "grade", "chapter", "type", "stem", "A", "B", "C", "D", "E", "answer", "explain", "difficulty", "tags", "group_id", "passage"];
     const store = {
       questions: [],
       validation: { errors: [], warnings: [] },
       session: null,
       history: [],
       ui: {
-        activeTab: "import",
+        activeTab: "home", // home, build, answer, result
         previewPage: 1,
         previewQuery: "",
-        resultFilter: "all",
-        resultSubject: "",
-        resultChapter: "",
-        showPassage: {},
-        canGoBack: true,
-        maxReachedIndex: 0
+        maxReachedIndex: 0,
+        showPassage: {}
       }
     };
 
     const storageKey = "exam_history_v1";
 
+    // Helpers
     const formatCount = (value) => `${value.toLocaleString("zh-TW")}`;
     const normalize = (value) => String(value || "").trim();
     const normalizeType = (value) => normalize(value).toLowerCase();
-    const splitMulti = (value) => normalize(value)
-      .split(",")
-      .map((item) => item.trim().toUpperCase())
-      .filter(Boolean);
-
+    const splitMulti = (value) => normalize(value).split(",").map((item) => item.trim().toUpperCase()).filter(Boolean);
     const shuffle = (items) => {
       const copy = [...items];
       for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -150,9 +146,14 @@
       }
       return copy;
     };
-
     const ensureArrayUniqueSorted = (arr) => Array.from(new Set(arr)).sort();
+    const formatDuration = (seconds) => {
+      const mins = Math.floor(seconds / 60).toString().padStart(2, "0");
+      const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+      return `${mins}:${secs}`;
+    };
 
+    // Data Parsing
     const parseCsvToQuestions = async (file) => {
       if (!file) return [];
       return new Promise((resolve, reject) => {
@@ -161,35 +162,18 @@
           skipEmptyLines: false,
           encoding: "UTF-8",
           complete: (results) => {
-            if (results.errors?.length) {
-              reject(new Error(`CSV 解析錯誤：${results.errors[0].message}`));
-              return;
-            }
+            if (results.errors?.length) { reject(new Error(`CSV 解析錯誤：${results.errors[0].message}`)); return; }
             resolve(results.data || []);
           },
           error: (error) => reject(error)
         });
       });
     };
-
     const parseCsvTextToRows = async (text) => {
-      if (!text) return [];
       return new Promise((resolve, reject) => {
-        Papa.parse(text, {
-          header: true,
-          skipEmptyLines: false,
-          complete: (results) => {
-            if (results.errors?.length) {
-              reject(new Error(`CSV 解析錯誤：${results.errors[0].message}`));
-              return;
-            }
-            resolve(results.data || []);
-          },
-          error: (error) => reject(error)
-        });
+        Papa.parse(text, { header: true, skipEmptyLines: false, complete: (r) => resolve(r.data || []), error: reject });
       });
     };
-
     const normalizeSheetUrl = (value) => {
       const input = normalize(value);
       if (!input) return "";
@@ -201,7 +185,6 @@
       const gid = gidMatch ? gidMatch[1] : "0";
       return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
     };
-
     const parseSheetsFromUrls = async (urls) => {
       const list = urls.map(normalize).filter(Boolean);
       if (!list.length) return [];
@@ -209,1208 +192,695 @@
       for (const rawUrl of list) {
         const csvUrl = normalizeSheetUrl(rawUrl);
         const response = await fetch(csvUrl);
-        if (!response.ok) {
-          throw new Error(`無法下載 Google Sheet CSV：${rawUrl}`);
-        }
+        if (!response.ok) throw new Error(`無法下載 Google Sheet CSV：${rawUrl}`);
         const text = await response.text();
-        const rows = await parseCsvTextToRows(text);
-        results.push(...rows);
+        results.push(...await parseCsvTextToRows(text));
       }
       return results;
     };
-
     const parseApiToRows = async (apiUrl) => {
-      const endpoint = normalize(apiUrl);
-      if (!endpoint) return [];
-      const response = await fetch(endpoint, { headers: { Accept: "application/json" } });
-      if (!response.ok) {
-        throw new Error(`無法取得 API 資料：${endpoint}`);
+      // Use CORS proxy to bypass 'file://' origin restrictions and Google Script 302 redirects
+      const targetUrl = normalize(apiUrl);
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+
+      try {
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error(`Proxy Error: ${response.status}`);
+        const payload = await response.json();
+        if (Array.isArray(payload)) return payload;
+        if (Array.isArray(payload?.data)) return payload.data;
+        throw new Error("API 回傳格式錯誤 (非陣列)");
+      } catch (e) {
+        console.warn("Proxy failed, trying direct...", e);
+        // Fallback to direct call (might work in some environments)
+        const response = await fetch(targetUrl);
+        if (!response.ok) throw new Error(`Direct Fetch Error: ${response.status}`);
+        const payload = await response.json();
+        if (Array.isArray(payload)) return payload;
+        throw new Error("API 回傳格式錯誤");
       }
-      const payload = await response.json();
-      if (Array.isArray(payload)) return payload;
-      if (Array.isArray(payload?.data)) return payload.data;
-      throw new Error("API 回傳格式錯誤，需為陣列或 { data: [] }");
     };
 
     const validateQuestions = (rows) => {
-      const errors = [];
-      const warnings = [];
-      const questions = [];
+      const errors = [], warnings = [], questions = [];
       const headerSet = new Set(Object.keys(rows[0] || {}));
-      const missingHeaders = REQUIRED_HEADERS.filter((key) => !headerSet.has(key));
-      if (missingHeaders.length) {
-        errors.push(`缺少欄位：${missingHeaders.join(", ")}`);
-      }
+      const missing = REQUIRED_HEADERS.filter(k => !headerSet.has(k));
+      if (missing.length) errors.push(`缺少欄位：${missing.join(", ")}`);
 
       const idSet = new Set();
-
       rows.forEach((row, index) => {
         const rowId = normalize(row.id);
-        const rowType = normalizeType(row.type);
-        const rowIndex = index + 2;
-
-        if (!rowId) {
-          errors.push(`第 ${rowIndex} 列缺少 id`);
-          return;
-        }
-        if (idSet.has(rowId)) {
-          errors.push(`第 ${rowIndex} 列 id 重複：${rowId}`);
-        }
+        if (!rowId) { errors.push(`第 ${index + 2} 列缺少 id`); return; }
+        if (idSet.has(rowId)) errors.push(`ID 重複：${rowId}`);
         idSet.add(rowId);
 
-        if (!["single", "multi"].includes(rowType)) {
-          errors.push(`第 ${rowIndex} 列 type 不合法：${row.type}`);
-        }
+        const type = normalizeType(row.type);
+        const options = ["A", "B", "C", "D", "E"].reduce((acc, k) => { if (normalize(row[k])) acc[k] = normalize(row[k]); return acc; }, {});
 
-        const options = ["A", "B", "C", "D", "E"].reduce((acc, key) => {
-          const value = normalize(row[key]);
-          if (value) acc[key] = value;
-          return acc;
-        }, {});
-
-        if (Object.keys(options).length < 2) {
-          errors.push(`第 ${rowIndex} 列選項不足（至少 2 個）`);
-        }
-
-        const rawAnswer = normalize(row.answer);
-        if (!rawAnswer) {
-          errors.push(`第 ${rowIndex} 列 answer 缺失`);
-        }
-
-        let normalizedAnswer = [];
-        if (rowType === "single") {
-          normalizedAnswer = [rawAnswer.toUpperCase().trim()];
-          if (!/^[A-E]$/.test(normalizedAnswer[0])) {
-            errors.push(`第 ${rowIndex} 列單選 answer 格式錯誤：${rawAnswer}`);
-          }
-        } else if (rowType === "multi") {
-          normalizedAnswer = ensureArrayUniqueSorted(splitMulti(rawAnswer));
-          if (!normalizedAnswer.length || normalizedAnswer.some((item) => !/^[A-E]$/.test(item))) {
-            errors.push(`第 ${rowIndex} 列多選 answer 格式錯誤：${rawAnswer}`);
-          }
-        }
-
-        normalizedAnswer.forEach((ans) => {
-          if (!options[ans]) {
-            errors.push(`第 ${rowIndex} 列 answer 參照不存在的選項：${ans}`);
-          }
-        });
+        let ans = [];
+        const rawAns = normalize(row.answer);
+        if (type === "single") ans = [rawAns.toUpperCase()];
+        else if (type === "multi") ans = ensureArrayUniqueSorted(splitMulti(rawAns));
 
         questions.push({
-          id: rowId,
-          subject: normalize(row.subject),
-          grade: normalize(row.grade),
-          chapter: normalize(row.chapter),
-          type: rowType || "",
-          stem: normalize(row.stem),
-          options,
-          answer: normalizedAnswer,
-          explain: normalize(row.explain),
-          difficulty: normalize(row.difficulty),
-          tags: normalize(row.tags),
-          group_id: normalize(row.group_id),
-          passage: normalize(row.passage)
+          id: rowId, subject: normalize(row.subject), grade: normalize(row.grade), chapter: normalize(row.chapter),
+          type, stem: normalize(row.stem), options, answer: ans, explain: normalize(row.explain),
+          difficulty: normalize(row.difficulty), tags: normalize(row.tags), group_id: normalize(row.group_id), passage: normalize(row.passage)
         });
       });
-
-      if (!rows.length) {
-        warnings.push("CSV 內沒有資料列");
-      }
-
+      if (!rows.length) warnings.push("無資料");
       return { errors, warnings, questions };
     };
 
     const buildExamSession = (config) => {
-      const filtered = store.questions.filter((question) => {
-        const subjectMatch = !config.subjects.length || config.subjects.includes(question.subject);
-        const gradeMatch = !config.grades.length || config.grades.includes(question.grade);
-        const chapterMatch = !config.chapters.length || config.chapters.includes(question.chapter);
-        const typeMatch = !config.types.length || config.types.includes(question.type);
-        return subjectMatch && gradeMatch && chapterMatch && typeMatch;
+      const filtered = store.questions.filter((q) => {
+        const sM = !config.subjects.length || config.subjects.includes(q.subject);
+        const gM = !config.grades.length || config.grades.includes(q.grade);
+        const cM = !config.chapters.length || config.chapters.includes(q.chapter);
+        return sM && gM && cM;
       });
-
-      const totalAvailable = filtered.length;
-      const count = Math.min(config.count, totalAvailable);
+      const count = Math.min(config.count, filtered.length);
       const selected = config.mode === "random" ? shuffle(filtered).slice(0, count) : filtered.slice(0, count);
-
       const optionMap = {};
-      const questions = selected.map((question) => {
-        const optionsArray = Object.entries(question.options).map(([key, value]) => ({
-          key,
-          value
-        }));
-        const mapped = config.shuffleOptions ? shuffle(optionsArray) : optionsArray;
-        optionMap[question.id] = mapped;
-        return question;
+      selected.forEach(q => {
+        const opts = Object.entries(q.options).map(([k, v]) => ({ key: k, value: v }));
+        optionMap[q.id] = config.shuffleOptions ? shuffle(opts) : opts;
       });
-
-      const startTime = Date.now();
-      const endTime = config.timerEnabled ? startTime + config.timerMinutes * 60 * 1000 : null;
-
       return {
-        config,
-        questions,
-        optionMap,
-        answersById: {},
-        markSet: new Set(),
-        status: "in_progress",
-        startTime,
-        endTime,
-        currentIndex: 0
+        config, questions: selected, optionMap, answersById: {}, status: "in_progress",
+        startTime: Date.now(), endTime: config.timerEnabled ? Date.now() + config.timerMinutes * 60000 : null, currentIndex: 0
       };
     };
 
     const gradeSession = (session) => {
-      if (!session) return null;
-      const total = session.questions.length || 1;
       let correct = 0;
-      const detail = session.questions.map((question) => {
-        const selected = session.answersById[question.id] || [];
-        const normalizedSelected = ensureArrayUniqueSorted(selected.map((item) => item.toUpperCase()));
-        const normalizedAnswer = ensureArrayUniqueSorted(question.answer);
-        const isCorrect = JSON.stringify(normalizedSelected) === JSON.stringify(normalizedAnswer);
-        if (isCorrect) correct += 1;
-        return {
-          question,
-          selected: normalizedSelected,
-          correct: normalizedAnswer,
-          isCorrect
-        };
+      const detail = session.questions.map(q => {
+        const sel = session.answersById[q.id] || [];
+        const normSel = ensureArrayUniqueSorted(sel.map(i => i.toUpperCase()));
+        const normAns = ensureArrayUniqueSorted(q.answer);
+        const isCorrect = JSON.stringify(normSel) === JSON.stringify(normAns);
+        if (isCorrect) correct++;
+        return { question: q, selected: normSel, correct: normAns, isCorrect };
       });
-
-      const score = Math.round((correct / total) * 100);
-      const timeSpentSec = Math.floor((Date.now() - session.startTime) / 1000);
-      return { score, correct, total, detail, timeSpentSec };
+      return { score: Math.round((correct / session.questions.length) * 100), correct, total: session.questions.length, detail, timeSpentSec: Math.floor((Date.now() - session.startTime) / 1000) };
     };
 
-    const saveHistory = () => {
-      const trimmed = store.history.slice(0, 50);
-      localStorage.setItem(storageKey, JSON.stringify(trimmed));
-    };
+    const getUniqueValues = (key) => Array.from(new Set(store.questions.map(q => q[key]).filter(Boolean)));
+    const saveHistory = () => { localStorage.setItem(storageKey, JSON.stringify(store.history.slice(0, 50))); };
+    const loadHistory = () => { try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; } };
 
-    const loadHistory = () => {
-      const stored = localStorage.getItem(storageKey);
-      if (!stored) return [];
-      try {
-        const parsed = JSON.parse(stored);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch (error) {
-        console.warn("Failed to parse history", error);
-        return [];
-      }
-    };
+    // --- Render Logic ---
+    const app = document.getElementById("main-container");
 
-    const exportJson = (data, filename) => {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.click();
-      URL.revokeObjectURL(url);
-    };
+    function render() {
+      if (store.ui.activeTab === "home") renderHome();
+      else if (store.ui.activeTab === "build") renderBuild();
+      else if (store.ui.activeTab === "answer") renderQuiz();
+      else if (store.ui.activeTab === "result") renderResult();
+      else if (store.ui.activeTab === "settings") renderSettings();
+    }
 
-    const importJson = async (file) => {
-      const text = await file.text();
-      return JSON.parse(text);
-    };
+    // 1. Home View
+    // 1. Home View
+    function renderHome() {
+      app.className = "flex-1 overflow-y-auto no-scrollbar relative bg-cloud-gradient";
 
-    const getUniqueValues = (key) => {
-      const values = store.questions.map((q) => q[key]).filter(Boolean);
-      return Array.from(new Set(values));
-    };
-
-    const renderTab = () => {
-      document.querySelectorAll(".tab-section").forEach((section) => section.classList.add("hidden"));
-      document.getElementById(`tab-${store.ui.activeTab}`).classList.remove("hidden");
-      document.querySelectorAll(".tab-btn").forEach((btn) => {
-        btn.classList.toggle("bg-primary", btn.dataset.tab === store.ui.activeTab);
-        btn.classList.toggle("text-white", btn.dataset.tab === store.ui.activeTab);
-      });
-
-      if (store.ui.activeTab === "import") renderImportTab();
-      if (store.ui.activeTab === "build") renderBuildTab();
-      if (store.ui.activeTab === "answer") renderAnswerTab();
-      if (store.ui.activeTab === "result") renderResultTab();
-      if (store.ui.activeTab === "settings") renderSettingsTab();
-    };
-
-    
-    const renderImportTab = () => {
-      const container = document.getElementById("tab-import");
-      container.innerHTML = "";
-      const stats = {
-        total: store.questions.length,
-        subjects: getUniqueValues("subject"),
-        grades: getUniqueValues("grade"),
-        chapters: getUniqueValues("chapter"),
-        types: getUniqueValues("type")
-      };
-      const pageSize = 5;
-      const query = normalize(store.ui.previewQuery).toLowerCase();
-      const previewFiltered = store.questions.filter((q) => {
-        if (!query) return true;
-        return q.id.toLowerCase().includes(query) || q.stem.toLowerCase().includes(query);
-      });
-      const totalPages = Math.max(1, Math.ceil(previewFiltered.length / pageSize));
-      store.ui.previewPage = Math.min(store.ui.previewPage, totalPages);
-      const page = store.ui.previewPage;
-      const previewItems = previewFiltered.slice((page - 1) * pageSize, page * pageSize);
-
-      container.innerHTML = `
-        <main class="flex-1 overflow-y-auto no-scrollbar relative bg-[linear-gradient(180deg,_#e0f2fe_0%,_#f0f9ff_100%)]">
-          <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-            <div class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-[#38bdf8]/10 rounded-full blur-[80px]"></div>
-            <div class="absolute bottom-20 -left-10 w-60 h-60 bg-[#facc15]/10 rounded-full blur-[80px]"></div>
-          </div>
-          <div class="pb-32 relative z-10 p-6 max-w-lg mx-auto">
-            <div class="flex items-center justify-between mb-8 pt-4">
-              <div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">測驗中心</h1>
-                <p class="text-sm text-[#64748b] mt-1">選擇一個類別開始練習</p>
-              </div>
-              <button id="open-import" class="bg-white p-2 rounded-full shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors">
-                <span class="material-symbols-outlined text-slate-400">notifications</span>
-              </button>
-            </div>
-            <div class="mb-8">
-              <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">推薦練習</h2>
-              <div class="bg-[#38bdf8] text-white rounded-2xl p-5 shadow-lg shadow-blue-200 relative overflow-hidden group">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl"></div>
-                <div class="absolute bottom-0 left-0 w-24 h-24 bg-[#0284c7]/20 rounded-full -ml-8 -mb-8 blur-lg"></div>
-                <div class="relative z-10 flex items-start justify-between">
-                  <div>
-                    <div class="bg-white/20 backdrop-blur-sm w-fit px-2 py-1 rounded-lg text-xs font-medium mb-3 border border-white/10">🔥 熱門</div>
-                    <h3 class="text-xl font-bold mb-1">題庫匯入</h3>
-                    <p class="text-blue-50 text-sm opacity-90">支援 Google Sheets / CSV / API</p>
-                  </div>
-                  <div class="bg-white/20 p-2.5 rounded-xl backdrop-blur-sm shadow-inner">
-                    <span class="material-symbols-outlined text-2xl">cloud_upload</span>
-                  </div>
-                </div>
-                <div class="mt-4 flex items-center gap-2 text-xs font-medium">
-                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 即時解析</span>
-                  <span class="w-1 h-1 bg-white/40 rounded-full"></span>
-                  <span>${stats.total} 題已匯入</span>
-                </div>
-              </div>
-            </div>
-            <div class="space-y-3">
-              <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">所有類別</h2>
-              ${[{
-                icon: "translate",
-                title: "英文單字練習",
-                desc: "必考 7000 單字核心與片語",
-                bg: "#ecfdf5",
-                text: "#059669",
-                value: stats.subjects.join("、") || "尚未匯入"
-              }, {
-                icon: "science",
-                title: "自然科學",
-                desc: "物理、化學與生物實驗題",
-                bg: "#fffbeb",
-                text: "#d97706",
-                value: stats.grades.join("、") || "尚未匯入"
-              }, {
-                icon: "public",
-                title: "社會人文",
-                desc: "歷史事件與地理環境分析",
-                bg: "#fff1f2",
-                text: "#f43f5e",
-                value: stats.chapters.join("、") || "尚未匯入"
-              }, {
-                icon: "edit_note",
-                title: "國語文綜合",
-                desc: "成語、閱讀測驗與古文",
-                bg: "#f5f3ff",
-                text: "#7c3aed",
-                value: stats.types.join("、") || "尚未匯入"
-              }].map((card) => `
-                <div class="bg-[linear-gradient(145deg,_rgba(255,_255,_255,_0.95)_0%,_rgba(255,_255,_255,_0.8)_100%)] border border-white/60 rounded-2xl p-4 shadow-[0_4px_20px_rgba(148,_163,_184,_0.05)] hover:shadow-[0_10px_25px_rgba(148,_163,_184,_0.15)] active:scale-[0.98] transition-all duration-300 flex items-center gap-4">
-                  <div class="size-12 rounded-xl flex items-center justify-center transition-transform duration-300" style="background-color: ${card.bg}; color: ${card.text};">
-                    <span class="material-symbols-outlined text-[26px]">${card.icon}</span>
-                  </div>
-                  <div class="flex-1">
-                    <h3 class="font-bold text-slate-800">${card.title}</h3>
-                    <p class="text-xs text-[#64748b] mt-0.5">${card.desc}</p>
-                  </div>
-                  <div class="text-xs text-slate-500">${card.value}</div>
-                </div>
-              `).join("")}
-            </div>
-          </div>
-        </main>
-        <nav class="fixed bottom-6 left-4 right-4 z-50">
-          <div class="bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl shadow-[0_10px_25px_rgba(148,_163,_184,_0.15)] px-6 py-4 flex justify-center items-center max-w-sm mx-auto">
-            <button id="open-import-bottom" class="flex items-center gap-2 text-[#0284c7] bg-blue-50/80 px-6 py-2 rounded-full transition-colors group">
-              <span class="material-symbols-outlined text-[24px] icon-filled" style="font-variation-settings: 'FILL' 1;">quiz</span>
-              <span class="text-sm font-bold">測驗模式</span>
-            </button>
-          </div>
-        </nav>
-        <div id="import-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
-          <div class="bg-white rounded-2xl w-full max-w-lg p-5 shadow-2xl">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-bold text-slate-800">題庫匯入</h3>
-              <button id="close-import" class="text-slate-400 hover:text-slate-600">✕</button>
-            </div>
-              <div class="space-y-4 text-sm text-slate-600">
-              <div class="space-y-2">
-                <p class="text-xs font-bold text-slate-400 uppercase">Google Sheets</p>
-                <textarea id="sheet-urls" rows="2" class="w-full rounded-xl border-slate-200" placeholder="貼上 Sheets 連結（換行分隔）"></textarea>
-                <button id="import-sheet" class="w-full px-4 py-2 rounded-xl bg-[#38bdf8] text-white font-semibold">從連結匯入</button>
-              </div>
-              <div class="space-y-2">
-                <p class="text-xs font-bold text-slate-400 uppercase">CSV 檔案</p>
-                <label class="inline-flex items-center gap-2 cursor-pointer">
-                  <input id="csv-input" type="file" accept=".csv,text/csv" class="hidden" />
-                  <span class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-semibold">上傳 CSV</span>
-                </label>
-              </div>
-              <div class="space-y-2">
-                <p class="text-xs font-bold text-slate-400 uppercase">Apps Script / API</p>
-                <input id="api-url" class="w-full rounded-xl border-slate-200" placeholder="https://script.google.com/macros/s/xxxxx/exec" />
-                <button id="import-api" class="w-full px-4 py-2 rounded-xl bg-slate-900 text-white font-semibold">從 API 匯入</button>
-              </div>
-              <button id="download-sample" class="w-full px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold">下載範例 CSV</button>
-              <button id="reset-import" class="w-full px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold">重置</button>
-              <button id="go-build" class="w-full px-4 py-2 rounded-xl bg-[#38bdf8] text-white font-semibold">前往建立測驗</button>
-              <div class="text-xs text-slate-400">目前已匯入 ${stats.total} 題</div>
-              <div class="text-xs text-slate-400">${store.validation.errors.length ? `錯誤：${store.validation.errors[0]}` : "未偵測到錯誤"}</div>
-              <div class="border-t border-slate-200 pt-3 space-y-2">
-                <div class="flex items-center justify-between">
-                  <p class="text-xs font-bold text-slate-400 uppercase">題庫預覽</p>
-                  <span class="text-[11px] text-slate-400">第 ${page} / ${totalPages} 頁</span>
-                </div>
-                <input id="preview-search" class="w-full rounded-xl border-slate-200 text-sm" placeholder="搜尋題目..." value="${store.ui.previewQuery}" />
-                <div class="space-y-2 max-h-48 overflow-y-auto">
-                  ${previewItems.map((q) => `
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                      <div class="text-xs text-slate-400">#${q.id} · ${q.subject || "未分類"} · ${q.type}</div>
-                      <div class="text-sm font-semibold text-slate-700 mt-1">${q.stem || "-"}</div>
-                    </div>
-                  `).join("") || `<p class="text-sm text-slate-400">沒有符合的題目</p>`}
-                </div>
-                <div class="flex gap-2">
-                  <button id="preview-prev" class="flex-1 px-3 py-2 rounded-xl bg-slate-100 text-slate-600 font-semibold">上一頁</button>
-                  <button id="preview-next" class="flex-1 px-3 py-2 rounded-xl bg-slate-100 text-slate-600 font-semibold">下一頁</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      const modal = container.querySelector("#import-modal");
-      const openButtons = [container.querySelector("#open-import"), container.querySelector("#open-import-bottom")];
-      openButtons.forEach((btn) => {
-        if (!btn) return;
-        btn.addEventListener("click", () => {
-          modal.classList.remove("hidden");
-          modal.classList.add("flex");
-        });
-      });
-      container.querySelector("#close-import").addEventListener("click", () => {
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-      });
-
-      container.querySelector("#csv-input").addEventListener("change", async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        try {
-          const rows = await parseCsvToQuestions(file);
-          const validated = validateQuestions(rows);
-          store.questions = validated.questions;
-          store.validation = { errors: validated.errors, warnings: validated.warnings };
-          renderTab();
-        } catch (error) {
-          store.validation = { errors: [error.message], warnings: [] };
-          store.questions = [];
-          renderTab();
-        }
-      });
-
-      container.querySelector("#import-sheet").addEventListener("click", async () => {
-        const rawUrls = container.querySelector("#sheet-urls").value.split("\n");
-        if (!rawUrls.length || !rawUrls.some((url) => normalize(url))) {
-          alert("請貼上 Google Sheets 連結");
-          return;
-        }
-        try {
-          const rows = await parseSheetsFromUrls(rawUrls);
-          const validated = validateQuestions(rows);
-          store.questions = validated.questions;
-          store.validation = { errors: validated.errors, warnings: validated.warnings };
-          renderTab();
-        } catch (error) {
-          store.validation = { errors: [error.message], warnings: [] };
-          store.questions = [];
-          renderTab();
-        }
-      });
-
-      container.querySelector("#import-api").addEventListener("click", async () => {
-        const apiUrl = container.querySelector("#api-url").value;
-        if (!normalize(apiUrl)) {
-          alert("請填入 API 連結");
-          return;
-        }
-        try {
-          const rows = await parseApiToRows(apiUrl);
-          const validated = validateQuestions(rows);
-          store.questions = validated.questions;
-          store.validation = { errors: validated.errors, warnings: validated.warnings };
-          renderTab();
-        } catch (error) {
-          store.validation = { errors: [error.message], warnings: [] };
-          store.questions = [];
-          renderTab();
-        }
-      });
-
-      container.querySelector("#download-sample").addEventListener("click", () => {
-        const sampleCsv = generateSampleCsv();
-        const blob = new Blob([sampleCsv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "sample_questions.csv";
-        link.click();
-        URL.revokeObjectURL(url);
-      });
-
-      container.querySelector("#reset-import").addEventListener("click", () => {
-        store.questions = [];
-        store.validation = { errors: [], warnings: [] };
-        renderTab();
-      });
-
-      container.querySelector("#go-build").addEventListener("click", () => {
-        store.ui.activeTab = "build";
-        renderTab();
-      });
-
-      container.querySelector("#preview-search").addEventListener("input", (event) => {
-        store.ui.previewQuery = event.target.value;
-        store.ui.previewPage = 1;
-        renderTab();
-      });
-
-      container.querySelector("#preview-prev").addEventListener("click", () => {
-        store.ui.previewPage = Math.max(1, store.ui.previewPage - 1);
-        renderTab();
-      });
-
-      container.querySelector("#preview-next").addEventListener("click", () => {
-        const filtered = store.questions.filter((q) => {
-          if (!store.ui.previewQuery) return true;
-          const term = store.ui.previewQuery.toLowerCase();
-          return q.id.toLowerCase().includes(term) || q.stem.toLowerCase().includes(term);
-        });
-        const maxPage = Math.max(1, Math.ceil(filtered.length / 5));
-        store.ui.previewPage = Math.min(maxPage, store.ui.previewPage + 1);
-        renderTab();
-      });
-    };
-
-    const renderBuildTab = () => {
-      const container = document.getElementById("tab-build");
-      container.innerHTML = "";
-      const wrapper = document.createElement("div");
-      wrapper.className = "max-w-6xl mx-auto px-4 py-8 space-y-6";
-
+      // Get unique subjects from current questions (which now come from Sheet names)
       const subjects = getUniqueValues("subject");
-      const grades = getUniqueValues("grade");
-      const chapters = getUniqueValues("chapter");
+      const totalQuestions = store.questions.length;
 
-      wrapper.innerHTML = `
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-bold">建立測驗</h2>
-            <p class="text-sm text-muted">設定出題條件與測驗規則</p>
-          </div>
-          <button id="reset-build" class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm font-semibold">重置</button>
-        </div>
-        <div class="grid gap-6 md:grid-cols-2">
-          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
-            <div>
-              <p class="font-semibold mb-2">篩選條件</p>
-              ${renderMultiSelect("subject", "科目", subjects)}
-              ${renderMultiSelect("grade", "年級", grades)}
-              ${renderMultiSelect("chapter", "章節", chapters)}
-            </div>
-            <div>
-              <p class="font-semibold mb-2">題型</p>
-              <div class="flex gap-3 text-sm">
-                <label class="inline-flex items-center gap-2"><input type="checkbox" value="single" class="type-checkbox" checked /> 單選</label>
-                <label class="inline-flex items-center gap-2"><input type="checkbox" value="multi" class="type-checkbox" checked /> 多選</label>
-              </div>
-            </div>
-          </div>
-          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
-            <div>
-              <p class="font-semibold mb-2">題數</p>
-              <div class="flex flex-wrap gap-2">
-                ${[10, 20, 30, 50].map((count) => `
-                  <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="count" value="${count}" class="count-radio" ${count === 10 ? "checked" : ""}/> ${count} 題</label>
-                `).join("")}
-                <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="count" value="custom" class="count-radio" /> 自訂</label>
-                <input id="custom-count" type="number" min="1" class="w-24 text-sm rounded-lg border-slate-200" placeholder="題數" />
-              </div>
-            </div>
-            <div>
-              <p class="font-semibold mb-2">出題方式</p>
-              <div class="flex gap-3 text-sm">
-                <label class="inline-flex items-center gap-2"><input type="radio" name="mode" value="random" checked /> 隨機</label>
-                <label class="inline-flex items-center gap-2"><input type="radio" name="mode" value="ordered" /> 依序</label>
-              </div>
-            </div>
-            <div class="grid gap-3 text-sm">
-              <label class="inline-flex items-center gap-2"><input id="shuffle-options" type="checkbox" checked /> 打亂選項順序</label>
-              <label class="inline-flex items-center gap-2"><input id="timer-enabled" type="checkbox" /> 啟用測驗時間</label>
-              <div class="flex items-center gap-2">
-                <input id="timer-minutes" type="number" min="1" max="240" value="30" class="w-20 text-sm rounded-lg border-slate-200" />
-                <span class="text-sm text-muted">分鐘</span>
-              </div>
-              <label class="inline-flex items-center gap-2"><input id="allow-back" type="checkbox" checked /> 允許回頭改答案</label>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <p class="font-semibold">準備開始</p>
-            <p class="text-sm text-muted">符合條件題庫：${store.questions.length} 題</p>
-          </div>
-          <button id="build-session" class="px-6 py-3 rounded-full bg-primary text-white font-semibold">建立測驗</button>
-        </div>
-      `;
+      // Helper to style categories based on name
+      const getCategoryStyle = (subject) => {
+        const name = subject.toLowerCase();
+        if (name.includes('英') || name.includes('english'))
+          return { icon: "translate", bg: "bg-emerald-50", text: "text-emerald-600", border: "group-hover:bg-emerald-600", desc: "單字、文法、閱讀" };
+        if (name.includes('數') || name.includes('math'))
+          return { icon: "functions", bg: "bg-blue-50", text: "text-blue-600", border: "group-hover:bg-blue-500", desc: "代數、幾何、機率" };
+        if (name.includes('國') || name.includes('chinese'))
+          return { icon: "edit_note", bg: "bg-violet-50", text: "text-violet-600", border: "group-hover:bg-violet-500", desc: "古文、詩詞、成語" };
+        if (name.includes('自') || name.includes('phy') || name.includes('chem') || name.includes('bio'))
+          return { icon: "science", bg: "bg-amber-50", text: "text-amber-600", border: "group-hover:bg-amber-500", desc: "物理、化學、生物" };
+        if (name.includes('社') || name.includes('soc') || name.includes('hist') || name.includes('geo'))
+          return { icon: "public", bg: "bg-rose-50", text: "text-rose-500", border: "group-hover:bg-rose-500", desc: "歷史、地理、公民" };
 
-      container.appendChild(wrapper);
+        // Default
+        return { icon: "menu_book", bg: "bg-slate-50", text: "text-slate-600", border: "group-hover:bg-slate-500", desc: "綜合練習" };
+      };
 
-      document.getElementById("reset-build").addEventListener("click", () => {
-        renderTab();
-      });
+      const categoriesHtml = subjects.map(s => {
+        const style = getCategoryStyle(s);
+        const count = store.questions.filter(q => q.subject === s).length;
+        return `
+            <div onclick="filterAndBuild('subject', '${s}')" class="bg-card-glass border border-white/60 rounded-2xl p-4 shadow-soft hover:shadow-soft-hover active:scale-[0.98] transition-all duration-300 cursor-pointer group flex items-center gap-4">
+                <div class="size-12 rounded-xl ${style.bg} ${style.text} flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-[26px]">${style.icon}</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-slate-800 transition-colors">${s}</h3>
+                        <span class="text-[10px] bg-white/50 px-2 py-0.5 rounded-full text-slate-400 font-medium">${count} 題</span>
+                    </div>
+                    <p class="text-xs text-text-sub mt-0.5">${style.desc}</p>
+                </div>
+                <div class="size-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 ${style.border} group-hover:text-white transition-all shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </div>
+            </div>`;
+      }).join('');
 
-      document.getElementById("build-session").addEventListener("click", () => {
-        if (!store.questions.length) {
-          alert("請先匯入題庫");
-          return;
-        }
+      app.innerHTML = `
+                <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                    <div class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-primary/10 rounded-full blur-[80px]"></div>
+                    <div class="absolute bottom-20 -left-10 w-60 h-60 bg-accent-yellow/10 rounded-full blur-[80px]"></div>
+                </div>
+                <div class="pb-32 relative z-10 p-6 max-w-lg mx-auto">
+                    <div class="flex items-center justify-between mb-8 pt-4">
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-800 tracking-tight">平臺測驗中心</h1>
+                            <p class="text-sm text-text-sub mt-1">今天想練習什麼呢？</p>
+                        </div>
+                        <button onclick="openImportModal()" class="bg-white p-2 rounded-full shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors relative group">
+                            <span class="material-symbols-outlined text-slate-400 group-hover:text-primary">settings_suggest</span>
+                            ${!store.questions.length ? '<span class="absolute top-0 right-0 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>' : ''}
+                        </button>
+                    </div>
 
-        const selectedSubjects = collectMultiSelect("subject");
-        const selectedGrades = collectMultiSelect("grade");
-        const selectedChapters = collectMultiSelect("chapter");
-        const selectedTypes = Array.from(document.querySelectorAll(".type-checkbox:checked")).map((item) => item.value);
-        const countRadio = document.querySelector("input[name='count']:checked").value;
-        const customCount = Number(document.getElementById("custom-count").value || 0);
-        const count = countRadio === "custom" ? customCount : Number(countRadio);
-        if (!count || count < 1) {
-          alert("請設定題數");
-          return;
-        }
+                    <div class="mb-8">
+                        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">推薦練習</h2>
+                        <div onclick="goToBuild('random')" class="bg-primary text-white rounded-2xl p-5 shadow-lg shadow-blue-200 relative overflow-hidden group cursor-pointer transform transition hover:scale-[1.02] active:scale-95">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl"></div>
+                            <div class="absolute bottom-0 left-0 w-24 h-24 bg-primary-dark/20 rounded-full -ml-8 -mb-8 blur-lg"></div>
+                            <div class="relative z-10 flex items-start justify-between">
+                                <div>
+                                    <div class="bg-white/20 backdrop-blur-sm w-fit px-2 py-1 rounded-lg text-xs font-medium mb-3 border border-white/10">🔥 熱門</div>
+                                    <h3 class="text-xl font-bold mb-1">隨機模擬考</h3>
+                                    <p class="text-blue-50 text-sm opacity-90">全範圍綜合測驗</p>
+                                </div>
+                                <div class="bg-white/20 p-2.5 rounded-xl backdrop-blur-sm shadow-inner">
+                                    <span class="material-symbols-outlined text-2xl">shuffle</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2 text-xs font-medium">
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">database</span> ${totalQuestions} 題庫</span>
+                                <span class="w-1 h-1 bg-white/40 rounded-full"></span>
+                                <span>${subjects.length} 個科目</span>
+                            </div>
+                        </div>
+                    </div>
 
-        const config = {
-          subjects: selectedSubjects,
-          grades: selectedGrades,
-          chapters: selectedChapters,
-          types: selectedTypes,
-          count,
-          mode: document.querySelector("input[name='mode']:checked").value,
-          shuffleOptions: document.getElementById("shuffle-options").checked,
-          timerEnabled: document.getElementById("timer-enabled").checked,
-          timerMinutes: Number(document.getElementById("timer-minutes").value || 0),
-          allowBack: document.getElementById("allow-back").checked
-        };
+                    <div class="space-y-3">
+                        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">分類練習 (資料來源: Google Sheets)</h2>
+                        ${store.questions.length === 0 ?
+          `<div class="text-center py-8 bg-slate-50/50 rounded-2xl border border-dashed border-slate-300">
+                                <span class="material-symbols-outlined text-slate-300 text-4xl mb-2">cloud_off</span>
+                                <p class="text-slate-500 text-sm">尚未匯入題庫</p>
+                                <button onclick="openImportModal()" class="mt-3 text-primary font-bold text-sm underline">點此設定 API 來源</button>
+                            </div>`
+          : categoriesHtml}
+                    </div>
+                </div>
+                
+                <nav class="fixed bottom-6 left-4 right-4 z-50">
+                    <div class="bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl shadow-soft-hover px-6 py-4 flex justify-center items-center max-w-sm mx-auto gap-4">
+                         <button onclick="goToBuild()" class="flex items-center gap-2 text-primary-dark bg-blue-50/80 px-6 py-2 rounded-full transition-colors group">
+                            <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">tune</span>
+                            <span class="text-sm font-bold">自訂測驗</span>
+                        </button>
+                        <button onclick="openResultHistory()" class="flex items-center gap-2 text-slate-500 hover:text-primary-dark px-4 py-2 rounded-full transition-colors">
+                            <span class="material-symbols-outlined text-[24px]">history</span>
+                        </button>
+                    </div>
+                </nav>
 
-        const session = buildExamSession(config);
-        if (!session.questions.length) {
-          alert("找不到符合條件的題目");
-          return;
-        }
+                <!-- Import Component (Hidden Modal) -->
+                ${renderImportModal()}
+            `;
+    }
 
-        store.session = session;
-        store.ui.activeTab = "answer";
-        store.ui.maxReachedIndex = 0;
-        renderTab();
-      });
-    };
+    function renderImportModal() {
+      return `
+            <div id="import-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-[99]">
+                <div class="bg-white rounded-2xl w-full max-w-lg p-5 shadow-2xl animate-pulse-slow" style="animation: none;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">題庫匯入 (Apps Script API)</h3>
+                        <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+                    </div>
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div class="space-y-2">
+                             <label class="block text-xs font-bold text-slate-500 mb-1">Apps Script API 網址</label>
+                             <input id="api-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-primary/20 transition-all font-mono text-xs" />
+                             <button onclick="triggerApiImport()" class="w-full py-3 mt-2 rounded-xl bg-primary text-white font-bold shadow-lg shadow-blue-200 hover:bg-primary-dark transition-colors">開始匯入</button>
+                        </div>
+                        <div class="border-t pt-4">
+                             <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-slate-400">目前題庫</span>
+                                <span class="text-xs font-bold text-primary">${store.questions.length} 題</span>
+                             </div>
+                             <div class="flex justify-end">
+                                <button onclick="resetAllQuestions()" class="text-xs text-red-400 underline ml-4 hover:text-red-500">清空題庫</button>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    }
 
-    
-    const renderAnswerTab = () => {
-      const container = document.getElementById("tab-answer");
-      container.innerHTML = "";
-      if (!store.session) {
-        container.innerHTML = `
-          <div class="max-w-lg mx-auto p-6">
-            <p class="text-sm text-slate-500">尚未建立測驗，請先完成題庫匯入與建立測驗。</p>
-          </div>
-        `;
-        return;
-      }
+    // 2. Build View (Simplified)
+    function renderBuild() {
+      app.className = "flex-1 overflow-y-auto no-scrollbar relative bg-slate-50";
+      const subjects = getUniqueValues("subject");
+      app.innerHTML = `
+                <div class="max-w-md mx-auto p-6 pt-8 pb-32">
+                    <div class="flex items-center gap-4 mb-6">
+                        <button onclick="goBackHome()" class="size-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm"><span class="material-symbols-outlined">arrow_back</span></button>
+                        <h1 class="text-xl font-bold">自訂測驗</h1>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">科目</label>
+                            <div class="flex flex-wrap gap-2" id="filter-subject">
+                                ${subjects.map(s => `<label class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm has-[:checked]:bg-primary has-[:checked]:text-white cursor-pointer"><input type="checkbox" value="${s}" class="hidden" checked />${s}</label>`).join('')}
+                                ${!subjects.length ? '<span class="text-sm text-slate-400">無資料</span>' : ''}
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">題數</label>
+                            <div class="flex gap-2">
+                                <label class="flex-1 py-2 text-center rounded-lg border border-slate-200 text-sm has-[:checked]:bg-primary has-[:checked]:text-white cursor-pointer"><input type="radio" name="count" value="10" class="hidden" checked />10</label>
+                                <label class="flex-1 py-2 text-center rounded-lg border border-slate-200 text-sm has-[:checked]:bg-primary has-[:checked]:text-white cursor-pointer"><input type="radio" name="count" value="20" class="hidden" />20</label>
+                                <label class="flex-1 py-2 text-center rounded-lg border border-slate-200 text-sm has-[:checked]:bg-primary has-[:checked]:text-white cursor-pointer"><input type="radio" name="count" value="50" class="hidden" />50</label>
+                            </div>
+                        </div>
+                        <button onclick="startCustomExam()" class="w-full py-3 rounded-xl bg-quiz-primary text-white font-bold shadow-lg shadow-indigo-200 active:scale-95 transition-transform">開始測驗</button>
+                    </div>
+                </div>
+             `;
+    }
 
+    // 3. Quiz View
+    function renderQuiz() {
+      app.className = "bg-slate-50 text-text-main font-body antialiased selection:bg-primary/20 selection:text-primary";
       const session = store.session;
       const current = session.questions[session.currentIndex];
       const options = session.optionMap[current.id] || [];
       const selected = session.answersById[current.id] || [];
-      const remainingTime = session.endTime ? Math.max(0, session.endTime - Date.now()) : null;
-      const remainingText = remainingTime !== null ? formatDuration(Math.floor(remainingTime / 1000)) : "--";
 
-      const optionNodes = options.map((option) => {
-        const isChecked = selected.includes(option.key);
-        const inputType = current.type === "multi" ? "checkbox" : "radio";
+      // Calculate progress
+      const progress = session.questions.map((_, idx) => {
+        if (idx === session.currentIndex) return `bg-quiz-primary shadow-glow`;
+        if (idx < session.currentIndex) return `bg-slate-300`;
+        return `bg-slate-200`;
+      });
+      const displayProgress = progress.length > 10 ? progress.slice(Math.max(0, session.currentIndex - 4), Math.max(0, session.currentIndex - 4) + 8) : progress;
+
+      const optionHTML = options.map(opt => {
+        const isSel = selected.includes(opt.key);
+        const type = current.type === "multi" ? "checkbox" : "radio";
+        const activeClass = isSel ? "border-quiz-primary bg-indigo-50/10" : "border-transparent bg-white";
+        const bgClass = isSel ? "bg-quiz-primary text-white" : "bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600";
+
         return `
-          <label class="group relative flex items-center gap-4 p-4 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200 cursor-pointer active:scale-[0.99]">
-            <input class="peer sr-only" name="quiz_answer" type="${inputType}" value="${option.key}" data-option-key="${option.key}" ${isChecked ? "checked" : ""}/>
-            <div class="flex items-center justify-center size-10 rounded-xl bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors peer-checked:bg-[#4F46E5] peer-checked:text-white shadow-inner">${option.key}</div>
-            <div class="flex-1">
-              <p class="text-slate-700 text-lg font-bold group-hover:text-indigo-900 transition-colors">${option.value}</p>
-            </div>
-            <div class="size-6 rounded-full border-2 border-slate-200 peer-checked:bg-[#4F46E5] peer-checked:border-[#4F46E5] flex items-center justify-center transition-colors bg-slate-50">
-              <span class="material-symbols-outlined text-white text-[16px] opacity-0 peer-checked:opacity-100 font-bold transform scale-75">check</span>
-            </div>
-            <div class="absolute inset-0 rounded-2xl border-2 border-[#4F46E5] bg-indigo-50/30 opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></div>
-          </label>
-        `;
-      }).join("");
-
-      container.innerHTML = `
-        <div class="relative flex min-h-screen w-full flex-col overflow-hidden max-w-md mx-auto bg-slate-50 shadow-2xl">
-          <div class="absolute top-[-10%] left-[-10%] w-[60%] h-[50%] bg-blue-200/40 rounded-full blur-[80px] pointer-events-none"></div>
-          <div class="absolute bottom-[-10%] right-[-20%] w-[70%] h-[60%] bg-indigo-200/30 rounded-full blur-[100px] pointer-events-none"></div>
-          <div class="absolute top-[40%] left-[20%] w-[40%] h-[30%] bg-amber-100/40 rounded-full blur-[90px] pointer-events-none"></div>
-          <header class="relative z-20 flex items-center justify-between p-6 pb-2">
-            <button id="prev-question" aria-label="返回" class="flex items-center justify-center size-10 rounded-full bg-white shadow-sm hover:bg-slate-100 text-slate-500 hover:text-[#4F46E5] transition-colors border border-slate-100">
-              <span class="material-symbols-outlined">arrow_back</span>
-            </button>
-            <div class="flex flex-col items-center">
-              <span class="text-xs font-bold tracking-wider text-slate-500 uppercase mb-2">${current.subject || "代數"}</span>
-              <div class="flex items-center gap-1.5">
-                ${session.questions.map((_, idx) => `
-                  <div class="h-2 w-8 rounded-full ${idx <= session.currentIndex ? "bg-[#4F46E5] shadow-[0_0_15px_rgba(79,70,229,0.3)]" : "bg-slate-200"}"></div>
-                `).join("")}
-              </div>
-            </div>
-            <button id="submit-session" aria-label="退出" class="flex items-center justify-center size-10 rounded-full bg-white shadow-sm hover:bg-slate-100 text-slate-500 hover:text-red-500 transition-colors border border-slate-100">
-              <span class="material-symbols-outlined">close</span>
-            </button>
-          </header>
-          <main class="relative z-10 flex-1 flex flex-col px-6 pt-4 pb-8 gap-6">
-            <div class="flex justify-center">
-              <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-orange-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] animate-[float_6s_ease-in-out_infinite]" style="animation-duration: 4s;">
-                <span class="text-[#F59E0B] material-symbols-outlined text-[22px]">local_fire_department</span>
-                <span class="text-sm font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent italic tracking-wide">作答進行中</span>
-              </div>
-            </div>
-            <div class="relative mt-4">
-              <div class="glass-panel rounded-3xl p-6 pt-10 pb-8 relative overflow-hidden group border border-white/60" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px);">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 via-[#4F46E5] to-purple-400"></div>
-                <div class="flex flex-col gap-4">
-                  <div class="flex justify-between items-start">
-                    <span class="text-[#4F46E5] text-xs font-bold tracking-widest uppercase bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">第 ${session.currentIndex + 1} 題</span>
-                    <div class="flex items-center gap-1.5 text-slate-500 text-xs font-bold bg-slate-100 px-2 py-1 rounded-full">
-                      <span class="material-symbols-outlined text-[16px] text-slate-600">timer</span>
-                      <span>${remainingText}</span>
+                <label class="group relative flex items-center gap-4 p-4 rounded-2xl border-2 ${activeClass} shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200 cursor-pointer active:scale-[0.99]">
+                    <input class="sr-only" type="${type}" name="opt_${current.id}" onchange="handleAnswer('${opt.key}', this.checked)" ${isSel ? 'checked' : ''}/>
+                    <div class="flex items-center justify-center size-10 rounded-xl ${bgClass} font-bold text-lg transition-colors shadow-inner">
+                        ${opt.key}
                     </div>
-                  </div>
-                  <h2 class="text-2xl md:text-3xl font-bold leading-tight text-slate-800 mt-2 whitespace-pre-wrap">${current.stem}</h2>
-                  <p class="text-slate-500 text-sm font-medium leading-relaxed mt-1">${current.explain ? current.explain : "請選擇正確答案。"}</p>
+                    <div class="flex-1">
+                        <p class="text-slate-700 text-lg font-bold group-hover:text-indigo-900 transition-colors">${opt.value}</p>
+                    </div>
+                </label>`;
+      }).join('');
+
+      app.innerHTML = `
+                <div class="relative flex min-h-screen w-full flex-col overflow-hidden max-w-md mx-auto bg-slate-50 shadow-2xl">
+                    <div class="absolute top-[-10%] left-[-10%] w-[60%] h-[50%] bg-blue-200/40 rounded-full blur-[80px] pointer-events-none"></div>
+                     <header class="relative z-20 flex items-center justify-between p-6 pb-2">
+                        <button onclick="prevQuestion()" class="flex items-center justify-center size-10 rounded-full bg-white shadow-sm hover:bg-slate-100 text-slate-500 transition-colors border border-slate-100">
+                             <span class="material-symbols-outlined">arrow_back</span>
+                        </button>
+                        <div class="flex flex-col items-center">
+                            <span class="text-xs font-bold tracking-wider text-slate-500 uppercase mb-2">${current.subject || '綜合'} • ${current.type === 'multi' ? '多選' : '單選'}</span>
+                            <div class="flex items-center gap-1.5">
+                                ${displayProgress.map(cls => `<div class="h-2 w-8 rounded-full ${cls}"></div>`).join('')}
+                            </div>
+                        </div>
+                        <button onclick="submitExam()" class="flex items-center justify-center size-10 rounded-full bg-white shadow-sm hover:bg-slate-100 text-slate-500 hover:text-red-500 transition-colors border border-slate-100">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </header>
+                    
+                    <main class="relative z-10 flex-1 flex flex-col px-6 pt-4 pb-8 gap-6">
+                         <!-- Mascot/Status -->
+                        <div class="flex justify-center">
+                            <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-orange-100 shadow-soft animate-float" style="animation-duration: 4s;">
+                                <span class="text-quiz-accent material-symbols-outlined text-[22px] animate-pulse">local_fire_department</span>
+                                <span class="text-sm font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent italic tracking-wide">作答進行中</span>
+                            </div>
+                        </div>
+
+                        <!-- Question Card -->
+                        <div class="relative mt-2">
+                             <div class="glass-panel rounded-3xl p-6 pt-8 pb-8 relative overflow-hidden group border border-white/60">
+                                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 via-quiz-primary to-purple-400"></div>
+                                <div class="flex flex-col gap-4">
+                                    <div class="flex justify-between items-start">
+                                        <span class="text-quiz-primary text-xs font-bold tracking-widest uppercase bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">Q.${session.currentIndex + 1}</span>
+                                    </div>
+                                    <h2 class="text-2xl font-bold leading-tight text-slate-800 mt-1 whitespace-pre-wrap">${current.stem}</h2>
+                                    ${current.passage ? `<button onclick="togglePassage('${current.id}')" class="text-xs text-quiz-primary underline text-left">查看題組文章</button>` : ''}
+                                </div>
+                             </div>
+                        </div>
+
+                         <!-- Options -->
+                        <div class="flex flex-col gap-3 mt-auto">
+                            ${optionHTML}
+                        </div>
+                    </main>
+
+                    <footer class="p-6 pt-0 z-20">
+                        <button onclick="nextQuestion()" class="w-full relative group overflow-hidden rounded-2xl bg-quiz-primary p-4 transition-all shadow-lg hover:shadow-indigo-500/30 active:scale-[0.98]">
+                            <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+                            <div class="relative flex items-center justify-center gap-2">
+                                <span class="text-white text-lg font-bold tracking-wide">${session.currentIndex === session.questions.length - 1 ? '交卷' : '下一題'}</span>
+                                <span class="material-symbols-outlined text-white font-bold">arrow_forward</span>
+                            </div>
+                        </button>
+                    </footer>
                 </div>
-              </div>
-            </div>
-            <div class="flex flex-col gap-3 mt-auto">
-              ${optionNodes}
-            </div>
-          </main>
-          <footer class="p-6 pt-0 z-20">
-            <button id="next-question" class="w-full relative group overflow-hidden rounded-2xl bg-[#4F46E5] p-4 transition-all shadow-lg hover:shadow-indigo-500/30 active:scale-[0.98]">
-              <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-              <div class="relative flex items-center justify-center gap-2">
-                <span class="text-white text-lg font-bold tracking-wide">確認答案</span>
-                <span class="material-symbols-outlined text-white font-bold">arrow_forward</span>
-              </div>
-            </button>
-          </footer>
-        </div>
-      `;
+            `;
+    }
 
-      const updateTimer = () => {
-        if (!store.session || !store.session.endTime) return;
-        const remaining = store.session.endTime - Date.now();
-        if (remaining <= 0) {
-          submitSession();
-          return;
-        }
-        const timer = container.querySelector("span[data-timer]");
-        if (timer) timer.textContent = formatDuration(Math.floor(remaining / 1000));
-      };
+    // 4. Result View
+    function renderResult() {
+      app.className = "bg-background-light font-body text-text-main antialiased pb-36";
+      const report = store.session.report;
+      if (!report) { renderHome(); return; }
 
-      if (session.endTime) {
-        clearInterval(window.__timerInterval);
-        window.__timerInterval = setInterval(updateTimer, 1000);
-      }
-
-      container.querySelectorAll("input[name='quiz_answer']").forEach((input) => {
-        input.addEventListener("change", (event) => {
-          const { optionKey } = event.target.dataset;
-          if (current.type === "single") {
-            session.answersById[current.id] = [optionKey];
-          } else {
-            const prev = new Set(session.answersById[current.id] || []);
-            if (event.target.checked) {
-              prev.add(optionKey);
-            } else {
-              prev.delete(optionKey);
-            }
-            session.answersById[current.id] = Array.from(prev);
-          }
-          renderAnswerTab();
-        });
-      });
-
-      container.querySelector("#next-question").addEventListener("click", () => {
-        if (session.currentIndex >= session.questions.length - 1) {
-          submitSession();
-          return;
-        }
-        session.currentIndex = Math.min(session.questions.length - 1, session.currentIndex + 1);
-        store.ui.maxReachedIndex = Math.max(store.ui.maxReachedIndex, session.currentIndex);
-        renderAnswerTab();
-      });
-
-      container.querySelector("#prev-question").addEventListener("click", () => {
-        if (!session.config.allowBack && session.currentIndex <= store.ui.maxReachedIndex) return;
-        session.currentIndex = Math.max(0, session.currentIndex - 1);
-        renderAnswerTab();
-      });
-
-      container.querySelector("#submit-session").addEventListener("click", () => {
-        const unanswered = session.questions.filter((q) => !session.answersById[q.id]).length;
-        if (unanswered > 0) {
-          const confirmSubmit = confirm(`尚有 ${unanswered} 題未作答，確定交卷？`);
-          if (!confirmSubmit) return;
-        } else if (!confirm("確定交卷？")) {
-          return;
-        }
-        submitSession();
-      });
-    };
-
-    
-    const renderResultTab = () => {
-      const container = document.getElementById("tab-result");
-      container.innerHTML = "";
-      if (!store.session || store.session.status !== "submitted") {
-        container.innerHTML = `
-          <div class="max-w-lg mx-auto p-6">
-            <p class="text-sm text-slate-500">尚未交卷，請完成作答後再查看成績。</p>
-          </div>
-        `;
-        return;
-      }
-
-      const session = store.session;
-      const report = session.report;
       const accuracy = Math.round((report.correct / report.total) * 100);
 
-      const detailCards = report.detail.map((item, index) => {
-        const statusClass = item.isCorrect ? "border-l-[#10B981]" : "border-l-[#EF4444]";
-        const badgeClass = item.isCorrect ? "text-[#10B981] bg-green-50" : "text-[#EF4444] bg-red-50";
+      // Detail Cards
+      const detailHTML = report.detail.map((item, idx) => {
+        const border = item.isCorrect ? "border-l-correct" : "border-l-incorrect";
+        const badge = item.isCorrect ? "bg-green-50 text-correct" : "bg-red-50 text-incorrect";
+        const icon = item.isCorrect ? "check" : "close";
+
         return `
-          <div class="bg-white rounded-2xl p-5 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] ${statusClass} border-l-4 relative">
-            <div class="flex justify-between items-start mb-3">
-              <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 tracking-wide">Q${index + 1} • ${item.question.subject || ""}</span>
-              <span class="${badgeClass} font-bold text-sm flex items-center gap-1 px-2 py-0.5 rounded-full">
-                <span class="material-symbols-outlined text-base">${item.isCorrect ? "check" : "close"}</span>
-                ${item.isCorrect ? "正確" : "錯誤"}
-              </span>
-            </div>
-            <p class="text-slate-800 font-bold mb-4 text-sm leading-relaxed">${item.question.stem}</p>
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div class="bg-red-50 p-3 rounded-xl border border-red-100">
-                <p class="text-[10px] text-red-400 mb-1 uppercase font-bold tracking-wider">您的答案</p>
-                <p class="${item.isCorrect ? "text-[#10B981]" : "text-[#EF4444]"} font-bold">${item.selected.join(", ") || "未作答"}</p>
-              </div>
-              <div class="bg-green-50 p-3 rounded-xl border border-green-100">
-                <p class="text-[10px] text-green-600 mb-1 uppercase font-bold tracking-wider">正確答案</p>
-                <p class="text-[#10B981] font-bold">${item.correct.join(", ")}</p>
-              </div>
-            </div>
-            ${item.question.explain ? `
-              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <p class="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5">
-                  <span class="material-symbols-outlined text-sm text-yellow-500" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
-                  解析
-                </p>
-                <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">${item.question.explain}</p>
-              </div>
-            ` : ""}
-          </div>
-        `;
-      }).join("");
+                <div class="bg-white rounded-2xl p-5 shadow-soft border-l-4 ${border} relative">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 tracking-wide">Q${idx + 1} • ${item.question.subject || '題目'}</span>
+                        <span class="${badge} font-bold text-sm flex items-center gap-1 px-2 py-0.5 rounded-full">
+                            <span class="material-symbols-outlined text-base">${icon}</span> ${item.isCorrect ? "正確" : "錯誤"}
+                        </span>
+                    </div>
+                    <p class="text-slate-800 font-bold mb-4 text-sm leading-relaxed">${item.question.stem}</p>
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="${item.isCorrect ? 'bg-primary/5' : 'bg-red-50'} p-3 rounded-xl border ${item.isCorrect ? 'border-primary/10' : 'border-red-100'}">
+                            <p class="text-[10px] ${item.isCorrect ? 'text-slate-400' : 'text-red-400'} mb-1 uppercase font-bold tracking-wider">您的答案</p>
+                            <p class="${item.isCorrect ? 'text-primary-dark' : 'text-incorrect line-through'} font-bold">${item.selected.join(',') || '未作答'}</p>
+                        </div>
+                        ${!item.isCorrect ? `<div class="bg-green-50 p-3 rounded-xl border border-green-100">
+                             <p class="text-[10px] text-green-600 mb-1 uppercase font-bold tracking-wider">正確答案</p>
+                             <p class="text-correct font-bold">${item.correct.join(',')}</p>
+                        </div>` : ''}
+                    </div>
+                    ${item.question.explain ? `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <p class="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5"><span class="material-symbols-outlined text-sm text-yellow-500" style="font-variation-settings: 'FILL' 1;">lightbulb</span> 解析</p>
+                        <p class="text-xs text-slate-600 leading-relaxed">${item.question.explain}</p>
+                    </div>` : ''}
+                </div>`;
+      }).join('');
 
-      container.innerHTML = `
-        <div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden bg-[#F8FAFC]">
-          <header class="sticky top-0 z-40 flex items-center justify-between p-4 bg-white/80 backdrop-blur-md border-b border-slate-100">
-            <button class="flex size-10 items-center justify-center rounded-full bg-slate-50 hover:bg-slate-100 transition text-slate-600" id="result-back">
-              <span class="material-symbols-outlined text-xl">arrow_back</span>
-            </button>
-            <h2 class="text-base font-bold tracking-wide text-slate-800">答題成效分析</h2>
-            <div class="size-10"></div>
-          </header>
-          <div class="w-full max-w-md mx-auto">
-            <section class="flex flex-col items-center px-4 pt-6 pb-2">
-              <div class="relative w-full aspect-[2/1] rounded-2xl overflow-hidden shadow-xl shadow-[#00C896]/10 mb-6 group">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-10"></div>
-                <div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDyat2SemDEINAHT8X9wXzNn314BpyUWHg0ufdsr0SK8lxQf1vdSWgNcxpFz4LOxRMw_n1GkS6Ym6UXxhKXH7tqX3Dh-HpMc1uOYVrK2mm7sY9ZMa_wAHuz9JQJ-QOreFdbql6obM9dWqHrU5j1E5hFRVv8AWwojT4dlsgcChO7Gtc-yDr72x0_QhujfA8d8kNcNFNpgMhjeC4_VcEIXu-ueAsv1aqvR-gqyoG905a9HiZMjD5v88oWjND1vEacLQ6r77_emqDT');"></div>
-                <div class="absolute bottom-0 left-0 right-0 p-5 z-20 flex flex-col items-center">
-                  <h1 class="text-3xl font-bold text-white mb-2 drop-shadow-md tracking-tight">挑戰完成！</h1>
-                  <div class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 shadow-lg">
-                    <span class="material-symbols-outlined text-yellow-300 text-lg" style="font-variation-settings: 'FILL' 1;">bolt</span>
-                    <span class="text-sm font-bold text-white tracking-wide">獲得 ${report.score * 10} XP</span>
-                  </div>
+      app.innerHTML = `
+                <div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden">
+                    <header class="sticky top-0 z-40 flex items-center justify-between p-4 bg-white/80 backdrop-blur-md border-b border-slate-100">
+                        <button onclick="goBackHome()" class="flex size-10 items-center justify-center rounded-full bg-slate-50 hover:bg-slate-100 transition text-slate-600">
+                            <span class="material-symbols-outlined text-xl">arrow_back</span>
+                        </button>
+                        <h2 class="text-base font-bold tracking-wide text-slate-800">成效分析</h2>
+                        <div class="size-10"></div>
+                    </header>
+                    <div class="w-full max-w-md mx-auto">
+                        <section class="flex flex-col items-center px-4 pt-6 pb-2">
+                             <div class="relative w-full aspect-[2/1] rounded-2xl overflow-hidden shadow-xl shadow-primary/10 mb-6 group bg-slate-800">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-10"></div>
+                                <div class="absolute bottom-0 left-0 right-0 p-5 z-20 flex flex-col items-center">
+                                    <h1 class="text-3xl font-bold text-white mb-2 drop-shadow-md tracking-tight">挑戰完成！</h1>
+                                    <div class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 shadow-lg">
+                                        <span class="material-symbols-outlined text-yellow-300 text-lg" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                                        <span class="text-sm font-bold text-white tracking-wide">獲得 ${report.score * 10} XP</span>
+                                    </div>
+                                </div>
+                             </div>
+                        </section>
+                        <section class="px-4 mb-6">
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="stat-card flex flex-col items-center justify-center p-3 py-4 rounded-2xl bg-white border border-slate-100 shadow-soft">
+                                    <span class="material-symbols-outlined text-amber-500 mb-1.5 text-3xl">stars</span>
+                                    <span class="text-2xl font-bold text-slate-800">${report.score}</span>
+                                    <span class="text-[11px] font-medium text-slate-400 mt-1">總分</span>
+                                </div>
+                                <div class="stat-card flex flex-col items-center justify-center p-3 py-4 rounded-2xl bg-white border border-slate-100 shadow-soft">
+                                    <span class="material-symbols-outlined text-primary mb-1.5 text-3xl">target</span>
+                                    <span class="text-2xl font-bold text-slate-800">${accuracy}%</span>
+                                    <span class="text-[11px] font-medium text-slate-400 mt-1">正確率</span>
+                                </div>
+                                <div class="stat-card flex flex-col items-center justify-center p-3 py-4 rounded-2xl bg-white border border-slate-100 shadow-soft">
+                                    <span class="material-symbols-outlined text-blue-500 mb-1.5 text-3xl">timer</span>
+                                    <span class="text-2xl font-bold text-slate-800">${formatDuration(report.timeSpentSec)}</span>
+                                    <span class="text-[11px] font-medium text-slate-400 mt-1">時間</span>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="px-4 mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 px-1">
+                                <span class="material-symbols-outlined text-primary">list_alt</span> 答題詳情
+                            </h3>
+                            <div class="space-y-4">${detailHTML}</div>
+                        </section>
+                    </div>
                 </div>
-              </div>
-            </section>
-            <section class="px-4 mb-6">
-              <div class="grid grid-cols-3 gap-3">
-                <div class="flex flex-col items-center justify-center p-3 py-4 rounded-2xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
-                  <span class="material-symbols-outlined text-amber-500 mb-1.5 text-3xl">stars</span>
-                  <span class="text-2xl font-bold text-slate-800">${report.score}</span>
-                  <span class="text-[11px] font-medium text-slate-400 mt-1">總分</span>
-                </div>
-                <div class="flex flex-col items-center justify-center p-3 py-4 rounded-2xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
-                  <span class="material-symbols-outlined text-[#00C896] mb-1.5 text-3xl">target</span>
-                  <span class="text-2xl font-bold text-slate-800">${accuracy}%</span>
-                  <span class="text-[11px] font-medium text-slate-400 mt-1">正確率</span>
-                </div>
-                <div class="flex flex-col items-center justify-center p-3 py-4 rounded-2xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
-                  <span class="material-symbols-outlined text-blue-500 mb-1.5 text-3xl">timer</span>
-                  <span class="text-2xl font-bold text-slate-800">${formatDuration(report.timeSpentSec)}</span>
-                  <span class="text-[11px] font-medium text-slate-400 mt-1">作答時間</span>
-                </div>
-              </div>
-            </section>
-            <section class="px-4 mb-4">
-              <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 px-1">
-                <span class="material-symbols-outlined text-[#00C896]">list_alt</span>
-                答題詳情
-              </h3>
-              <div class="space-y-4">${detailCards}</div>
-            </section>
-          </div>
-          <div class="fixed bottom-0 left-0 right-0 p-4 pt-8 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/95 to-transparent z-50">
-            <div class="flex gap-3 max-w-md mx-auto">
-              <button id="retry-wrong" class="flex-1 py-4 px-6 rounded-2xl border border-slate-200 font-bold text-slate-600 bg-white hover:bg-slate-50 active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-sm">
-                <span class="material-symbols-outlined text-[#FF6B6B]">history</span>
-                錯題複習
-              </button>
-              <button id="reset-result" class="flex-[1.5] py-4 px-6 rounded-2xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20 hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center gap-2">
-                下一關
-                <span class="material-symbols-outlined">arrow_forward</span>
-              </button>
+            `;
+    }
+
+    // 5. Settings/History View
+    function renderSettings() {
+      app.className = "bg-background-light font-body text-text-main antialiased pb-36";
+
+      const historyItems = store.history.map(item => `
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-3">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-slate-400">${new Date(item.date).toLocaleString()}</span>
+                <span class="px-2 py-0.5 rounded text-xs font-bold ${item.score >= 60 ? 'bg-green-50 text-correct' : 'bg-red-50 text-incorrect'}">
+                    ${item.score} 分
+                </span>
             </div>
-          </div>
+            <div class="flex items-center gap-4 text-xs text-slate-500">
+                <span><span class="font-bold text-slate-700">${item.questionCount}</span> 題</span>
+                <span>正確率 <span class="font-bold text-slate-700">${Math.round(item.accuracy * 100)}%</span></span>
+            </div>
+        </div>
+      `).join('');
+
+      app.innerHTML = `
+        <div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden">
+             <header class="sticky top-0 z-40 flex items-center justify-between p-4 bg-white/80 backdrop-blur-md border-b border-slate-100">
+                <button onclick="goBackHome()" class="flex size-10 items-center justify-center rounded-full bg-slate-50 hover:bg-slate-100 transition text-slate-600">
+                    <span class="material-symbols-outlined text-xl">arrow_back</span>
+                </button>
+                <h2 class="text-base font-bold tracking-wide text-slate-800">歷史紀錄</h2>
+                <div class="size-10"></div>
+            </header>
+            <div class="w-full max-w-md mx-auto p-4">
+                 <!-- Actions -->
+                 <div class="grid grid-cols-2 gap-3 mb-6">
+                    <button onclick="exportHistory()" class="flex items-center justify-center gap-2 p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition">
+                         <span class="material-symbols-outlined text-lg">download</span> 匯出紀錄
+                    </button>
+                    <label class="flex items-center justify-center gap-2 p-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition cursor-pointer">
+                         <span class="material-symbols-outlined text-lg">upload</span> 匯入紀錄
+                         <input type="file" accept="application/json" class="hidden" onchange="importHistory(this)" />
+                    </label>
+                 </div>
+
+                 <!-- List -->
+                 <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">最近 50 筆紀錄</h3>
+                 ${historyItems.length ? historyItems : `<div class="text-center py-10 text-slate-400 text-sm">尚無測驗紀錄</div>`}
+            </div>
         </div>
       `;
+    }
 
-      container.querySelector("#result-back").addEventListener("click", () => {
-        store.ui.activeTab = "import";
-        renderTab();
-      });
+    // --- Interaction Handlers ---
+    // Home Actions
+    function openImportModal() {
+      document.getElementById('import-modal').classList.remove('hidden');
+      document.getElementById('import-modal').classList.add('flex');
+      const url = localStorage.getItem('exam_config_api');
+      if (url && document.getElementById('api-url-input')) document.getElementById('api-url-input').value = url;
+    }
+    function closeImportModal() { document.getElementById('import-modal').classList.add('hidden'); document.getElementById('import-modal').classList.remove('flex'); }
 
-      container.querySelector("#reset-result").addEventListener("click", () => {
-        store.ui.activeTab = "import";
-        renderTab();
-      });
+    function saveConfig(apiUrl) {
+      localStorage.setItem('exam_config_api', apiUrl);
+      localStorage.setItem('exam_cache_questions', JSON.stringify(store.questions));
+    }
 
-      container.querySelector("#retry-wrong").addEventListener("click", () => {
-        const wrongIds = report.detail.filter((item) => !item.isCorrect).map((item) => item.question.id);
-        if (!wrongIds.length) {
-          alert("恭喜全對！沒有錯題可重練。");
-          return;
+    function loadConfig() {
+      const url = localStorage.getItem('exam_config_api');
+      // Don't auto-fetch to avoid blocking, just pre-fill if in modal
+      try {
+        if (document.getElementById('api-url-input') && url) {
+          document.getElementById('api-url-input').value = url;
         }
-        const shuffleOptions = confirm("是否重新打亂選項？");
-        const questions = store.questions.filter((q) => wrongIds.includes(q.id));
-        store.session = buildExamSession({
-          subjects: [],
-          grades: [],
-          chapters: [],
-          types: ["single", "multi"],
-          count: questions.length,
-          mode: "ordered",
-          shuffleOptions,
-          timerEnabled: false,
-          timerMinutes: 0,
-          allowBack: true
-        });
-        store.session.questions = questions;
-        store.ui.activeTab = "answer";
-        renderTab();
-      });
-    };
-
-    const renderSettingsTab = () => {
-      const container = document.getElementById("tab-settings");
-      container.innerHTML = "";
-      const wrapper = document.createElement("div");
-      wrapper.className = "max-w-6xl mx-auto px-4 py-8 space-y-6";
-
-      wrapper.innerHTML = `
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-bold">設定 / 匯出</h2>
-            <p class="text-sm text-muted">題庫與成績匯入/匯出</p>
-          </div>
-          <button id="reset-settings" class="px-4 py-2 rounded-full bg-slate-100 text-sm">重置</button>
-        </div>
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
-            <div>
-              <p class="font-semibold mb-2">題庫匯出</p>
-              <p class="text-sm text-muted">下載目前題庫 JSON</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <button id="export-questions" class="px-4 py-2 rounded-full bg-primary text-white text-sm">下載題庫 JSON</button>
-            </div>
-          </div>
-          <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card space-y-4">
-            <div>
-              <p class="font-semibold mb-2">成績匯入/匯出</p>
-              <p class="text-sm text-muted">可合併去重歷史紀錄</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <button id="export-history" class="px-4 py-2 rounded-full bg-slate-900 text-white text-sm">匯出成績 JSON</button>
-              <label class="inline-flex items-center gap-2 cursor-pointer">
-                <input id="import-history" type="file" accept="application/json" class="hidden" />
-                <span class="px-4 py-2 rounded-full bg-slate-100 text-sm">匯入成績 JSON</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card">
-          <p class="font-semibold mb-3">最近 50 次成績紀錄</p>
-          <div class="space-y-3 max-h-[360px] overflow-y-auto no-scrollbar">
-            ${store.history.length ? store.history.map((item) => `
-              <div class="border border-slate-100 rounded-xl p-4 text-sm">
-                <div class="flex items-center justify-between">
-                  <span>${new Date(item.date).toLocaleString("zh-TW")}</span>
-                  <span class="font-semibold text-primary">${item.score} 分</span>
-                </div>
-                <p class="text-xs text-muted mt-2">${item.questionCount} 題 · 正確率 ${Math.round(item.accuracy * 100)}%</p>
-                <p class="text-xs text-muted">錯題 ${item.wrongIds.length} 題</p>
-              </div>
-            `).join("") : `<p class="text-sm text-muted">尚無成績紀錄</p>`}
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-card">
-          <p class="font-semibold mb-3">錯題統計</p>
-          <div class="space-y-2">
-            ${renderWrongStats()}
-          </div>
-        </div>
-      `;
-
-      container.appendChild(wrapper);
-
-      document.getElementById("export-questions").addEventListener("click", () => {
-        if (!store.questions.length) {
-          alert("尚無題庫可匯出");
-          return;
+        const cached = JSON.parse(localStorage.getItem('exam_cache_questions'));
+        if (cached && Array.isArray(cached) && cached.length > 0) {
+          store.questions = cached;
+          console.log("Loaded cached questions:", store.questions.length);
         }
-        exportJson(store.questions, "question_bank.json");
-      });
+      } catch (e) { console.error("Load config error", e); }
+    }
 
-      document.getElementById("export-history").addEventListener("click", () => {
-        exportJson(store.history, "exam_history.json");
-      });
+    function triggerApiImport() {
+      const url = document.getElementById('api-url-input').value.trim();
+      if (!url) { alert("請輸入 API 連結"); return; }
 
-      document.getElementById("import-history").addEventListener("change", async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
+      parseApiToRows(url).then(rows => {
+        const res = validateQuestions(rows);
+        store.questions = res.questions;
+        saveConfig(url); // Save on success
+        closeImportModal();
+        render();
+        alert(`匯入成功！共 ${res.questions.length} 題`);
+      }).catch(e => alert("API 讀取失敗：" + e.message));
+    }
+
+    // function triggerCsv() { ... }
+    // function handleCsv(input) { ... }
+    // function triggerUrlImport() { ... }
+    function resetAllQuestions() { store.questions = []; render(); closeImportModal(); }
+    // function downloadSample() { ... }
+
+    // Build Actions
+    function filterAndBuild(key, val) {
+      if (!store.questions.length) { alert("請先匯入題庫！"); openImportModal(); return; }
+      // Auto build for quick start
+      const config = { subjects: [val], grades: [], chapters: [], types: [], count: 10, mode: "random", shuffleOptions: true, timerEnabled: false, timerMinutes: 0 };
+      startSession(config);
+    }
+    function goToBuild(mode) {
+      if (!store.questions.length) { alert("請先匯入題庫！"); openImportModal(); return; }
+      if (mode === 'random') {
+        startSession({ subjects: [], grades: [], chapters: [], types: [], count: 20, mode: "random", shuffleOptions: true, timerEnabled: false });
+      } else {
+        store.ui.activeTab = "build";
+        render();
+      }
+    }
+    function goBackHome() { store.ui.activeTab = "home"; render(); }
+    function startCustomExam() {
+      // Collect filters from UI
+      const subjects = Array.from(document.querySelectorAll('#filter-subject input:checked')).map(i => i.value);
+      const count = parseInt(document.querySelector('input[name="count"]:checked').value);
+      startSession({ subjects, grades: [], chapters: [], types: [], count, mode: "random", shuffleOptions: true, timerEnabled: false });
+    }
+
+    function startSession(config) {
+      const session = buildExamSession(config);
+      if (!session.questions.length) { alert("找不到符合條件的題目"); return; }
+      store.session = session;
+      store.ui.activeTab = "answer";
+      store.ui.maxReachedIndex = 0;
+      render();
+    }
+
+    // Quiz Actions
+    function handleAnswer(key, checked) {
+      const session = store.session;
+      const q = session.questions[session.currentIndex];
+      let ans = session.answersById[q.id] || [];
+      if (q.type === 'single') ans = [key];
+      else {
+        if (checked) ans.push(key);
+        else ans = ans.filter(k => k !== key);
+      }
+      session.answersById[q.id] = ans;
+      render();
+    }
+    function prevQuestion() {
+      if (store.session.currentIndex > 0) {
+        store.session.currentIndex--;
+        render();
+      }
+    }
+    function nextQuestion() {
+      const session = store.session;
+      if (session.currentIndex < session.questions.length - 1) {
+        session.currentIndex++;
+        store.ui.maxReachedIndex = Math.max(store.ui.maxReachedIndex, session.currentIndex);
+        render();
+      } else {
+        submitExam();
+      }
+    }
+    function submitExam() {
+      if (confirm("確定交卷？")) {
+        store.session.report = gradeSession(store.session);
+        store.session.status = "submitted";
+        // Save history
+        const rec = { date: new Date().toISOString(), score: store.session.report.score, questionCount: store.session.questions.length };
+        store.history.unshift(rec);
+        saveHistory();
+        store.ui.activeTab = "result";
+        render();
+      }
+    }
+    function togglePassage(qid) {
+      const q = store.questions.find(x => x.id === qid);
+      if (q && q.passage) alert(q.passage); // Simple fallback for now
+    }
+    function openResultHistory() {
+      store.ui.activeTab = "settings";
+      render();
+    }
+
+    // History Actions
+    function exportHistory() {
+      const data = JSON.stringify(store.history, null, 2);
+      const encodedUri = "data:application/json;charset=utf-8," + encodeURIComponent(data);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "exam_history.json");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    function importHistory(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
         try {
-          const incoming = await importJson(file);
-          if (!Array.isArray(incoming)) {
-            alert("成績 JSON 格式錯誤");
-            return;
-          }
-          const merged = [...store.history, ...incoming];
-          const unique = [];
-          const seen = new Set();
-          merged.forEach((item) => {
-            const signature = `${item.date}-${item.score}-${item.questionCount}`;
-            if (!seen.has(signature)) {
-              seen.add(signature);
-              unique.push(item);
-            }
-          });
-          store.history = unique.slice(0, 50);
-          saveHistory();
-          renderSettingsTab();
-        } catch (error) {
-          alert("匯入失敗，請確認 JSON 格式");
-        }
-      });
-
-      document.getElementById("reset-settings").addEventListener("click", () => {
-        renderSettingsTab();
-      });
-    };
-
-    const renderMultiSelect = (key, label, values) => {
-      if (!values.length) {
-        return `<p class="text-xs text-muted">${label}：尚無資料</p>`;
-      }
-      return `
-        <div class="mb-3">
-          <p class="text-sm font-semibold mb-1">${label}</p>
-          <div class="flex flex-wrap gap-2">
-            ${values.map((value) => `
-              <label class="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" class="filter-${key}" value="${value}" />
-                ${value}
-              </label>
-            `).join("")}
-          </div>
-        </div>
-      `;
-    };
-
-    const collectMultiSelect = (key) => {
-      return Array.from(document.querySelectorAll(`.filter-${key}:checked`)).map((item) => item.value);
-    };
-
-    const renderOption = (question, option, selected) => {
-      const isChecked = selected.includes(option.key);
-      const inputType = question.type === "multi" ? "checkbox" : "radio";
-      return `
-        <label class="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-primary/40 bg-white transition">
-          <input type="${inputType}" name="option" class="rounded-full" ${isChecked ? "checked" : ""} data-option-key="${option.key}" data-option-value="${option.value}" />
-          <div class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold">${option.key}</div>
-          <div class="flex-1 text-sm font-semibold">${option.value}</div>
-        </label>
-      `;
-    };
-
-    const renderPassage = (question) => {
-      const show = store.ui.showPassage[question.group_id] ?? true;
-      return `
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-          <div class="flex items-center justify-between">
-            <p class="text-sm font-semibold">題組閱讀</p>
-            <button class="toggle-passage text-xs text-primary" data-group="${question.group_id}">${show ? "收合" : "展開"}</button>
-          </div>
-          ${show ? `<p class="text-sm whitespace-pre-wrap mt-2">${question.passage}</p>` : ""}
-        </div>
-      `;
-    };
-
-    const renderWrongStats = () => {
-      if (!store.history.length) {
-        return `<p class="text-sm text-muted">尚無資料</p>`;
-      }
-      const wrongStats = {};
-      store.history.forEach((record) => {
-        record.wrongIds.forEach((id) => {
-          wrongStats[id] = (wrongStats[id] || 0) + 1;
-        });
-      });
-      const sorted = Object.entries(wrongStats).sort((a, b) => b[1] - a[1]).slice(0, 10);
-      if (!sorted.length) {
-        return `<p class="text-sm text-muted">目前沒有錯題</p>`;
-      }
-      return sorted.map(([id, count]) => `
-        <div class="flex items-center justify-between text-sm">
-          <span>${id}</span>
-          <span class="font-semibold">${count} 次</span>
-        </div>
-      `).join("");
-    };
-
-    const submitSession = () => {
-      const report = gradeSession(store.session);
-      store.session.status = "submitted";
-      store.session.report = report;
-
-      const historyEntry = {
-        date: new Date().toISOString(),
-        filters: store.session.config,
-        questionCount: report.total,
-        score: report.score,
-        accuracy: report.correct / report.total,
-        timeSpentSec: report.timeSpentSec,
-        wrongIds: report.detail.filter((item) => !item.isCorrect).map((item) => item.question.id),
-        modeMeta: {
-          shuffleOptions: store.session.config.shuffleOptions,
-          timerEnabled: store.session.config.timerEnabled
-        }
+          const data = JSON.parse(e.target.result);
+          if (Array.isArray(data)) {
+            store.history = data;
+            saveHistory();
+            render();
+            alert("匯入成功");
+          } else alert("格式錯誤");
+        } catch (err) { alert("讀取失敗"); }
       };
+      reader.readAsText(file);
+    }
 
-      store.history.unshift(historyEntry);
-      store.history = store.history.slice(0, 50);
-      saveHistory();
-
-      store.ui.activeTab = "result";
-      renderTab();
-    };
-
-    const formatDuration = (seconds) => {
-      const mins = Math.floor(seconds / 60).toString().padStart(2, "0");
-      const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
-      return `${mins}:${secs}`;
-    };
-
-    const generateSampleCsv = () => {
-      const rows = [
-        REQUIRED_HEADERS.join(","),
-        "Q001,數學,高一,一元一次方程式,single,求解 x: 2x+5=15,A,5,B,10,C,7.5,D,2,E,,A,因為 2x=10,x=5,簡單,代數,,",
-        "Q002,數學,高一,幾何,single,直角三角形 3,4,?,A,5,B,6,C,7,D,8,E,,A,畢氏定理,簡單,幾何,,",
-        "Q003,英文,高一,單字,multi,下列哪些是同義詞,A,Happy,B,Joyful,C,Sad,D,Glad,E,Angry,A,B,D,Happy/Glad/ Joyful 同義,中等,詞彙,,",
-        "Q004,社會,高二,歷史,single,台灣第一條鐵路在哪位巡撫任內完成?,A,沈葆楨,B,劉銘傳,C,吳鳳,D,林爽文,E,,B,劉銘傳推動縱貫鐵路,中等,台灣史,,",
-        "Q005,數學,高二,函數,single,函數 y = x^2 在 x=3 時的值?,A,6,B,9,C,12,D,3,E,,B,平方函數帶入,簡單,函數,,",
-        "Q006,物理,高一,運動,multi,下列哪些是向量量?,A,速度,B,位移,C,時間,D,加速度,E,質量,A,B,D,向量有方向,簡單,物理,,",
-        "Q007,國文,高一,成語,single,形容事情非常容易的成語?,A,易如反掌,B,畫蛇添足,C,刻舟求劍,D,望梅止渴,E,,A,易如反掌,簡單,成語,,",
-        "Q008,英文,高二,文法,single,He ___ to school every day.,A,go,B,goes,C,going,D,went,E,,B,第三人稱單數,簡單,文法,,",
-        "Q009,生物,高一,細胞,single,細胞的能量工廠是?,A,細胞核,B,粒線體,C,葉綠體,D,高基氏體,E,,B,粒線體產生能量,簡單,生物,,",
-        "Q010,地理,高二,地形,single,台灣最高峰是?,A,玉山,B,雪山,C,阿里山,D,合歡山,E,,A,玉山,簡單,地理,,"
-      ];
-      return rows.join("\n");
-    };
-
-    const setupTabs = () => {
-      document.querySelectorAll(".tab-btn").forEach((btn) => {
-        btn.className = "tab-btn px-4 py-2 rounded-full bg-slate-100 text-slate-700 font-semibold text-sm";
-        btn.addEventListener("click", () => {
-          store.ui.activeTab = btn.dataset.tab;
-          renderTab();
-        });
-      });
-    };
-
-    const resetAll = () => {
-      store.questions = [];
-      store.validation = { errors: [], warnings: [] };
-      store.session = null;
-      store.ui.previewPage = 1;
-      store.ui.previewQuery = "";
-      store.ui.activeTab = "import";
-      renderTab();
-    };
-
-    document.getElementById("reset-all").addEventListener("click", resetAll);
-
+    // Init
     store.history = loadHistory();
+    loadConfig();
+    render();
 
-    setupTabs();
-    renderTab();
-
-    document.body.addEventListener("click", (event) => {
-      if (event.target.classList.contains("toggle-passage")) {
-        const group = event.target.dataset.group;
-        store.ui.showPassage[group] = !(store.ui.showPassage[group] ?? true);
-        renderAnswerTab();
-      }
-    });
   </script>
 </body>
+
 </html>

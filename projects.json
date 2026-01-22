@@ -151,5 +151,19 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Exam+System",
     "date": "2025-09-04",
     "description": "純前端的題庫匯入與線上作答系統，支援 CSV 匯入、測驗建立、作答、批改與成績匯出，適用 GitHub Pages。"
+  },
+  {
+    "id": "12",
+    "name": "Vim 百科（Vim Encyclopedia）",
+    "path": "12-vim-encyclopedia/index.html",
+    "folder": "12-vim-encyclopedia/",
+    "tags": [
+      "Vim",
+      "Education",
+      "Simulator"
+    ],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Vim+Encyclopedia",
+    "date": "2025-10-05",
+    "description": "單頁式 Vim 百科與教學模擬器，包含模式切換、游標移動、搜尋與命令列示範，適用 GitHub Pages。"
   }
 ]

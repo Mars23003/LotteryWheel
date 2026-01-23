@@ -203,10 +203,16 @@
             document.getElementById('table-loading').classList.remove('hidden');
 
             try {
-                const [tseRes, otcRes] = await Promise.all([
-                    fetch(API_TSE).then(res => res.json()),
-                    fetch(API_OTC).then(res => res.json())
+                // Use a CORS proxy for GitHub Pages compatibility
+                const proxy = 'https://api.allorigins.win/get?url=';
+
+                const [tseData, otcData] = await Promise.all([
+                    fetch(proxy + encodeURIComponent(API_TSE)).then(res => res.json()),
+                    fetch(proxy + encodeURIComponent(API_OTC)).then(res => res.json())
                 ]);
+
+                const tseRes = JSON.parse(tseData.contents);
+                const otcRes = JSON.parse(otcData.contents);
 
                 // Normalize data
                 const tseProcessed = tseRes.map(s => ({

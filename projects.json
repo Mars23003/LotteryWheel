@@ -165,5 +165,19 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Vim+Encyclopedia",
     "date": "2025-10-05",
     "description": "單頁式 Vim 百科與教學模擬器，包含模式切換、游標移動、搜尋與命令列示範，適用 GitHub Pages。"
+  },
+  {
+    "id": "13",
+    "name": "台股即時看盤工具",
+    "path": "13-tw-stock-tool/index.html",
+    "folder": "13-tw-stock-tool/",
+    "tags": [
+      "Finance",
+      "Stock",
+      "Real-time"
+    ],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=TW+Stock+Tool",
+    "date": "2026-01-23",
+    "description": "純前端的台股監控工具，串接 TWSE/TPEx OpenAPI 獲取即時行情，支援搜尋、自選股（LocalStorage）與漲跌分析。"
   }
 ]

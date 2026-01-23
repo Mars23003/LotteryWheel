@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台股看盤工具 - MVP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        'bg-dark': '#0f172a',
+                        'card-dark': '#1e293b',
+                        'up': '#ef4444', // Taiwan Stock: Red is Up
+                        'down': '#22c55e', // Taiwan Stock: Green is Down
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes pulse-soft {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .animate-pulse-soft {
+            animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+
+<body class="bg-bg-dark text-slate-200 min-h-screen font-sans antialiased overflow-x-hidden">
+    <!-- Background Decor -->
+    <div class="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-blue-500/10 rounded-full blur-[100px]"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+            <div>
+                <h1 class="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary text-4xl">trending_up</span>
+                    台股即時看盤 <span
+                        class="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full uppercase tracking-widest font-bold">MVP</span>
+                </h1>
+                <p class="text-slate-400 mt-1 flex items-center gap-2">
+                    <span id="update-time" class="text-sm font-mono">載入中...</span>
+                    <button onclick="fetchAllData()" class="hover:text-primary transition-colors cursor-pointer"
+                        title="手動更新">
+                        <span class="material-symbols-outlined text-sm">refresh</span>
+                    </button>
+                </p>
+            </div>
+
+            <div class="relative w-full md:w-80">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="material-symbols-outlined text-slate-400">search</span>
+                </div>
+                <input type="text" id="stock-search" placeholder="輸入代碼或名稱 (如: 2330, 台積電)"
+                    class="block w-full pl-10 pr-3 py-3 bg-card-dark/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-slate-500">
+                <div id="search-results"
+                    class="absolute z-50 w-full mt-2 glass-panel rounded-xl shadow-2xl overflow-hidden hidden">
+                    <!-- Search items injected here -->
+                </div>
+            </div>
+        </header>
+
+        <!-- Market Status Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <!-- Market Overview Card (can be added later if index API is found) -->
+            <div class="glass-panel p-6 rounded-2xl md:col-span-1">
+                <h3 class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-4">市場狀態</h3>
+                <div id="market-status" class="flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-300">台灣加權指數</span>
+                        <span id="twse-index" class="font-mono font-bold">--</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-300">櫃買指數</span>
+                        <span id="otc-index" class="font-mono font-bold">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl md:col-span-2">
+                <h3 class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-4">今日強勢股</h3>
+                <div id="top-gainers" class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                    <!-- Top gainers cards -->
+                    <div class="animate-pulse flex space-x-4">
+                        <div class="rounded-xl bg-slate-700 h-16 w-32"></div>
+                        <div class="rounded-xl bg-slate-700 h-16 w-32"></div>
+                        <div class="rounded-xl bg-slate-700 h-16 w-32"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Watchlist Section -->
+        <section class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-yellow-500">star</span>
+                    我的自選股
+                </h2>
+                <span id="watchlist-count" class="text-xs bg-slate-700 px-2 py-0.5 rounded-full text-slate-400">0</span>
+            </div>
+
+            <div id="watchlist-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Watchlist items -->
+                <div
+                    class="border-2 border-dashed border-slate-700 rounded-2xl p-8 flex flex-col items-center justify-center text-slate-500 col-span-full">
+                    <span class="material-symbols-outlined text-4xl mb-2">add_circle</span>
+                    <p>搜尋股票並點擊星號加入自選</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- All Stocks List (Paginated or Top N) -->
+        <section>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-white">熱門排行</h2>
+                <div class="flex gap-2">
+                    <button id="filter-all"
+                        class="px-3 py-1 rounded-full bg-primary text-white text-sm font-medium">全部</button>
+                    <button id="filter-tse"
+                        class="px-3 py-1 rounded-full bg-slate-800 text-slate-400 text-sm font-medium hover:bg-slate-700 transition-colors">上市</button>
+                    <button id="filter-otc"
+                        class="px-3 py-1 rounded-full bg-slate-800 text-slate-400 text-sm font-medium hover:bg-slate-700 transition-colors">上櫃</button>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-white/5 border-b border-white/10">
+                        <tr>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">代碼 / 名稱</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">成交價</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">漲跌</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">漲跌幅</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">
+                                操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-table-body" class="divide-y divide-white/5">
+                        <!-- Table rows injected here -->
+                    </tbody>
+                </table>
+                <div id="table-loading" class="p-20 flex justify-center flex-col items-center gap-4">
+                    <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-slate-400">正在獲取市場報價...</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        const API_TSE = 'https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL';
+        const API_OTC = 'https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes';
+
+        let allStocks = [];
+        let watchlist = JSON.parse(localStorage.getItem('tw-stock-watchlist') || '[]');
+        let currentFilter = 'all';
+
+        async function fetchAllData() {
+            document.getElementById('update-time').textContent = '更新中...';
+            document.getElementById('table-loading').classList.remove('hidden');
+
+            try {
+                const [tseRes, otcRes] = await Promise.all([
+                    fetch(API_TSE).then(res => res.json()),
+                    fetch(API_OTC).then(res => res.json())
+                ]);
+
+                // Normalize data
+                const tseProcessed = tseRes.map(s => ({
+                    code: s.Code,
+                    name: s.Name,
+                    price: parseFloat(s.ClosingPrice) || 0,
+                    change: s.Change, // String usually like "+1.50"
+                    changeVal: parseFloat(s.Change) || 0,
+                    market: 'TSE',
+                    volume: parseInt(s.TradeVolume) || 0
+                }));
+
+                const otcProcessed = otcRes.map(s => ({
+                    code: s.Code,
+                    name: s.Name,
+                    price: parseFloat(s.Close) || 0,
+                    change: s.Change,
+                    changeVal: parseFloat(s.Change) || 0,
+                    market: 'OTC',
+                    volume: parseInt(s.Volume) || 0
+                }));
+
+                allStocks = [...tseProcessed, ...otcProcessed];
+
+                // Calculate Change %
+                allStocks.forEach(s => {
+                    const prev = s.price - s.changeVal;
+                    s.changePct = prev > 0 ? (s.changeVal / prev) * 100 : 0;
+                });
+
+                renderUI();
+                updateLastRefresh();
+            } catch (err) {
+                console.error('Fetch Error:', err);
+                document.getElementById('update-time').textContent = '資料載入失敗，請稍後再試';
+            } finally {
+                document.getElementById('table-loading').classList.add('hidden');
+            }
+        }
+
+        function updateLastRefresh() {
+            const now = new Date();
+            document.getElementById('update-time').textContent = `最後更新: ${now.toLocaleTimeString()}`;
+        }
+
+        function renderUI() {
+            renderWatchlist();
+            renderTopMovers();
+            renderTable();
+        }
+
+        function renderWatchlist() {
+            const container = document.getElementById('watchlist-grid');
+            document.getElementById('watchlist-count').textContent = watchlist.length;
+
+            if (watchlist.length === 0) {
+                container.innerHTML = `
+                    <div class="border-2 border-dashed border-slate-700 rounded-2xl p-8 flex flex-col items-center justify-center text-slate-500 col-span-full">
+                        <span class="material-symbols-outlined text-4xl mb-2">add_circle</span>
+                        <p>搜尋股票並點擊星號加入自選</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            watchlist.forEach(code => {
+                const stock = allStocks.find(s => s.code === code);
+                if (stock) {
+                    const card = createStockCard(stock);
+                    container.appendChild(card);
+                }
+            });
+        }
+
+        function createStockCard(stock) {
+            const div = document.createElement('div');
+            div.className = 'glass-panel p-5 rounded-2xl relative group hover:ring-2 hover:ring-primary/50 transition-all';
+
+            const colorClass = stock.changeVal > 0 ? 'text-up' : (stock.changeVal < 0 ? 'text-down' : 'text-slate-400');
+            const sign = stock.changeVal > 0 ? '+' : '';
+
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <div class="text-xs font-bold text-slate-500 uppercase">${stock.market}</div>
+                        <div class="text-lg font-bold text-white">${stock.name}</div>
+                        <div class="text-sm font-mono text-slate-400">${stock.code}</div>
+                    </div>
+                    <button onclick="toggleWatchlist('${stock.code}')" class="text-yellow-500">
+                        <span class="material-symbols-outlined fill-1">star</span>
+                    </button>
+                </div>
+                <div class="flex items-end justify-between">
+                    <div class="text-2xl font-mono font-bold">${stock.price.toFixed(2)}</div>
+                    <div class="text-right">
+                        <div class="text-sm font-bold ${colorClass}">${sign}${stock.changeVal.toFixed(2)}</div>
+                        <div class="text-xs font-medium ${colorClass}">${sign}${stock.changePct.toFixed(2)}%</div>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function renderTopMovers() {
+            const container = document.getElementById('top-gainers');
+            // Filter stocks with volume > 1000 and sort by changePct descending
+            const movers = [...allStocks]
+                .filter(s => s.volume > 1000)
+                .sort((a, b) => b.changePct - a.changePct)
+                .slice(0, 5);
+
+            container.innerHTML = '';
+            movers.forEach(s => {
+                const pill = document.createElement('div');
+                pill.className = 'flex-shrink-0 bg-white/5 border border-white/10 px-4 py-3 rounded-xl flex items-center gap-3 min-w-[140px]';
+                pill.innerHTML = `
+                    <div class="w-2 h-8 rounded-full bg-up"></div>
+                    <div>
+                        <div class="text-sm font-bold">${s.name}</div>
+                        <div class="text-xs text-up font-mono">+${s.changePct.toFixed(1)}%</div>
+                    </div>
+                `;
+                container.appendChild(pill);
+            });
+        }
+
+        function renderTable() {
+            const body = document.getElementById('stock-table-body');
+            let filtered = allStocks;
+            if (currentFilter === 'tse') filtered = allStocks.filter(s => s.market === 'TSE');
+            if (currentFilter === 'otc') filtered = allStocks.filter(s => s.market === 'OTC');
+
+            // Sort by volume or something meaningful
+            const displayList = filtered.sort((a, b) => b.volume - a.volume).slice(0, 50);
+
+            body.innerHTML = '';
+            displayList.forEach(s => {
+                const colorClass = s.changeVal > 0 ? 'text-up' : (s.changeVal < 0 ? 'text-down' : 'text-slate-400');
+                const sign = s.changeVal > 0 ? '+' : '';
+                const isWatched = watchlist.includes(s.code);
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-white/5 transition-colors group';
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-white">${s.name}</div>
+                        <div class="text-xs font-mono text-slate-500">${s.code} · ${s.market}</div>
+                    </td>
+                    <td class="px-6 py-4 font-mono font-bold">${s.price.toFixed(2)}</td>
+                    <td class="px-6 py-4 font-mono ${colorClass}">${sign}${s.changeVal.toFixed(2)}</td>
+                    <td class="px-6 py-4 font-mono ${colorClass}">${sign}${s.changePct.toFixed(2)}%</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="toggleWatchlist('${s.code}')" class="p-2 rounded-full hover:bg-white/10 transition-all ${isWatched ? 'text-yellow-500' : 'text-slate-600'}">
+                            <span class="material-symbols-outlined ${isWatched ? 'fill-1' : ''}">${isWatched ? 'star' : 'star_outline'}</span>
+                        </button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function toggleWatchlist(code) {
+            const index = watchlist.indexOf(code);
+            if (index > -1) {
+                watchlist.splice(index, 1);
+            } else {
+                watchlist.push(code);
+            }
+            localStorage.setItem('tw-stock-watchlist', JSON.stringify(watchlist));
+            renderUI();
+        }
+
+        // Search Logic
+        const searchInput = document.getElementById('stock-search');
+        const searchResults = document.getElementById('search-results');
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (query.length < 2) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+
+            const matched = allStocks.filter(s =>
+                s.code.includes(query) || s.name.toLowerCase().includes(query)
+            ).slice(0, 8);
+
+            if (matched.length > 0) {
+                searchResults.innerHTML = matched.map(s => `
+                    <div onclick="addAndCloseSearch('${s.code}')" class="px-4 py-3 hover:bg-primary/20 flex justify-between cursor-pointer border-b border-white/5 last:border-0">
+                        <div>
+                            <span class="font-bold text-white">${s.name}</span>
+                            <span class="text-xs font-mono text-slate-500 ml-2">${s.code}</span>
+                        </div>
+                        <span class="text-xs font-bold text-slate-400 uppercase">${s.market}</span>
+                    </div>
+                `).join('');
+                searchResults.classList.remove('hidden');
+            } else {
+                searchResults.classList.add('hidden');
+            }
+        });
+
+        function addAndCloseSearch(code) {
+            if (!watchlist.includes(code)) {
+                watchlist.push(code);
+                localStorage.setItem('tw-stock-watchlist', JSON.stringify(watchlist));
+            }
+            searchInput.value = '';
+            searchResults.classList.add('hidden');
+            renderUI();
+        }
+
+        // Close search on clicks outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.add('hidden');
+            }
+        });
+
+        // Filter Buttons
+        document.getElementById('filter-all').onclick = () => setFilter('all');
+        document.getElementById('filter-tse').onclick = () => setFilter('tse');
+        document.getElementById('filter-otc').onclick = () => setFilter('otc');
+
+        function setFilter(f) {
+            currentFilter = f;
+            ['all', 'tse', 'otc'].forEach(id => {
+                const btn = document.getElementById(`filter-${id}`);
+                btn.classList.remove('bg-primary', 'text-white');
+                btn.classList.add('bg-slate-800', 'text-slate-400');
+            });
+            const activeBtn = document.getElementById(`filter-${f}`);
+            activeBtn.classList.remove('bg-slate-800', 'text-slate-400');
+            activeBtn.classList.add('bg-primary', 'text-white');
+            renderTable();
+        }
+
+        // Initial Load
+        fetchAllData();
+        // Auto refresh every 5 minutes during trading hours (optional)
+        setInterval(fetchAllData, 300000);
+
+    </script>
+</body>
+
+</html>

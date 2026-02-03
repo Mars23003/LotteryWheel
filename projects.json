@@ -193,5 +193,19 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Dog+Runner",
     "date": "2026-02-10",
     "description": "離線小恐龍玩法改成小狗奔跑版，支援跳躍、速度成長、最高分紀錄與行動裝置觸控。"
+  },
+  {
+    "id": "15",
+    "name": "PDF 電子書翻閱工具",
+    "path": "15-ebook-reader/index.html",
+    "folder": "15-ebook-reader/",
+    "tags": [
+      "PDF",
+      "Ebook",
+      "Viewer"
+    ],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=PDF+Ebook",
+    "date": "2026-03-01",
+    "description": "上傳 PDF 轉成電子書閱讀介面，支援拖放、翻頁、縮放、頁碼跳轉與鍵盤快捷鍵。"
   }
 ]

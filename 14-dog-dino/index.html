@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>狗狗跳跳｜離線小恐龍風格遊戲</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --panel: #141a22;
+      --accent: #ffb648;
+      --accent-2: #7bd3ff;
+      --text: #f5f7ff;
+      --muted: #9aa4b2;
+      --danger: #ff6b6b;
+      --success: #5ef2a0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Noto Sans TC", sans-serif;
+      background: radial-gradient(circle at top, #141b2c, #0d1117 60%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+    .app {
+      width: min(960px, 100%);
+      background: var(--panel);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      padding: 24px;
+      display: grid;
+      gap: 20px;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 32px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    header h1 span {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 182, 72, 0.2);
+      color: var(--accent);
+      letter-spacing: 0.08em;
+    }
+    .stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .stat {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 12px;
+      border-radius: 12px;
+      min-width: 120px;
+    }
+    .stat p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .stat strong {
+      font-size: 18px;
+      display: block;
+    }
+    canvas {
+      width: 100%;
+      background: linear-gradient(180deg, #0f1726, #0b0f18 70%);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .controls {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .panel {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+    .panel h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .panel p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), #ff8f3d);
+      color: #10131a;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    button.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>狗狗跳跳 <span>離線小恐龍靈感</span></h1>
+      <div class="stats">
+        <div class="stat">
+          <p>目前分數</p>
+          <strong id="score">0</strong>
+        </div>
+        <div class="stat">
+          <p>最高分</p>
+          <strong id="best-score">0</strong>
+        </div>
+        <div class="stat">
+          <p>速度</p>
+          <strong id="speed">1.0x</strong>
+        </div>
+      </div>
+    </header>
+
+    <canvas id="game" width="900" height="320"></canvas>
+
+    <div class="controls">
+      <div class="panel">
+        <h3>玩法</h3>
+        <p>按下 <strong>空白鍵 / 觸控</strong> 讓小狗跳起，閃避障礙物。速度會逐漸上升，快看看你能跑多遠！</p>
+      </div>
+      <div class="panel">
+        <h3>指令</h3>
+        <p>空白鍵：跳躍<br/>R：重新開始<br/>P：暫停 / 繼續</p>
+      </div>
+      <div class="panel">
+        <h3>狀態</h3>
+        <p id="status">準備好了！按空白鍵開始。</p>
+      </div>
+      <div class="panel actions">
+        <button id="start">開始 / 重新開始</button>
+        <button id="pause" class="secondary">暫停</button>
+        <p class="hint">在手機上點擊畫面即可跳躍。</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const bestScoreEl = document.getElementById('best-score');
+    const speedEl = document.getElementById('speed');
+    const statusEl = document.getElementById('status');
+    const startBtn = document.getElementById('start');
+    const pauseBtn = document.getElementById('pause');
+
+    const state = {
+      running: false,
+      paused: false,
+      time: 0,
+      score: 0,
+      speed: 6,
+      gravity: 0.6,
+      jump: -11.5,
+      ground: 250,
+      obstacles: [],
+      clouds: [],
+      particles: []
+    };
+
+    const dog = {
+      x: 80,
+      y: state.ground,
+      vy: 0,
+      width: 46,
+      height: 36,
+      legPhase: 0
+    };
+
+    const resizeCanvas = () => {
+      const ratio = window.devicePixelRatio || 1;
+      const { width, height } = canvas.getBoundingClientRect();
+      canvas.width = Math.floor(width * ratio);
+      canvas.height = Math.floor(height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    };
+
+    const loadBestScore = () => {
+      const saved = Number(localStorage.getItem('dog-dino-best') || 0);
+      bestScoreEl.textContent = saved.toString();
+    };
+
+    const saveBestScore = () => {
+      const currentBest = Number(bestScoreEl.textContent) || 0;
+      if (state.score > currentBest) {
+        bestScoreEl.textContent = state.score.toString();
+        localStorage.setItem('dog-dino-best', String(state.score));
+      }
+    };
+
+    const resetGame = () => {
+      state.running = true;
+      state.paused = false;
+      state.time = 0;
+      state.score = 0;
+      state.speed = 6;
+      state.obstacles = [];
+      state.clouds = [];
+      state.particles = [];
+      dog.y = state.ground;
+      dog.vy = 0;
+      statusEl.textContent = '衝刺開始！';
+    };
+
+    const togglePause = () => {
+      if (!state.running) return;
+      state.paused = !state.paused;
+      statusEl.textContent = state.paused ? '已暫停，按 P 繼續。' : '繼續奔跑！';
+    };
+
+    const jump = () => {
+      if (!state.running) {
+        resetGame();
+      }
+      if (state.paused) return;
+      if (dog.y >= state.ground) {
+        dog.vy = state.jump;
+        spawnDust();
+      }
+    };
+
+    const spawnObstacle = () => {
+      const height = 28 + Math.random() * 22;
+      const width = 18 + Math.random() * 16;
+      state.obstacles.push({
+        x: canvas.getBoundingClientRect().width + 40,
+        y: state.ground + 4 - height,
+        width,
+        height
+      });
+    };
+
+    const spawnCloud = () => {
+      state.clouds.push({
+        x: canvas.getBoundingClientRect().width + 40,
+        y: 40 + Math.random() * 80,
+        speed: 0.4 + Math.random() * 0.4,
+        size: 20 + Math.random() * 20
+      });
+    };
+
+    const spawnDust = () => {
+      for (let i = 0; i < 6; i += 1) {
+        state.particles.push({
+          x: dog.x + 10,
+          y: state.ground + 10,
+          vx: -1 - Math.random() * 1.2,
+          vy: -1.2 - Math.random() * 1.2,
+          life: 20 + Math.random() * 10
+        });
+      }
+    };
+
+    const update = () => {
+      if (!state.running || state.paused) return;
+      state.time += 1;
+      state.score = Math.floor(state.time / 6);
+      state.speed = Math.min(14, 6 + state.time / 600);
+      scoreEl.textContent = state.score.toString();
+      speedEl.textContent = `${state.speed.toFixed(1)}x`;
+
+      dog.vy += state.gravity;
+      dog.y += dog.vy;
+      if (dog.y > state.ground) {
+        dog.y = state.ground;
+        dog.vy = 0;
+      }
+      dog.legPhase += state.speed * 0.1;
+
+      if (state.time % 90 === 0) spawnCloud();
+      if (state.time % Math.floor(90 - Math.min(40, state.time / 60)) === 0) {
+        spawnObstacle();
+      }
+
+      state.obstacles = state.obstacles
+        .map((obs) => ({ ...obs, x: obs.x - state.speed }))
+        .filter((obs) => obs.x + obs.width > -20);
+
+      state.clouds = state.clouds
+        .map((cloud) => ({ ...cloud, x: cloud.x - cloud.speed }))
+        .filter((cloud) => cloud.x > -60);
+
+      state.particles = state.particles
+        .map((p) => ({ ...p, x: p.x + p.vx, y: p.y + p.vy, vy: p.vy + 0.08, life: p.life - 1 }))
+        .filter((p) => p.life > 0);
+
+      checkCollision();
+    };
+
+    const checkCollision = () => {
+      const hitbox = {
+        x: dog.x + 6,
+        y: dog.y - dog.height + 4,
+        width: dog.width - 12,
+        height: dog.height - 6
+      };
+      for (const obs of state.obstacles) {
+        if (
+          hitbox.x < obs.x + obs.width &&
+          hitbox.x + hitbox.width > obs.x &&
+          hitbox.y < obs.y + obs.height &&
+          hitbox.y + hitbox.height > obs.y
+        ) {
+          state.running = false;
+          statusEl.textContent = '撞到了！按空白鍵或按鈕重新開始。';
+          saveBestScore();
+          return;
+        }
+      }
+    };
+
+    const drawGround = () => {
+      const width = canvas.getBoundingClientRect().width;
+      ctx.fillStyle = '#1f2a38';
+      ctx.fillRect(0, state.ground + 12, width, 40);
+      ctx.strokeStyle = '#2f3d52';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, state.ground + 12);
+      ctx.lineTo(width, state.ground + 12);
+      ctx.stroke();
+    };
+
+    const drawDog = () => {
+      const x = dog.x;
+      const y = dog.y;
+      ctx.save();
+      ctx.translate(x, y);
+
+      ctx.fillStyle = '#ffcc80';
+      ctx.beginPath();
+      ctx.roundRect(0, -dog.height, dog.width, dog.height, 12);
+      ctx.fill();
+
+      ctx.fillStyle = '#f59f45';
+      ctx.beginPath();
+      ctx.roundRect(24, -dog.height - 14, 22, 20, 10);
+      ctx.fill();
+
+      ctx.fillStyle = '#2f2f2f';
+      ctx.beginPath();
+      ctx.arc(40, -dog.height - 6, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(48, -dog.height - 6, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#2f2f2f';
+      ctx.beginPath();
+      ctx.arc(52, -dog.height + 2, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#f59f45';
+      ctx.beginPath();
+      ctx.roundRect(18, -dog.height - 22, 12, 12, 6);
+      ctx.fill();
+
+      ctx.strokeStyle = '#ffb648';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(-2, -dog.height + 6);
+      ctx.lineTo(-10, -dog.height - 4);
+      ctx.stroke();
+
+      const legOffset = Math.sin(dog.legPhase) * 4;
+      ctx.strokeStyle = '#2b2b2b';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(10, -4);
+      ctx.lineTo(12, 6 + legOffset);
+      ctx.moveTo(30, -4);
+      ctx.lineTo(32, 6 - legOffset);
+      ctx.stroke();
+
+      ctx.restore();
+    };
+
+    const drawObstacle = (obs) => {
+      ctx.fillStyle = '#6ddccf';
+      ctx.beginPath();
+      ctx.roundRect(obs.x, obs.y, obs.width, obs.height, 6);
+      ctx.fill();
+      ctx.fillStyle = '#2a504a';
+      ctx.fillRect(obs.x + 4, obs.y + 6, obs.width - 8, 4);
+    };
+
+    const drawCloud = (cloud) => {
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath();
+      ctx.arc(cloud.x, cloud.y, cloud.size * 0.5, 0, Math.PI * 2);
+      ctx.arc(cloud.x + cloud.size * 0.5, cloud.y + 4, cloud.size * 0.45, 0, Math.PI * 2);
+      ctx.arc(cloud.x + cloud.size * 0.9, cloud.y, cloud.size * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    const drawParticles = () => {
+      state.particles.forEach((p) => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.life / 30})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    };
+
+    const render = () => {
+      const width = canvas.getBoundingClientRect().width;
+      const height = canvas.getBoundingClientRect().height;
+      ctx.clearRect(0, 0, width, height);
+
+      state.clouds.forEach(drawCloud);
+      drawGround();
+      state.obstacles.forEach(drawObstacle);
+      drawDog();
+      drawParticles();
+
+      if (!state.running) {
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#f5f7ff';
+        ctx.font = '20px "Inter", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('按空白鍵開始奔跑', width / 2, height / 2 - 10);
+        ctx.font = '14px "Inter", sans-serif';
+        ctx.fillText('小狗版離線小恐龍', width / 2, height / 2 + 18);
+      }
+
+      if (state.paused) {
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#f5f7ff';
+        ctx.font = '18px "Inter", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('暫停中', width / 2, height / 2);
+      }
+    };
+
+    const tick = () => {
+      update();
+      render();
+      requestAnimationFrame(tick);
+    };
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('keydown', (event) => {
+      if (event.code === 'Space') {
+        event.preventDefault();
+        jump();
+      }
+      if (event.code === 'KeyR') resetGame();
+      if (event.code === 'KeyP') togglePause();
+    });
+
+    canvas.addEventListener('pointerdown', () => jump());
+    startBtn.addEventListener('click', resetGame);
+    pauseBtn.addEventListener('click', togglePause);
+
+    resizeCanvas();
+    loadBestScore();
+    tick();
+  </script>
+</body>
+</html>

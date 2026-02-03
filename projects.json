@@ -179,5 +179,19 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=TW+Stock+Tool",
     "date": "2026-01-23",
     "description": "純前端的台股監控工具，串接 TWSE/TPEx OpenAPI 獲取即時行情，支援搜尋、自選股（LocalStorage）與漲跌分析。"
+  },
+  {
+    "id": "14",
+    "name": "狗狗跳跳（離線小恐龍）",
+    "path": "14-dog-dino/index.html",
+    "folder": "14-dog-dino/",
+    "tags": [
+      "Game",
+      "Canvas",
+      "Runner"
+    ],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=Dog+Runner",
+    "date": "2026-02-10",
+    "description": "離線小恐龍玩法改成小狗奔跑版，支援跳躍、速度成長、最高分紀錄與行動裝置觸控。"
   }
 ]

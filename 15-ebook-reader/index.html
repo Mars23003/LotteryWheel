@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>電子書翻閱工具</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <style>
+    body {
+      font-family: "Inter", "Noto Sans TC", system-ui, -apple-system, sans-serif;
+    }
+
+    .book-shell {
+      background: radial-gradient(circle at top, #2d2b55, #151222 60%, #0e0c18 100%);
+    }
+
+    .book-frame {
+      background: #f6f1e7;
+      box-shadow: 0 25px 60px rgba(15, 12, 24, 0.45);
+    }
+
+    .book-page {
+      background: #ffffff;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06), 0 20px 40px rgba(17, 13, 27, 0.12);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-shadow {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0.05));
+      mix-blend-mode: multiply;
+    }
+
+    .page-flip {
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      pointer-events: none;
+      transform-origin: left center;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0) 30%, rgba(0, 0, 0, 0.15) 55%, rgba(0, 0, 0, 0));
+      opacity: 0;
+    }
+
+    .page-flip.is-active {
+      animation: flip 500ms ease;
+    }
+
+    @keyframes flip {
+      0% {
+        opacity: 0;
+        transform: rotateY(0deg);
+      }
+      40% {
+        opacity: 0.85;
+      }
+      100% {
+        opacity: 0;
+        transform: rotateY(-22deg);
+      }
+    }
+
+    .drop-zone.is-dragging {
+      border-color: #a855f7;
+      background: rgba(168, 85, 247, 0.08);
+    }
+
+    .range-thumb::-webkit-slider-thumb {
+      appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 999px;
+      background: #a855f7;
+      border: 2px solid #fff;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .range-thumb::-moz-range-thumb {
+      height: 18px;
+      width: 18px;
+      border-radius: 999px;
+      background: #a855f7;
+      border: 2px solid #fff;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <main class="book-shell min-h-screen">
+    <div class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+      <header class="flex flex-col gap-4">
+        <p class="text-sm uppercase tracking-[0.3em] text-violet-200/70">PDF → 電子書</p>
+        <div class="flex flex-col gap-3">
+          <h1 class="text-4xl md:text-5xl font-black">電子書翻閱工具</h1>
+          <p class="text-slate-300 max-w-2xl">上傳 PDF 後即可在瀏覽器內翻頁閱讀，支援拖放、頁碼跳轉、縮放與鍵盤操作（← →）。</p>
+        </div>
+      </header>
+
+      <section class="grid lg:grid-cols-[320px_1fr] gap-6">
+        <aside class="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
+          <div>
+            <h2 class="text-lg font-semibold">檔案上傳</h2>
+            <p class="text-sm text-slate-300 mt-2">將 PDF 拖曳到下方區塊，或點擊選擇檔案。</p>
+          </div>
+          <label class="drop-zone border-2 border-dashed border-white/20 rounded-2xl p-5 flex flex-col gap-3 items-center justify-center text-center cursor-pointer transition" id="drop-zone">
+            <span class="text-4xl">📘</span>
+            <span class="font-semibold">拖放 PDF</span>
+            <span class="text-xs text-slate-400">支援單一檔案、最大 50MB</span>
+            <input id="file-input" type="file" accept="application/pdf" class="hidden" />
+          </label>
+          <div class="space-y-2">
+            <h3 class="text-sm font-semibold text-violet-200">閱讀資訊</h3>
+            <div class="text-sm text-slate-300 space-y-1">
+              <p>檔名：<span id="file-name" class="text-white">尚未上傳</span></p>
+              <p>頁數：<span id="page-total" class="text-white">-</span></p>
+              <p>目前頁：<span id="page-current" class="text-white">-</span></p>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-sm font-semibold text-violet-200">閱讀指引</h3>
+            <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+              <li>← → 或 A/D 快速翻頁</li>
+              <li>Enter 跳到輸入頁碼</li>
+              <li>Ctrl + 滾輪可縮放</li>
+            </ul>
+          </div>
+        </aside>
+
+        <section class="space-y-4">
+          <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-wrap items-center gap-3">
+            <button id="prev-btn" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition disabled:opacity-40" disabled>上一頁</button>
+            <button id="next-btn" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition disabled:opacity-40" disabled>下一頁</button>
+            <div class="flex items-center gap-2">
+              <label class="text-sm text-slate-300" for="page-input">頁碼</label>
+              <input id="page-input" type="number" min="1" value="1" class="w-20 rounded-lg bg-white/10 border border-white/10 px-3 py-2 text-white" disabled />
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="text-sm text-slate-300" for="zoom-range">縮放</label>
+              <input id="zoom-range" type="range" min="60" max="200" value="100" class="range-thumb" disabled />
+              <span id="zoom-label" class="text-sm text-slate-300">100%</span>
+            </div>
+            <div class="flex-1 min-w-[160px]">
+              <input id="page-slider" type="range" min="1" max="1" step="2" value="1" class="range-thumb w-full" disabled />
+            </div>
+          </div>
+
+          <div class="book-frame relative rounded-3xl p-6 flex items-center justify-center min-h-[60vh]">
+            <div class="absolute top-6 right-6 text-xs bg-black/50 text-white px-3 py-1 rounded-full" id="page-indicator">尚未載入</div>
+            <div class="relative w-full max-w-4xl">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="book-page">
+                  <canvas id="pdf-canvas-left" class="w-full"></canvas>
+                  <div class="page-shadow"></div>
+                </div>
+                <div class="book-page">
+                  <canvas id="pdf-canvas-right" class="w-full"></canvas>
+                  <div class="page-shadow"></div>
+                  <div class="page-flip" id="page-flip"></div>
+                </div>
+              </div>
+            </div>
+            <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400">
+              <span class="text-5xl">📖</span>
+              <p>上傳 PDF 後即可開始翻閱</p>
+            </div>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+    const fileNameText = document.getElementById('file-name');
+    const pageTotalText = document.getElementById('page-total');
+    const pageCurrentText = document.getElementById('page-current');
+    const prevButton = document.getElementById('prev-btn');
+    const nextButton = document.getElementById('next-btn');
+    const pageInput = document.getElementById('page-input');
+    const zoomRange = document.getElementById('zoom-range');
+    const zoomLabel = document.getElementById('zoom-label');
+    const pageSlider = document.getElementById('page-slider');
+    const canvasLeft = document.getElementById('pdf-canvas-left');
+    const canvasRight = document.getElementById('pdf-canvas-right');
+    const pageIndicator = document.getElementById('page-indicator');
+    const pageFlip = document.getElementById('page-flip');
+    const emptyState = document.getElementById('empty-state');
+    const ctxLeft = canvasLeft.getContext('2d');
+    const ctxRight = canvasRight.getContext('2d');
+
+    const MAX_FILE_SIZE = 50 * 1024 * 1024;
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let pdfDoc = null;
+    let currentPage = 1;
+    let totalPages = 0;
+    let scale = 1.0;
+    let isRendering = false;
+    let pendingPage = null;
+
+    const normalizePage = (value) => {
+      let page = Math.min(Math.max(Number(value), 1), totalPages || 1);
+      if (page % 2 === 0) {
+        page -= 1;
+      }
+      return page;
+    };
+
+    const updateControls = () => {
+      const hasDoc = !!pdfDoc;
+      prevButton.disabled = !hasDoc || currentPage <= 1;
+      nextButton.disabled = !hasDoc || currentPage + 1 >= totalPages;
+      pageInput.disabled = !hasDoc;
+      zoomRange.disabled = !hasDoc;
+      pageSlider.disabled = !hasDoc;
+
+      if (hasDoc) {
+        pageInput.max = totalPages;
+        pageSlider.max = totalPages;
+        pageSlider.value = currentPage;
+        pageInput.value = currentPage;
+      }
+    };
+
+    const updateMeta = () => {
+      pageTotalText.textContent = totalPages ? totalPages : '-';
+      pageCurrentText.textContent = totalPages ? currentPage : '-';
+      if (!totalPages) {
+        pageIndicator.textContent = '尚未載入';
+        return;
+      }
+      const rightPage = currentPage + 1 <= totalPages ? currentPage + 1 : '—';
+      pageIndicator.textContent = `第 ${currentPage} / ${rightPage} 頁`;
+    };
+
+    const clearCanvas = (canvas, ctx) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#f8f5ef';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+
+    const renderSinglePage = async (pageNumber, canvas, ctx) => {
+      if (!pdfDoc || !pageNumber) {
+        clearCanvas(canvas, ctx);
+        return;
+      }
+
+      const page = await pdfDoc.getPage(pageNumber);
+      const viewport = page.getViewport({ scale });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      canvas.style.height = 'auto';
+
+      const renderContext = { canvasContext: ctx, viewport };
+      await page.render(renderContext).promise;
+    };
+
+    const renderSpread = async (pageNumber) => {
+      if (!pdfDoc) return;
+      isRendering = true;
+
+      await renderSinglePage(pageNumber, canvasLeft, ctxLeft);
+      const rightPageNumber = pageNumber + 1 <= totalPages ? pageNumber + 1 : null;
+      await renderSinglePage(rightPageNumber, canvasRight, ctxRight);
+
+      isRendering = false;
+      updateControls();
+      updateMeta();
+
+      if (pendingPage !== null) {
+        const next = pendingPage;
+        pendingPage = null;
+        renderSpread(next);
+      }
+    };
+
+    const queueRenderSpread = (pageNumber) => {
+      if (isRendering) {
+        pendingPage = pageNumber;
+      } else {
+        renderSpread(pageNumber);
+      }
+    };
+
+    const triggerPageTurn = () => {
+      pageFlip.classList.remove('is-active');
+      void pageFlip.offsetWidth;
+      pageFlip.classList.add('is-active');
+    };
+
+    const handlePdfLoad = async (file) => {
+      if (!file) return;
+      if (file.size > MAX_FILE_SIZE) {
+        alert('檔案大小超過 50MB，請重新選擇。');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const typedArray = new Uint8Array(event.target.result);
+        const loadingTask = pdfjsLib.getDocument(typedArray);
+        pdfDoc = await loadingTask.promise;
+        totalPages = pdfDoc.numPages;
+        currentPage = 1;
+        scale = 1.0;
+        zoomRange.value = 100;
+        zoomLabel.textContent = '100%';
+        emptyState.classList.add('hidden');
+        fileNameText.textContent = file.name;
+        updateMeta();
+        updateControls();
+        renderSpread(currentPage);
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
+    const changePage = (delta) => {
+      if (!pdfDoc) return;
+      const nextPage = normalizePage(currentPage + delta * 2);
+      if (nextPage !== currentPage) {
+        currentPage = nextPage;
+        triggerPageTurn();
+        queueRenderSpread(currentPage);
+      }
+    };
+
+    const jumpToPage = (value) => {
+      if (!pdfDoc) return;
+      const nextPage = normalizePage(value);
+      if (!Number.isNaN(nextPage)) {
+        currentPage = nextPage;
+        triggerPageTurn();
+        queueRenderSpread(currentPage);
+      }
+    };
+
+    const updateZoom = (value) => {
+      scale = Number(value) / 100;
+      zoomLabel.textContent = `${value}%`;
+      queueRenderSpread(currentPage);
+    };
+
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      handlePdfLoad(file);
+    });
+
+    dropZone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      dropZone.classList.add('is-dragging');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('is-dragging'));
+    dropZone.addEventListener('drop', (event) => {
+      event.preventDefault();
+      dropZone.classList.remove('is-dragging');
+      const file = event.dataTransfer.files[0];
+      if (file) handlePdfLoad(file);
+    });
+
+    prevButton.addEventListener('click', () => changePage(-1));
+    nextButton.addEventListener('click', () => changePage(1));
+
+    pageInput.addEventListener('change', (event) => jumpToPage(event.target.value));
+    pageSlider.addEventListener('input', (event) => jumpToPage(event.target.value));
+
+    zoomRange.addEventListener('input', (event) => updateZoom(event.target.value));
+
+    document.addEventListener('keydown', (event) => {
+      if (['ArrowLeft', 'a', 'A'].includes(event.key)) {
+        changePage(-1);
+      }
+      if (['ArrowRight', 'd', 'D'].includes(event.key)) {
+        changePage(1);
+      }
+      if (event.key === 'Enter' && !pageInput.disabled) {
+        pageInput.focus();
+        pageInput.select();
+      }
+    });
+
+    window.addEventListener('wheel', (event) => {
+      if (!pdfDoc) return;
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      const nextValue = Math.min(Math.max(Number(zoomRange.value) + (event.deltaY < 0 ? 5 : -5), 60), 200);
+      zoomRange.value = nextValue;
+      updateZoom(nextValue);
+    }, { passive: false });
+  </script>
+</body>
+</html>

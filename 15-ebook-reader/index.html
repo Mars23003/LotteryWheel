@@ -19,27 +19,48 @@
       box-shadow: 0 25px 60px rgba(15, 12, 24, 0.45);
     }
 
-    .book-canvas {
+    .book-page {
       background: #ffffff;
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06), 0 20px 40px rgba(17, 13, 27, 0.12);
       border-radius: 16px;
+      position: relative;
+      overflow: hidden;
     }
 
-    .page-turn {
+    .page-shadow {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0.05));
+      mix-blend-mode: multiply;
+    }
+
+    .page-flip {
       position: absolute;
       inset: 0;
       border-radius: 16px;
       pointer-events: none;
-      background: linear-gradient(130deg, rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0.08) 60%, rgba(0, 0, 0, 0) 75%);
-      opacity: 0;
       transform-origin: left center;
-      transform: rotateY(0deg);
-      transition: opacity 300ms ease, transform 500ms ease;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0) 30%, rgba(0, 0, 0, 0.15) 55%, rgba(0, 0, 0, 0));
+      opacity: 0;
     }
 
-    .page-turn.is-active {
-      opacity: 0.9;
-      transform: rotateY(-15deg);
+    .page-flip.is-active {
+      animation: flip 500ms ease;
+    }
+
+    @keyframes flip {
+      0% {
+        opacity: 0;
+        transform: rotateY(0deg);
+      }
+      40% {
+        opacity: 0.85;
+      }
+      100% {
+        opacity: 0;
+        transform: rotateY(-22deg);
+      }
     }
 
     .drop-zone.is-dragging {
@@ -103,7 +124,7 @@
             <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
               <li>← → 或 A/D 快速翻頁</li>
               <li>Enter 跳到輸入頁碼</li>
-              <li>滑鼠滾輪可縮放</li>
+              <li>Ctrl + 滾輪可縮放</li>
             </ul>
           </div>
         </aside>
@@ -122,15 +143,24 @@
               <span id="zoom-label" class="text-sm text-slate-300">100%</span>
             </div>
             <div class="flex-1 min-w-[160px]">
-              <input id="page-slider" type="range" min="1" max="1" value="1" class="range-thumb w-full" disabled />
+              <input id="page-slider" type="range" min="1" max="1" step="2" value="1" class="range-thumb w-full" disabled />
             </div>
           </div>
 
           <div class="book-frame relative rounded-3xl p-6 flex items-center justify-center min-h-[60vh]">
             <div class="absolute top-6 right-6 text-xs bg-black/50 text-white px-3 py-1 rounded-full" id="page-indicator">尚未載入</div>
-            <div class="relative w-full max-w-3xl">
-              <canvas id="pdf-canvas" class="book-canvas w-full"></canvas>
-              <div class="page-turn" id="page-turn"></div>
+            <div class="relative w-full max-w-4xl">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="book-page">
+                  <canvas id="pdf-canvas-left" class="w-full"></canvas>
+                  <div class="page-shadow"></div>
+                </div>
+                <div class="book-page">
+                  <canvas id="pdf-canvas-right" class="w-full"></canvas>
+                  <div class="page-shadow"></div>
+                  <div class="page-flip" id="page-flip"></div>
+                </div>
+              </div>
             </div>
             <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400">
               <span class="text-5xl">📖</span>
@@ -155,11 +185,13 @@
     const zoomRange = document.getElementById('zoom-range');
     const zoomLabel = document.getElementById('zoom-label');
     const pageSlider = document.getElementById('page-slider');
-    const canvas = document.getElementById('pdf-canvas');
+    const canvasLeft = document.getElementById('pdf-canvas-left');
+    const canvasRight = document.getElementById('pdf-canvas-right');
     const pageIndicator = document.getElementById('page-indicator');
-    const pageTurn = document.getElementById('page-turn');
+    const pageFlip = document.getElementById('page-flip');
     const emptyState = document.getElementById('empty-state');
-    const ctx = canvas.getContext('2d');
+    const ctxLeft = canvasLeft.getContext('2d');
+    const ctxRight = canvasRight.getContext('2d');
 
     const MAX_FILE_SIZE = 50 * 1024 * 1024;
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
@@ -172,10 +204,18 @@
     let isRendering = false;
     let pendingPage = null;
 
+    const normalizePage = (value) => {
+      let page = Math.min(Math.max(Number(value), 1), totalPages || 1);
+      if (page % 2 === 0) {
+        page -= 1;
+      }
+      return page;
+    };
+
     const updateControls = () => {
       const hasDoc = !!pdfDoc;
       prevButton.disabled = !hasDoc || currentPage <= 1;
-      nextButton.disabled = !hasDoc || currentPage >= totalPages;
+      nextButton.disabled = !hasDoc || currentPage + 1 >= totalPages;
       pageInput.disabled = !hasDoc;
       zoomRange.disabled = !hasDoc;
       pageSlider.disabled = !hasDoc;
@@ -191,20 +231,43 @@
     const updateMeta = () => {
       pageTotalText.textContent = totalPages ? totalPages : '-';
       pageCurrentText.textContent = totalPages ? currentPage : '-';
-      pageIndicator.textContent = totalPages ? `第 ${currentPage} / ${totalPages} 頁` : '尚未載入';
+      if (!totalPages) {
+        pageIndicator.textContent = '尚未載入';
+        return;
+      }
+      const rightPage = currentPage + 1 <= totalPages ? currentPage + 1 : '—';
+      pageIndicator.textContent = `第 ${currentPage} / ${rightPage} 頁`;
     };
 
-    const renderPage = async (pageNumber) => {
-      if (!pdfDoc) return;
-      isRendering = true;
+    const clearCanvas = (canvas, ctx) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#f8f5ef';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+
+    const renderSinglePage = async (pageNumber, canvas, ctx) => {
+      if (!pdfDoc || !pageNumber) {
+        clearCanvas(canvas, ctx);
+        return;
+      }
+
       const page = await pdfDoc.getPage(pageNumber);
       const viewport = page.getViewport({ scale });
-
       canvas.width = viewport.width;
       canvas.height = viewport.height;
+      canvas.style.height = 'auto';
 
       const renderContext = { canvasContext: ctx, viewport };
       await page.render(renderContext).promise;
+    };
+
+    const renderSpread = async (pageNumber) => {
+      if (!pdfDoc) return;
+      isRendering = true;
+
+      await renderSinglePage(pageNumber, canvasLeft, ctxLeft);
+      const rightPageNumber = pageNumber + 1 <= totalPages ? pageNumber + 1 : null;
+      await renderSinglePage(rightPageNumber, canvasRight, ctxRight);
 
       isRendering = false;
       updateControls();
@@ -213,21 +276,22 @@
       if (pendingPage !== null) {
         const next = pendingPage;
         pendingPage = null;
-        renderPage(next);
+        renderSpread(next);
       }
     };
 
-    const queueRenderPage = (pageNumber) => {
+    const queueRenderSpread = (pageNumber) => {
       if (isRendering) {
         pendingPage = pageNumber;
       } else {
-        renderPage(pageNumber);
+        renderSpread(pageNumber);
       }
     };
 
     const triggerPageTurn = () => {
-      pageTurn.classList.add('is-active');
-      setTimeout(() => pageTurn.classList.remove('is-active'), 400);
+      pageFlip.classList.remove('is-active');
+      void pageFlip.offsetWidth;
+      pageFlip.classList.add('is-active');
     };
 
     const handlePdfLoad = async (file) => {
@@ -251,35 +315,35 @@
         fileNameText.textContent = file.name;
         updateMeta();
         updateControls();
-        renderPage(currentPage);
+        renderSpread(currentPage);
       };
       reader.readAsArrayBuffer(file);
     };
 
     const changePage = (delta) => {
       if (!pdfDoc) return;
-      const nextPage = Math.min(Math.max(currentPage + delta, 1), totalPages);
+      const nextPage = normalizePage(currentPage + delta * 2);
       if (nextPage !== currentPage) {
         currentPage = nextPage;
         triggerPageTurn();
-        queueRenderPage(currentPage);
+        queueRenderSpread(currentPage);
       }
     };
 
     const jumpToPage = (value) => {
       if (!pdfDoc) return;
-      const nextPage = Math.min(Math.max(Number(value), 1), totalPages);
+      const nextPage = normalizePage(value);
       if (!Number.isNaN(nextPage)) {
         currentPage = nextPage;
         triggerPageTurn();
-        queueRenderPage(currentPage);
+        queueRenderSpread(currentPage);
       }
     };
 
     const updateZoom = (value) => {
       scale = Number(value) / 100;
       zoomLabel.textContent = `${value}%`;
-      queueRenderPage(currentPage);
+      queueRenderSpread(currentPage);
     };
 
     fileInput.addEventListener('change', (event) => {
@@ -287,7 +351,6 @@
       handlePdfLoad(file);
     });
 
-    dropZone.addEventListener('click', () => fileInput.click());
     dropZone.addEventListener('dragover', (event) => {
       event.preventDefault();
       dropZone.classList.add('is-dragging');

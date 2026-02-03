@@ -25,6 +25,9 @@
       border-radius: 16px;
       position: relative;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .page-shadow {
@@ -139,8 +142,8 @@
             </div>
             <div class="flex items-center gap-2">
               <label class="text-sm text-slate-300" for="zoom-range">縮放</label>
-              <input id="zoom-range" type="range" min="60" max="200" value="100" class="range-thumb" disabled />
-              <span id="zoom-label" class="text-sm text-slate-300">100%</span>
+              <input id="zoom-range" type="range" min="80" max="240" value="120" class="range-thumb" disabled />
+              <span id="zoom-label" class="text-sm text-slate-300">120%</span>
             </div>
             <div class="flex-1 min-w-[160px]">
               <input id="page-slider" type="range" min="1" max="1" step="2" value="1" class="range-thumb w-full" disabled />
@@ -152,11 +155,15 @@
             <div class="relative w-full max-w-4xl">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="book-page">
-                  <canvas id="pdf-canvas-left" class="w-full"></canvas>
+                  <div class="w-full h-full flex items-center justify-center overflow-auto">
+                    <canvas id="pdf-canvas-left"></canvas>
+                  </div>
                   <div class="page-shadow"></div>
                 </div>
                 <div class="book-page">
-                  <canvas id="pdf-canvas-right" class="w-full"></canvas>
+                  <div class="w-full h-full flex items-center justify-center overflow-auto">
+                    <canvas id="pdf-canvas-right"></canvas>
+                  </div>
                   <div class="page-shadow"></div>
                   <div class="page-flip" id="page-flip"></div>
                 </div>
@@ -200,7 +207,7 @@
     let pdfDoc = null;
     let currentPage = 1;
     let totalPages = 0;
-    let scale = 1.0;
+    let scale = 1.2;
     let isRendering = false;
     let pendingPage = null;
 
@@ -255,7 +262,8 @@
       const viewport = page.getViewport({ scale });
       canvas.width = viewport.width;
       canvas.height = viewport.height;
-      canvas.style.height = 'auto';
+      canvas.style.width = `${viewport.width}px`;
+      canvas.style.height = `${viewport.height}px`;
 
       const renderContext = { canvasContext: ctx, viewport };
       await page.render(renderContext).promise;
@@ -308,9 +316,9 @@
         pdfDoc = await loadingTask.promise;
         totalPages = pdfDoc.numPages;
         currentPage = 1;
-        scale = 1.0;
-        zoomRange.value = 100;
-        zoomLabel.textContent = '100%';
+        scale = 1.2;
+        zoomRange.value = 120;
+        zoomLabel.textContent = '120%';
         emptyState.classList.add('hidden');
         fileNameText.textContent = file.name;
         updateMeta();
@@ -388,7 +396,7 @@
       if (!pdfDoc) return;
       if (!event.ctrlKey) return;
       event.preventDefault();
-      const nextValue = Math.min(Math.max(Number(zoomRange.value) + (event.deltaY < 0 ? 5 : -5), 60), 200);
+      const nextValue = Math.min(Math.max(Number(zoomRange.value) + (event.deltaY < 0 ? 5 : -5), 80), 240);
       zoomRange.value = nextValue;
       updateZoom(nextValue);
     }, { passive: false });

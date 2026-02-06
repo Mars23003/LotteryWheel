@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>台灣刮刮樂體驗</title>
+  <style>
+    :root {
+      --bg-a: #0f172a;
+      --bg-b: #1e293b;
+      --neon: #22d3ee;
+      --gold: #fbbf24;
+      --silver: #b8bec9;
+      --card-w: min(92vw, 540px);
+      --card-h: calc(var(--card-w) * 1.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 20% 10%, #1e3a8a, transparent 35%),
+        radial-gradient(circle at 80% 90%, #7c2d12, transparent 40%),
+        linear-gradient(160deg, var(--bg-a), var(--bg-b));
+      color: #e2e8f0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(100%, 720px);
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(10px);
+      padding: clamp(16px, 3.5vw, 28px);
+    }
+
+    .title {
+      margin: 0 0 12px;
+      font-size: clamp(1.45rem, 4vw, 2rem);
+      letter-spacing: 0.04em;
+      color: #f8fafc;
+      text-shadow: 0 0 16px rgba(34, 211, 238, 0.35);
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: #cbd5e1;
+      font-size: 0.96rem;
+    }
+
+    .ticket {
+      position: relative;
+      width: var(--card-w);
+      height: var(--card-h);
+      margin: 0 auto;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 2px solid rgba(250, 204, 21, 0.4);
+      box-shadow: inset 0 0 32px rgba(0, 0, 0, 0.28), 0 14px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .prize-board {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 10px;
+      padding: 16px;
+      background: linear-gradient(135deg, #7c3aed, #1d4ed8 55%, #0f766e);
+    }
+
+    .cell {
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.06));
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff7cc;
+      font-size: clamp(1.05rem, 4vw, 1.5rem);
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45), 0 0 8px rgba(251, 191, 36, 0.4);
+    }
+
+    #scratch-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .result {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px dashed rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      line-height: 1.55;
+    }
+
+    .result.show { display: block; }
+
+    .result.win {
+      color: #fde68a;
+      border-color: rgba(251, 191, 36, 0.7);
+      box-shadow: inset 0 0 18px rgba(251, 191, 36, 0.2);
+    }
+
+    .result.lose {
+      color: #cbd5e1;
+    }
+
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-weight: 700;
+      color: #0f172a;
+      background: linear-gradient(145deg, #fbbf24, #f59e0b);
+      cursor: pointer;
+    }
+
+    button:hover { filter: brightness(1.06); }
+
+    @media (max-width: 480px) {
+      .ticket { border-radius: 14px; }
+      .prize-board { gap: 8px; padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1 class="title">台灣刮刮樂體驗</h1>
+    <p class="subtitle">刮開超過 60% 自動揭曉結果，看看你是不是今天的幸運星！</p>
+
+    <section class="ticket" id="ticket">
+      <div class="prize-board" id="prize-board"></div>
+      <canvas id="scratch-canvas" aria-label="刮刮遮罩"></canvas>
+    </section>
+
+    <section id="result" class="result" aria-live="polite"></section>
+
+    <div class="actions">
+      <button id="reset-btn" type="button">重玩一局</button>
+    </div>
+  </main>
+
+  <script>
+    const BOARD_SIZE = 3;
+    const REVEAL_THRESHOLD = 0.6;
+    const SAMPLE_GRID = 80;
+    const BRUSH_RADIUS = 18;
+
+    const prizePool = [
+      100, 100, 100,
+      200, 200, 200,
+      500, 500, 1000,
+      1000, 2000, 5000,
+      10000
+    ];
+
+    const ticketEl = document.getElementById('ticket');
+    const boardEl = document.getElementById('prize-board');
+    const canvas = document.getElementById('scratch-canvas');
+    const resultEl = document.getElementById('result');
+    const resetBtn = document.getElementById('reset-btn');
+
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    const state = {
+      board: [],
+      result: null,
+      isScratching: false,
+      isRevealed: false,
+      settleTriggered: false
+    };
+
+    const randomPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    function generateScratchResult() {
+      const board = Array.from({ length: BOARD_SIZE * BOARD_SIZE }, () => randomPick(prizePool));
+      const counts = board.reduce((acc, value) => {
+        acc[value] = (acc[value] || 0) + 1;
+        return acc;
+      }, {});
+
+      const matched = Object.entries(counts)
+        .filter(([, count]) => count >= 3)
+        .map(([amount]) => Number(amount))
+        .sort((a, b) => b - a);
+
+      const prizeAmount = matched[0] || 0;
+      return {
+        board,
+        isWin: prizeAmount > 0,
+        prizeAmount
+      };
+    }
+
+    function renderBoard(board) {
+      boardEl.innerHTML = '';
+      board.forEach((amount) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = `$${amount.toLocaleString('zh-TW')}`;
+        boardEl.appendChild(cell);
+      });
+    }
+
+    function resizeCanvas() {
+      const rect = ticketEl.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(rect.width * ratio);
+      canvas.height = Math.floor(rect.height * ratio);
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      paintScratchMask(rect.width, rect.height);
+    }
+
+    function paintScratchMask(width, height) {
+      ctx.globalCompositeOperation = 'source-over';
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, '#c8ced8');
+      gradient.addColorStop(0.5, '#8d95a3');
+      gradient.addColorStop(1, '#d8dde5');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      for (let i = 0; i < 2000; i += 1) {
+        const alpha = Math.random() * 0.16;
+        ctx.fillStyle = `rgba(${160 + Math.random() * 80}, ${160 + Math.random() * 80}, ${160 + Math.random() * 80}, ${alpha})`;
+        ctx.fillRect(Math.random() * width, Math.random() * height, 1.8, 1.8);
+      }
+    }
+
+    function getCanvasPoint(event) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+    }
+
+    function scratchAt(x, y) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(x, y, BRUSH_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function estimateRevealRatio() {
+      const { width, height } = canvas;
+      const stepX = Math.max(1, Math.floor(width / SAMPLE_GRID));
+      const stepY = Math.max(1, Math.floor(height / SAMPLE_GRID));
+      const imageData = ctx.getImageData(0, 0, width, height).data;
+
+      let transparentCount = 0;
+      let total = 0;
+
+      for (let y = 0; y < height; y += stepY) {
+        for (let x = 0; x < width; x += stepX) {
+          const alpha = imageData[(y * width + x) * 4 + 3];
+          if (alpha < 24) transparentCount += 1;
+          total += 1;
+        }
+      }
+
+      return total ? transparentCount / total : 0;
+    }
+
+    function revealAllMask() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function settleGame() {
+      if (state.settleTriggered) return;
+      state.settleTriggered = true;
+      state.isRevealed = true;
+      revealAllMask();
+      showResult(state.result);
+    }
+
+    function showResult(result) {
+      resultEl.className = `result show ${result.isWin ? 'win' : 'lose'}`;
+      resultEl.innerHTML = result.isWin
+        ? `🎉 中獎！符合三個以上相同金額，獎金：<strong>NT$ ${result.prizeAmount.toLocaleString('zh-TW')}</strong>`
+        : '再接再厲！這次沒有湊到三個相同金額。';
+    }
+
+    function newGame() {
+      state.result = generateScratchResult();
+      state.board = state.result.board;
+      state.isScratching = false;
+      state.isRevealed = false;
+      state.settleTriggered = false;
+      renderBoard(state.board);
+      resultEl.className = 'result';
+      resultEl.textContent = '';
+      resizeCanvas();
+    }
+
+    canvas.addEventListener('pointerdown', (event) => {
+      if (state.isRevealed) return;
+      state.isScratching = true;
+      canvas.setPointerCapture(event.pointerId);
+      const point = getCanvasPoint(event);
+      scratchAt(point.x, point.y);
+    });
+
+    canvas.addEventListener('pointermove', (event) => {
+      if (!state.isScratching || state.isRevealed) return;
+      const point = getCanvasPoint(event);
+      scratchAt(point.x, point.y);
+
+      const ratio = estimateRevealRatio();
+      if (ratio >= REVEAL_THRESHOLD) {
+        settleGame();
+      }
+    });
+
+    const stopScratch = () => {
+      state.isScratching = false;
+    };
+
+    canvas.addEventListener('pointerup', stopScratch);
+    canvas.addEventListener('pointercancel', stopScratch);
+    canvas.addEventListener('pointerleave', stopScratch);
+
+    window.addEventListener('resize', () => {
+      if (!state.isRevealed) {
+        resizeCanvas();
+      }
+    });
+
+    resetBtn.addEventListener('click', newGame);
+
+    newGame();
+  </script>
+</body>
+</html>

@@ -207,5 +207,19 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=PDF+Ebook",
     "date": "2026-03-01",
     "description": "上傳 PDF 轉成電子書閱讀介面，支援拖放、翻頁、縮放、頁碼跳轉與鍵盤快捷鍵。"
+  },
+  {
+    "id": "16",
+    "name": "台灣刮刮樂體驗",
+    "path": "16-tw-scratch/index.html",
+    "folder": "16-tw-scratch/",
+    "tags": [
+      "Game",
+      "Canvas",
+      "Scratch"
+    ],
+    "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=TW+Scratch+Card",
+    "date": "2026-02-06",
+    "description": "台灣風格的刮刮樂互動頁面，支援滑鼠/觸控刮除、60% 自動結算與一鍵重玩。"
   }
 ]

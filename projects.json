@@ -221,5 +221,19 @@
     "image": "https://placehold.co/1200x675/eeeeee/666666.png?text=TW+Scratch+Card",
     "date": "2026-02-06",
     "description": "台灣風格的刮刮樂互動頁面，支援滑鼠/觸控刮除、60% 自動結算與一鍵重玩。"
+  },
+  {
+    "id": "17",
+    "name": "Cube Lens｜魔術方塊拍照解法",
+    "path": "17-cube-solver/index.html",
+    "folder": "17-cube-solver/",
+    "tags": [
+      "Camera",
+      "AI Assist",
+      "Puzzle"
+    ],
+    "image": "https://placehold.co/1200x675/4d46d9/ffffff.png?text=Cube+Lens",
+    "date": "2026-07-10",
+    "description": "使用瀏覽器相機依序掃描 3×3 魔術方塊的六個面，自動依中心色辨識貼紙、支援手動校正，並在本機產生復原步驟。"
   }
 ]

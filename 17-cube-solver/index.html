@@ -64,7 +64,7 @@
   <script>
     const FACES = ['U','R','F','D','L','B'];
     const faceNames = {U:'上面',R:'右面',F:'前面',D:'下面',L:'左面',B:'後面'};
-    const captured = {}; const centers = {}; let selectedFace = 'U'; let stream; let solutionMoves=[]; let moveIndex=0;
+    const captured = {}; const centers = {}; let selectedFace = 'U'; let stream; let solutionMoves=[]; let moveIndex=0; let solverReady=false;
     const $ = (id) => document.getElementById(id);
     const video=$('video'), canvas=$('canvas'), guide=$('guide'), cameraEmpty=$('camera-empty');
     const distance = (a,b) => Math.sqrt((a.r-b.r)**2+(a.g-b.g)**2+(a.b-b.b)**2);
@@ -83,7 +83,7 @@
     function validate(){const state=cubeString();for(const face of FACES){if([...state].filter(v=>v===face).length!==9)return `「${face}」色目前不是 9 格，請修正色塊。`;}return null;}
     function describeMove(move){const face={U:'上面',D:'下面',R:'右面',L:'左面',F:'前面',B:'後面'}[move[0]];return `${face}${move.includes('2')?'轉 180°':move.includes("'")?'逆時針轉 90°':'順時針轉 90°'}`;}
     function renderSolution(){const root=$('moves');root.innerHTML='';solutionMoves.forEach((move,i)=>{const el=document.createElement('span');el.className=`move ${i===moveIndex?'current':''}`;el.textContent=move;el.title=describeMove(move);root.appendChild(el);});$('move-note').textContent=solutionMoves.length?`第 ${moveIndex+1} / ${solutionMoves.length} 步：${describeMove(solutionMoves[moveIndex])}`:'方塊已完成，不需要移動。';}
-    function solve(){const error=validate();if(error){$('solve-status').className='status error';$('solve-status').textContent=error;return;}$('solve').disabled=true;$('solve-status').className='status';$('solve-status').textContent='正在建立解法表…第一次使用約需幾秒鐘。';setTimeout(()=>{try{Cube.initSolver();const cube=Cube.fromString(cubeString());const answer=cube.isSolved()?'':cube.solve();solutionMoves=answer.trim()?answer.trim().split(/\s+/):[];moveIndex=0;$('solution').hidden=false;renderSolution();$('solve-status').className='status ok';$('solve-status').textContent=solutionMoves.length?`完成！共 ${solutionMoves.length} 步。`:'方塊已經完成。';}catch(e){$('solve-status').className='status error';$('solve-status').textContent=`無法解出此狀態：${e.message||'請檢查拍攝方向和色塊。'}`;}finally{$('solve').disabled=false;}},20);}
+    function solve(){const error=validate();if(error){$('solve-status').className='status error';$('solve-status').textContent=error;return;}$('solve').disabled=true;$('solve-status').className='status';$('solve-status').textContent=solverReady?'正在產生解方…':'正在建立解法表…第一次使用約需幾秒鐘。';setTimeout(()=>{try{if(!solverReady){Cube.initSolver();solverReady=true;}const cube=Cube.fromString(cubeString());const answer=cube.isSolved()?'':cube.solve();solutionMoves=answer.trim()?answer.trim().split(/\s+/):[];moveIndex=0;$('solution').hidden=false;renderSolution();$('solve-status').className='status ok';$('solve-status').textContent=solutionMoves.length?`完成！共 ${solutionMoves.length} 步。`:'方塊已經完成。';}catch(e){$('solve-status').className='status error';$('solve-status').textContent=`無法解出此狀態：${e.message||'請檢查拍攝方向和色塊。'}`;}finally{$('solve').disabled=false;}},20);}
     $('start-camera').onclick=startCamera;$('stop-camera').onclick=stopCamera;$('capture').onclick=capture;$('solve').onclick=solve;$('prev').onclick=()=>{if(solutionMoves.length){moveIndex=(moveIndex-1+solutionMoves.length)%solutionMoves.length;renderSolution();}};$('next').onclick=()=>{if(solutionMoves.length){moveIndex=(moveIndex+1)%solutionMoves.length;renderSolution();}};window.addEventListener('beforeunload',stopCamera);renderTabs();renderCaptured();
   </script>
 </body>
